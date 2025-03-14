@@ -1,0 +1,9 @@
+{
+  "parent": "createbigcannons:block/torpedo_sliding_breech_rotated",
+  "textures": {
+    "hole": "createbigcannons:block/torpedo_sliding_breech/steel_torpedo_sliding_breech_hole",
+    "inside": "createbigcannons:block/torpedo_sliding_breech/steel_torpedo_sliding_breech_inside",
+    "side": "createbigcannons:block/torpedo_sliding_breech/steel_torpedo_sliding_breech_side",
+    "side_hole": "createbigcannons:block/torpedo_sliding_breech/steel_torpedo_sliding_breech_side_hole"
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "parent": "cbcmoreshells:block/shelless_ap_shot",
+  "overrides": [
+    {
+      "model": "cbcmoreshells:item/shelless_ap_shot_head_fuze",
+      "predicate": {
+        "createbigcannons:fuze_state": 1.0
+      }
+    },
+    {
+      "model": "cbcmoreshells:item/shelless_ap_shot_base_fuze",
+      "predicate": {
+        "createbigcannons:fuze_state": 2.0
+      }
+    }
+  ]
+}

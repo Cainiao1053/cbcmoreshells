@@ -1,0 +1,8 @@
+{
+  "parent": "minecraft:block/cube_column",
+  "textures": {
+    "end": "cbcmoreshells:block/torpedo_tube_chamber/steel_torpedo_tube_chamber_end",
+    "particle": "cbcmoreshells:block/torpedo_tube_chamber/steel_torpedo_tube_chamber_side",
+    "side": "cbcmoreshells:block/torpedo_tube_chamber/steel_torpedo_tube_chamber_side"
+  }
+}

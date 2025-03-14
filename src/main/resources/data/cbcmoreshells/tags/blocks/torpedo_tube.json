@@ -1,0 +1,8 @@
+{
+  "replace": false,
+  "values": [
+"cbcmoreshells:steel_torpedo_quickfiring_breech",
+"cbcmoreshells:steel_torpedo_tube_chamber",
+"cbcmoreshells:steel_torpedo_tube_barrel"
+  ]
+}

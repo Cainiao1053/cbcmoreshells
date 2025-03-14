@@ -1,0 +1,8 @@
+{
+    "itemGroup.cbcmoreshells": "机械动力火炮：炮弹附加",
+    "block.cbcmoreshells.inferior_he_shell": "劣质高爆",
+    "block.cbcmoreshells.inferior_he_shell.tooltip": "劣质高爆",
+    "block.cbcmoreshells.inferior_he_shell.tooltip.behaviour1": "爆炸",
+    "block.cbcmoreshells.inferior_he_shell.tooltip.condition1": "引爆时",
+    "block.cbcmoreshells.inferior_he_shell.tooltip.summary": "掺了优质沙子的炮弹还算劣质炮弹么？"
+}

@@ -1,0 +1,9 @@
+{
+  "parent": "createbigcannons:block/projectile_block",
+  "textures": {
+    "bottom": "cbcmoreshells:block/projectile/hesh_shell_bottom",
+    "particle": "cbcmoreshells:block/projectile/hesh_shell_top",
+    "side": "cbcmoreshells:block/projectile/hesh_shell",
+    "top": "cbcmoreshells:block/projectile/hesh_shell_top"
+  }
+}

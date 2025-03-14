@@ -1,0 +1,8 @@
+{
+  "parent": "createbigcannons:block/cannon_barrel",
+  "textures": {
+    "end": "cbcmoreshells:block/torpedo_tube_barrel/steel_torpedo_tube_barrel_end",
+    "particle": "cbcmoreshells:block/torpedo_tube_barrel/steel_torpedo_tube_barrel_side",
+    "side": "cbcmoreshells:block/torpedo_tube_barrel/steel_torpedo_tube_barrel_side"
+  }
+}

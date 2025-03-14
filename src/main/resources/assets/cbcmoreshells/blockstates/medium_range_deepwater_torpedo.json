@@ -1,0 +1,56 @@
+{
+  "variants": {
+    "facing=down,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 180
+    },
+    "facing=down,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 180
+    },
+    "facing=east,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 90
+    },
+    "facing=east,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90
+    },
+    "facing=north,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90
+    },
+    "facing=south,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 180
+    },
+    "facing=south,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo"
+    },
+    "facing=up,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo"
+    },
+    "facing=west,waterlogged=false": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 270
+    },
+    "facing=west,waterlogged=true": {
+      "model": "cbcmoreshells:block/medium_range_deepwater_torpedo",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

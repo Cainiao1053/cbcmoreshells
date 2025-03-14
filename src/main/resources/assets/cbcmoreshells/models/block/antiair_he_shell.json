@@ -1,0 +1,9 @@
+{
+  "parent": "createbigcannons:block/projectile_block",
+  "textures": {
+    "bottom": "cbcmoreshells:block/projectile/antiair_he_shell_bottom",
+    "particle": "cbcmoreshells:block/projectile/antiair_he_shell_top",
+    "side": "cbcmoreshells:block/projectile/antiair_he_shell",
+    "top": "cbcmoreshells:block/projectile/antiair_he_shell_top"
+  }
+}
