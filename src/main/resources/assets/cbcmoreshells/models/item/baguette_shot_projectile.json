@@ -1,0 +1,9 @@
+{
+  "parent": "createbigcannons:block/projectile_block",
+  "textures": {
+    "bottom": "cbcmoreshells:block/projectile/baguette_shot_projectile_bottom",
+    "particle": "cbcmoreshells:block/projectile/baguette_shot_projectile_top",
+    "side": "cbcmoreshells:block/projectile/baguette_shot_projectile",
+    "top": "cbcmoreshells:block/projectile/baguette_shot_projectile_top"
+  }
+}

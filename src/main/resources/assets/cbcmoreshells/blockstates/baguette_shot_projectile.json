@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "cbcmoreshells:block/baguette_shot_projectile",
+      "x": 90
+    }
+  }
+}

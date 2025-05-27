@@ -1,0 +1,31 @@
+{
+  "replace": false,
+  "values": [
+    "cbcmoreshells:sap_shell",
+    "cbcmoreshells:apbc_shot",
+    "cbcmoreshells:inferior_he_shell",
+    "cbcmoreshells:hesh_shell",
+    "cbcmoreshells:shelless_he_shell",
+    "cbcmoreshells:he_cannon_rocket",
+    "cbcmoreshells:cannon_torpedo",
+    "cbcmoreshells:medium_range_torpedo",
+    "cbcmoreshells:medium_range_deepwater_torpedo",
+    "cbcmoreshells:highspeed_torpedo",
+    "cbcmoreshells:airdropped_torpedo",
+    "cbcmoreshells:apfsds_shot",
+    "cbcmoreshells:antiair_he_shell",
+    "cbcmoreshells:long_range_torpedo",
+    "cbcmoreshells:sharpnel_torpedo",
+    "cbcmoreshells:airdropped_shrapnel_torpedo",
+    "cbcmoreshells:shelless_ap_shot",
+    "cbcmoreshells:shelless_sap_shell",
+    "cbcmoreshells:ap_super_heavy_shot",
+    "cbcmoreshells:baked_apfsds_shot",
+    "cbcmoreshells:baguette_shot",
+    "cbcmoreshells:incendiary_he_shell",
+    "cbcmoreshells:shelless_incendiary_he_shell",
+    "cbcmoreshells:deepwater_shrapnel_torpedo",
+    "cbcmoreshells:medium_range_torpedo_typeb",
+    "cbcmoreshells:medium_range_deepwater_torpedo_typeb"
+  ]
+}

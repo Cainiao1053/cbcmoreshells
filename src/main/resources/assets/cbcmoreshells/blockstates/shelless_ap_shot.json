@@ -1,5 +1,13 @@
 {
   "variants": {
+    "facing=north,waterlogged=false": {
+      "model": "cbcmoreshells:block/shelless_ap_shot",
+      "x": 90
+    },
+    "facing=north,waterlogged=true": {
+      "model": "cbcmoreshells:block/shelless_ap_shot",
+      "x": 90
+    },
     "facing=down,waterlogged=false": {
       "model": "cbcmoreshells:block/shelless_ap_shot",
       "x": 180
@@ -17,14 +25,6 @@
       "model": "cbcmoreshells:block/shelless_ap_shot",
       "x": 90,
       "y": 90
-    },
-    "facing=north,waterlogged=false": {
-      "model": "cbcmoreshells:block/shelless_ap_shot",
-      "x": 90
-    },
-    "facing=north,waterlogged=true": {
-      "model": "cbcmoreshells:block/shelless_ap_shot",
-      "x": 90
     },
     "facing=south,waterlogged=false": {
       "model": "cbcmoreshells:block/shelless_ap_shot",

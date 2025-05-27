@@ -6,6 +6,8 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.index.CBCMSMunitionPropertiesHandlers;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.ShellessInertBigCannonProperties;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Lang;
@@ -19,11 +21,16 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import rbasamoyai.createbigcannons.index.CBCMunitionPropertiesHandlers;
 import rbasamoyai.createbigcannons.munitions.FuzedProjectileBlockItem;
+import rbasamoyai.createbigcannons.munitions.big_cannon.FuzedBigCannonProjectile;
 import rbasamoyai.createbigcannons.munitions.big_cannon.ProjectileBlockItem;
+import rbasamoyai.createbigcannons.munitions.big_cannon.config.BigCannonCommonShellProperties;
 import rbasamoyai.createbigcannons.munitions.fuzes.FuzeItem;
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
 
+import static com.cainiao1053.cbcmoreshells.CBCMSEntityTypes.APBC_SHOT;
+import static com.cainiao1053.cbcmoreshells.CBCMSEntityTypes.SAP_SHELL;
 import static com.cainiao1053.cbcmoreshells.base.CBCMSTooltip.addHoldShift;
 import static rbasamoyai.createbigcannons.base.CBCTooltip.getPalette;
 
@@ -41,11 +48,9 @@ public class SAPShellBlockItem extends FuzedProjectileBlockItem {
 			addHoldShift(desc, tooltip);
 			return;
 		}
-		String key1 = stack.getDescriptionId()+".tooltip.title";
-		TooltipHelper.Palette palette = getPalette(level, stack);
-		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
-		String key2 = stack.getDescriptionId()+".tooltip.desc";
-		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key2), palette.primary(), palette.highlight(), 1));
+
+		BigCannonCommonShellProperties properties = CBCMunitionPropertiesHandlers.COMMON_SHELL_BIG_CANNON_PROJECTILE.getPropertiesOf(SAP_SHELL.get());
+		CBCMSTooltip.appendExplosiveInfo(stack, level, tooltip, flag, properties.ballistics().durabilityMass(), properties.ballistics().penetration(), properties.ballistics().deflection(),properties.explosion().explosivePower());
 
 	}
 

@@ -12,9 +12,9 @@
   "minimum_charge_power": 1.0,
   "can_squib": true,
   "added_recoil": 1.0,
-  "penetration": 1.6,
+  "penetration": 2.75,
   "max_charges": 6,
   "lifetime": 70,
   "toughness": 1.0,
-  "deflection": 0.25
+  "deflection": 0.5
 }

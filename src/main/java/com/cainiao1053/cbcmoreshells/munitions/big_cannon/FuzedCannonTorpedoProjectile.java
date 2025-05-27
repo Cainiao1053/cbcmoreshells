@@ -95,6 +95,7 @@ public abstract class FuzedCannonTorpedoProjectile extends AbstractCannonTorpedo
 		}
 	}
 
+
 	protected void expireProjectile() {
 		this.discard();
 	}
@@ -123,6 +124,11 @@ public abstract class FuzedCannonTorpedoProjectile extends AbstractCannonTorpedo
 	protected final boolean canDetonate(Predicate<FuzeItem> cons) {
 		return !this.level().isClientSide && this.level().hasChunkAt(this.blockPosition()) && !this.isRemoved()
 			&& this.fuze.getItem() instanceof FuzeItem FuzeItem && cons.test(FuzeItem);
+	}
+
+	@Override
+	public boolean ignoreExplosion() {
+		return true;
 	}
 
 	/**

@@ -29,8 +29,7 @@ public class ShellessHEShellProjectile extends ShellessFuzedBigCannonProjectile 
 	public ShellessHEShellProjectile(EntityType<? extends ShellessHEShellProjectile> type, Level level) {
 		super(type, level);
 	}
-
-
+	
 
 	@Override
 	protected void detonate(Position position) {
@@ -57,6 +56,7 @@ public class ShellessHEShellProjectile extends ShellessFuzedBigCannonProjectile 
 		this.tooManyCharges = maxCharges >= 0 && power > maxCharges;
 		setLifetime(lifetime);
 	}
+
 
 	@Nonnull
 	@Override

@@ -20,15 +20,16 @@ public enum CBCMSCannonContraptionTypes implements ICannonContraptionType {
 	private static final Map<ResourceLocation, CBCMSCannonContraptionTypes> BY_ID =
 		Arrays.stream(values()).collect(Collectors.toMap(CBCMSCannonContraptionTypes::getId, Function.identity()));
 
-	private final ResourceLocation id = Cbcmoreshells.resource(this.name().toLowerCase(Locale.ROOT));
+	private final ResourceLocation id;
 
 	CBCMSCannonContraptionTypes() {
+		this.id = Cbcmoreshells.resource(this.name().toLowerCase(Locale.ROOT));
 		CannonContraptionTypeRegistry.register(this.id, this);
 	}
 
 	@Override public ResourceLocation getId() { return this.id; }
 
-	@Nullable public static CBCMSCannonContraptionTypes byId(ResourceLocation loc) { return BY_ID.get(loc); }
+	@Nullable public static CBCMSCannonContraptionTypes byId(ResourceLocation loc) { return (CBCMSCannonContraptionTypes)BY_ID.get(loc); }
 
 	public static void register() {
 	}

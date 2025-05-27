@@ -36,8 +36,8 @@ public class AirdroppedTorpedoProjectile extends FuzedCannonTorpedoProjectile {
 
 	@Override
 	protected void detonate(Position position) {
-		float explosivePower = this.getAllProperties().explosion().explosivePower();
-		if (getTickInWater() > 20){explosivePower *=4;}
+		float explosivePower = 0f;
+		if (getTickInWater() > 20){explosivePower =this.getAllProperties().explosion().explosivePower()*4;}
 
 		ShellExplosion explosion = new ShellExplosion(this.level(), this, this.indirectArtilleryFire(false), position.x(),
 			position.y(), position.z(), explosivePower, false,
@@ -68,6 +68,8 @@ public class AirdroppedTorpedoProjectile extends FuzedCannonTorpedoProjectile {
 	protected TorpedoProjectilePropertiesComponent getBigCannonProjectileProperties() {
 		return this.getAllProperties().torpedoProperties();
 	}
+
+
 
 	@Nonnull
 	@Override

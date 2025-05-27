@@ -64,6 +64,7 @@ public abstract class TorpedoProjectileBlock<ENTITY extends AbstractCannonTorped
 		return new AllShapes.Builder(base).forDirectional();
 	}
 
+
 	@Override
 	public BlockState getStateForPlacement(BlockPlaceContext context) {
 		Player player = context.getPlayer();

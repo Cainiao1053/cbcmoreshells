@@ -3,9 +3,12 @@ plugins {
     id 'idea'
     id 'maven-publish'
     id 'net.minecraftforge.gradle' version '[6.0,6.2)'
+
+    id "com.github.johnrengelman.shadow" version "8.1.1"
+    id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = '0.0.15'
+version = '0.0.18'
 group = 'com.cainiao1053.cbcmoreshells' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'cbcmoreshells'
 
@@ -48,6 +51,11 @@ minecraft {
             // You can set various levels here.
             // Please read: https://stackoverflow.com/questions/2031163/when-to-use-the-different-log-levels
             property 'forge.logging.console.level', 'debug'
+
+            property 'mixin.env.remapRefMap', 'true'
+            property 'mixin.env.refMapRemappingFile', "${projectDir}/build/createSrgToMcp/output.srg"
+            args '-mixin.config=cbcmoreshells.mixins.json'
+
 
             // Comma-separated list of namespaces to load gametests from. Empty = all namespaces.
             property 'forge.enabledGameTestNamespaces', 'cbcmoreshells'
@@ -175,6 +183,11 @@ repositories {
     mavenCentral()
 }
 
+mixin {
+    add sourceSets.main, "cbcmoreshells.refmap.json"
+    config 'cbcmoreshells.mixins.json'
+}
+
 dependencies {
     // Specify the version of Minecraft to use. If this is any group other than 'net.minecraft', it is assumed
     // that the dep is a ForgeGradle 'patcher' dependency, and its patches will be applied.
@@ -198,6 +211,7 @@ dependencies {
     // runtimeOnly fg.deobf("mezz.jei:jei-${mc_version}:${jei_version}") // Adds the full JEI mod as a runtime dependency
     // implementation fg.deobf("com.tterrag.registrate:Registrate:MC${mc_version}-${registrate_version}") // Adds registrate as a dependency
 
+    annotationProcessor 'org.spongepowered:mixin:0.8.5:processor'
     // Examples using mod jars from ./libs
     // implementation fg.deobf("blank:coolmod-${mc_version}:${coolmod_version}")
 

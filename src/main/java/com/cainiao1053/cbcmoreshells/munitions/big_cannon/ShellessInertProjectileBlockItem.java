@@ -6,6 +6,10 @@ import java.util.List;
 import javax.annotation.Nullable;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.index.CBCMSMunitionPropertiesHandlers;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.BigCannonShellessShellProperties;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.ShellessInertBigCannonProperties;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shellless_ap_shot.ShellessAPShotProjectile;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.Components;
 import com.simibubi.create.foundation.utility.Lang;
@@ -19,15 +23,17 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.level.block.Block;
+import rbasamoyai.createbigcannons.index.CBCMunitionPropertiesHandlers;
 import rbasamoyai.createbigcannons.munitions.FuzedProjectileBlockItem;
 import rbasamoyai.createbigcannons.munitions.big_cannon.ProjectileBlockItem;
+import rbasamoyai.createbigcannons.munitions.config.components.BallisticPropertiesComponent;
 import rbasamoyai.createbigcannons.munitions.fuzes.FuzeItem;
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
 
 import static com.cainiao1053.cbcmoreshells.base.CBCMSTooltip.addHoldShift;
 import static rbasamoyai.createbigcannons.base.CBCTooltip.getPalette;
 
-public class ShellessInertProjectileBlockItem extends FuzedProjectileBlockItem {
+public class ShellessInertProjectileBlockItem extends ProjectileBlockItem {
 
 	public ShellessInertProjectileBlockItem(Block block, Properties properties) {
 		super(block, properties);

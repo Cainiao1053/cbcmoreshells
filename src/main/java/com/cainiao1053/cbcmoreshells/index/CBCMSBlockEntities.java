@@ -16,6 +16,12 @@ import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.breeches.sliding_breec
 import com.simibubi.create.content.kinetics.base.ShaftInstance;
 import com.simibubi.create.content.kinetics.base.ShaftRenderer;
 import com.tterrag.registrate.util.entry.BlockEntityEntry;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.quickfiring_breech.QuickfiringBreechBlockEntity;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.quickfiring_breech.QuickfiringBreechInstance;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.quickfiring_breech.QuickfiringBreechBlockEntityRenderer;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.sliding_breech.SlidingBreechBlockEntity;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.sliding_breech.SlidingBreechBlockEntityRenderer;
+import rbasamoyai.createbigcannons.cannons.big_cannons.breeches.sliding_breech.SlidingBreechInstance;
 
 
 public class CBCMSBlockEntities {
@@ -49,14 +55,19 @@ public class CBCMSBlockEntities {
 			.validBlocks(CBCMSBlocks.STEEL_TORPEDO_SLIDING_BREECH)
 			.register();
 
+	public static final BlockEntityEntry<QuickfiringBreechBlockEntity> NETHERSTEELQUICKFIRING_BREECH = REGISTRATE
+			.blockEntity("quickfiring_breech", QuickfiringBreechBlockEntity::new)
+			.instance(() -> QuickfiringBreechInstance::new)
+			.renderer(() -> QuickfiringBreechBlockEntityRenderer::new)
+			.validBlocks(CBCMSBlocks.NETHERSTEEL_QUICKFIRING_BREECH)
+			.register();
 
-
-
-
-
-
-
-
+	public static final BlockEntityEntry<SlidingBreechBlockEntity> SLIDING_BREECH = REGISTRATE
+			.blockEntity("sliding_breech", SlidingBreechBlockEntity::new)
+			.instance(() -> SlidingBreechInstance::new, false)
+			.renderer(() -> SlidingBreechBlockEntityRenderer::new)
+			.validBlocks(CBCMSBlocks.NETHERSTEEL_SLIDING_BREECH)
+			.register();
 
 
 

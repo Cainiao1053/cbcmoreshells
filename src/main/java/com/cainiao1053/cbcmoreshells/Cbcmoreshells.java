@@ -1,14 +1,15 @@
 package com.cainiao1053.cbcmoreshells;
 
+import com.cainiao1053.cbcmoreshells.cannon_control.cannon_types.CBCMSCannonContraptionTypes;
 import com.cainiao1053.cbcmoreshells.datagen.assets.CBCMSLangGen;
-import com.cainiao1053.cbcmoreshells.index.CBCMSArmInteractionPointTypes;
-import com.cainiao1053.cbcmoreshells.index.CBCMSBlockEntities;
-import com.cainiao1053.cbcmoreshells.index.CBCMSBlockPartials;
-import com.cainiao1053.cbcmoreshells.index.CBCMSContraptionTypes;
+import com.cainiao1053.cbcmoreshells.index.*;
+import com.cainiao1053.cbcmoreshells.network.CBCMSNetwork;
+import com.cainiao1053.cbcmoreshells.network.CBCMSRootNetwork;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.server.packs.resources.ResourceManager;
 import net.minecraft.world.item.CreativeModeTab;
+import net.minecraft.world.item.crafting.RecipeType;
 import net.minecraftforge.common.MinecraftForge;
 import net.minecraftforge.event.AddReloadListenerEvent;
 import net.minecraftforge.event.BuildCreativeModeTabContentsEvent;
@@ -24,6 +25,8 @@ import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLCommonSetupEvent;
 import net.minecraftforge.fml.event.lifecycle.FMLDedicatedServerSetupEvent;
 import com.simibubi.create.foundation.data.CreateRegistrate;
+import net.minecraftforge.registries.DeferredRegister;
+import net.minecraftforge.registries.ForgeRegistries;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import rbasamoyai.createbigcannons.utils.CBCUtils;
@@ -54,11 +57,14 @@ public class Cbcmoreshells {
         CBCMSBlockEntities.register();
         CBCMSBlockPartials.init();
         CBCMSItems.register();
+        CBCMSCannonContraptionTypes.register();
+        //CBCMSRecipeTypes.register();
 
         //CBCMSArmInteractionPointTypes.register();
 
         CBCMSContraptionTypes.prepare();
         //CBCMSLangGen.prepare();
+        CBCMSRootNetwork.init();
 
 
 
@@ -83,6 +89,7 @@ public class Cbcmoreshells {
     private void commonSetup(final FMLCommonSetupEvent event)
     {
         // Some common setup code
+        CBCMSNetwork.init();
 
     }
 

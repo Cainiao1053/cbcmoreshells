@@ -1,0 +1,9 @@
+{
+  "parent": "createbigcannons:block/sliding_breech_rotated",
+  "textures": {
+    "hole": "cbcmoreshells:block/sliding_breech/nethersteel_sliding_breech_hole",
+    "inside": "cbcmoreshells:block/sliding_breech/nethersteel_sliding_breech_inside",
+    "side": "cbcmoreshells:block/sliding_breech/nethersteel_sliding_breech_side",
+    "side_hole": "cbcmoreshells:block/sliding_breech/nethersteel_sliding_breech_side_hole"
+  }
+}

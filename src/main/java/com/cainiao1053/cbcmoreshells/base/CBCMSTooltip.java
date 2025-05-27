@@ -51,6 +51,39 @@ public class CBCMSTooltip {
 		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", String.format("%.1f",torpSpeed*38.8),buoyancyFactor,String.format("%.1f",lifetime*torpSpeed)), palette.primary(), palette.highlight(), 1));
 	}
 
+	public static void appendBallisticInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										 TooltipFlag flag, float durabilityMass, float penetration, float deflection) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI)), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendExplosiveInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										   TooltipFlag flag, float durabilityMass, float penetration, float deflection, float explosion) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI),explosion), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendIncendiaryInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										   TooltipFlag flag, float durabilityMass, float penetration, float deflection, float explosion, float fireChance, int fireRange) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI),explosion,String.format("%.0f",100*fireChance),fireRange), palette.primary(), palette.highlight(), 1));
+	}
+
 	private static Component getNoGogglesMeter(int outOfFive, boolean invertColor, boolean canBeInvalid) {
 		int value = invertColor ? 5 - outOfFive : outOfFive;
 		ChatFormatting color = switch (value) {

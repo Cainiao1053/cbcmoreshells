@@ -27,7 +27,7 @@ public class SAPShellProjectile extends FuzedBigCannonProjectile {
 		super(type, level);
 	}
 
-	@Override
+
 	protected void detonate(Position position) {
 		ShellExplosion explosion = new ShellExplosion(this.level(), this, this.indirectArtilleryFire(false), position.x(),
 			position.y(), position.z(), this.getAllProperties().explosion().explosivePower(), false,
@@ -35,31 +35,27 @@ public class SAPShellProjectile extends FuzedBigCannonProjectile {
 		CreateBigCannons.handleCustomExplosion(this.level(), explosion);
 	}
 
-	@Override
+
 	public BlockState getRenderedBlockState() {
 		return CBCMSBlocks.SAP_SHELL.getDefaultState().setValue(BlockStateProperties.FACING, Direction.NORTH);
 	}
 
 	@Nonnull
-	@Override
 	protected BigCannonFuzePropertiesComponent getFuzeProperties() {
 		return this.getAllProperties().fuze();
 	}
 
 	@Nonnull
-	@Override
 	protected BigCannonProjectilePropertiesComponent getBigCannonProjectileProperties() {
 		return this.getAllProperties().bigCannonProperties();
 	}
 
 	@Nonnull
-	@Override
 	public EntityDamagePropertiesComponent getDamageProperties() {
 		return this.getAllProperties().damage();
 	}
 
 	@Nonnull
-	@Override
 	protected BallisticPropertiesComponent getBallisticProperties() {
 		return this.getAllProperties().ballistics();
 	}

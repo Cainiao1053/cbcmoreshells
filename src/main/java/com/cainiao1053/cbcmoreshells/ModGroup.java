@@ -42,6 +42,17 @@ public class ModGroup {
 				CBCMSBlocks.LONG_RANGE_TORPEDO.asStack(),
 				CBCMSBlocks.APFSDS_SHOT.asStack(),
 				CBCMSBlocks.ANTIAIR_HE_SHELL.asStack(),
+				CBCMSBlocks.SHARPNEL_TORPEDO.asStack(),
+				CBCMSBlocks.AIRDROPPED_SHRAPNEL_TORPEDO.asStack(),
+				CBCMSBlocks.DEEPWATER_SHRAPNEL_TORPEDO.asStack(),
+				CBCMSBlocks.APBC_SHOT.asStack(),
+				CBCMSBlocks.AP_SUPER_HEAVY_SHOT.asStack(),
+				CBCMSBlocks.BAKED_APFSDS_SHOT.asStack(),
+				CBCMSBlocks.BAGUETTE_SHOT.asStack(),
+				CBCMSBlocks.INCENDIARY_HE_SHELL.asStack(),
+				CBCMSBlocks.SHELLESS_INCENDIARY_HE_SHELL.asStack(),
+				CBCMSBlocks.MEDIUM_RANGE_TORPEDO_TYPEB.asStack(),
+				CBCMSBlocks.MEDIUM_RANGE_DEEPWATER_TORPEDO_TYPEB.asStack(),
 
 
 
@@ -50,6 +61,8 @@ public class ModGroup {
 				CBCMSBlocks.STEEL_TORPEDO_QUICKFIRING_BREECH.asStack(),
 				CBCMSBlocks.STEEL_TORPEDO_CHAMBER.asStack(),
 				CBCMSBlocks.STEEL_TORPEDO_BARREL.asStack(),
+				CBCMSBlocks.NETHERSTEEL_SLIDING_BREECH.asStack(),
+				CBCMSBlocks.NETHERSTEEL_QUICKFIRING_BREECH.asStack(),
 
 				CBCMSBlocks.ANTIBLAST_COPYCAT_PANEL.asStack()
 			));
