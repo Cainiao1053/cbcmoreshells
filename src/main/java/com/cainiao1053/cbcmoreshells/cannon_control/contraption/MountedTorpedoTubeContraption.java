@@ -448,7 +448,7 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 
 		float soundPower = Mth.clamp(1 / 16f, 0, 1);
 		float tone = 2 + soundPower * -8 + level.random.nextFloat() * 4f - 2f;
-		float pitch = 1.75f;
+		float pitch = 1.8f;
 		double shakeDistance = propelCtx.chargesUsed * CBCConfigs.SERVER.cannons.bigCannonBlastDistanceMultiplier.getF();
 		float volume = 8;
 		Vec3 plumePos = spawnPos.subtract(vec);
@@ -456,7 +456,7 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 
 		BigCannonPlumeParticleData plumeParticle = new BigCannonPlumeParticleData(0, 0, 0);
 		CannonBlastWaveEffectParticleData blastEffect = new CannonBlastWaveEffectParticleData(shakeDistance,
-			BuiltInRegistries.SOUND_EVENT.wrapAsHolder(AllSoundEvents.STEAM.getMainEvent()), SoundSource.BLOCKS,
+			BuiltInRegistries.SOUND_EVENT.wrapAsHolder(CBCSoundEvents.SMOKE_SHELL_DETONATE.getMainEvent()), SoundSource.BLOCKS,
 			volume, pitch, 2, 0);
 		Packet<?> blastWavePacket = new ClientboundLevelParticlesPacket(blastEffect, true, plumePos.x, plumePos.y, plumePos.z, 0, 0, 0, 1, 0);
 

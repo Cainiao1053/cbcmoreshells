@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cbcmoreshells:block/steel_ammo_rack",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/steel_ammo_rack",
+      "y": 0
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/steel_ammo_rack",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/steel_ammo_rack",
+      "y": 270
+    }
+  }
+}

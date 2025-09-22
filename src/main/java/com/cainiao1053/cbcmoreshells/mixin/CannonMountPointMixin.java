@@ -1,6 +1,8 @@
 package com.cainiao1053.cbcmoreshells.mixin;
 
+import com.cainiao1053.cbcmoreshells.cannon_control.contraption.MountedProjectileRackContraption;
 import com.cainiao1053.cbcmoreshells.cannon_control.contraption.MountedTorpedoTubeContraption;
+import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.breeches.quick_firing_breech.ProjectileRackCannonMountPoint;
 import net.minecraft.world.item.ItemStack;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
@@ -29,6 +31,8 @@ public class CannonMountPointMixin {
 	public void getInsertedResultAndDoSomethingInject(ItemStack stack, boolean simulate, AbstractMountedCannonContraption cannon, PitchOrientedContraptionEntity poce, CallbackInfoReturnable<ItemStack> cir) {
 		if (cannon instanceof MountedTorpedoTubeContraption torp) {
 			cir.setReturnValue(TorpedoCannonMountPoint.torpedoTubeInsert(stack, simulate, torp, poce));
+		}else if (cannon instanceof MountedProjectileRackContraption rack) {
+			cir.setReturnValue(ProjectileRackCannonMountPoint.projectileRackInsert(stack, simulate, rack, poce));
 		}
 
 	}

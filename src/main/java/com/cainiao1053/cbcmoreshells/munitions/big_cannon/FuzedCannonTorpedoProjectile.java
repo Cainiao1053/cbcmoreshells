@@ -139,6 +139,8 @@ public abstract class FuzedCannonTorpedoProjectile extends AbstractCannonTorpedo
 
 	protected abstract void detonate(Position position);
 
+	public void triggerDetonation(){this.detonate(this.position());}
+
 	public int getTickInWater() {
 		return this.tickInWater;
 	}

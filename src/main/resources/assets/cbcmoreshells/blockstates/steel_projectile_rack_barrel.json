@@ -1,0 +1,56 @@
+{
+  "variants": {
+    "facing=down,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 180
+    },
+    "facing=east,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90
+    },
+    "facing=south,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel"
+    },
+    "facing=west,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 270
+    },
+        "facing=down,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 180
+    },
+    "facing=east,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 90
+    },
+    "facing=north,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90
+    },
+    "facing=south,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 180
+    },
+    "facing=up,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel"
+    },
+    "facing=west,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_barrel",
+      "x": 90,
+      "y": 270
+    }
+  }
+}

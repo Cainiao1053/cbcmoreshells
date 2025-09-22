@@ -69,16 +69,16 @@ public class TorpedoBurst extends CBCProjectileBurst {
 			BlockPos pos1 = pos.immutable();
 			CreateBigCannons.BLOCK_DAMAGE.damageBlock(pos1, (int) Math.min(curPom, 2*toughness), state, this.level(), PartialBlockDamageManager::voidBlock);
 		}
-		if (this.level() instanceof ServerLevel slevel) {
-			ParticleOptions options = new BlockParticleOption(ParticleTypes.BLOCK, state);
-			for (ServerPlayer player : slevel.players()) {
-				if (player.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 1024d)
-					slevel.sendParticles(player, options, true, pos.getX(), pos.getY(), pos.getZ(), 20, 0.4, 2, 0.4, 1);
-			}
-		}
-		SoundType type = state.getSoundType();
-		this.level().playLocalSound(pos.getX(), pos.getY(), pos.getZ(), type.getBreakSound(), SoundSource.NEUTRAL,
-			type.getVolume() * 2, type.getPitch(), false);
+//		if (this.level() instanceof ServerLevel slevel) {
+//			ParticleOptions options = new BlockParticleOption(ParticleTypes.BLOCK, state);
+//			for (ServerPlayer player : slevel.players()) {
+//				if (player.distanceToSqr(pos.getX(), pos.getY(), pos.getZ()) < 1024d)
+//					slevel.sendParticles(player, options, true, pos.getX(), pos.getY(), pos.getZ(), 20, 0.4, 2, 0.4, 1);
+//			}
+//		}
+//		SoundType type = state.getSoundType();
+//		this.level().playLocalSound(pos.getX(), pos.getY(), pos.getZ(), type.getBreakSound(), SoundSource.NEUTRAL,
+//			type.getVolume() * 2, type.getPitch(), false);
 	}
 
 	protected boolean canDestroyBlock(BlockState state) { return true; }
@@ -87,6 +87,11 @@ public class TorpedoBurst extends CBCProjectileBurst {
 
 	@Override public double getSubProjectileWidth() { return 0.8; }
 	@Override public double getSubProjectileHeight() { return 0.8; }
+
+	@Override
+	public boolean ignoreExplosion() {
+		return true;
+	}
 
 	protected DamageSource getDamageSource() {
 		return new CannonDamageSource(CannonDamageSource.getDamageRegistry(this.level()).getHolderOrThrow(CBCDamageTypes.SHRAPNEL),

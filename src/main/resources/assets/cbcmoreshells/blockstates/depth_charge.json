@@ -1,0 +1,29 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "cbcmoreshells:block/depth_charge",
+      "z": 90,
+      "x": 90
+    },
+    "facing=east": {
+      "model": "cbcmoreshells:block/depth_charge",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/depth_charge"
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/depth_charge",
+      "y": 180
+    },
+    "facing=up": {
+      "model": "cbcmoreshells:block/depth_charge",
+      "x": 90,
+      "z": 90
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/depth_charge",
+      "y": 270
+    }
+  }
+}

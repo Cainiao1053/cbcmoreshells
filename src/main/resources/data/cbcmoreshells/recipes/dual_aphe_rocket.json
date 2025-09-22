@@ -1,0 +1,17 @@
+{
+  "type": "minecraft:crafting_shaped",
+  "pattern": [
+  	"RBR"
+  ],
+  "key": {
+  	"R": {
+      "item": "cbcmoreshells:aphe_rocket"
+    },
+    "B": {
+      "item": "cbcmoreshells:rocket_bracket"
+    }
+  },
+  "result": {
+    "item": "cbcmoreshells:dual_aphe_rocket"
+  }
+}

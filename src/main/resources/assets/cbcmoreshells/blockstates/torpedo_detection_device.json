@@ -1,0 +1,50 @@
+{
+  "variants": {
+    "facing=down,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device",
+      "x": 90
+    },
+    "facing=east,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device",
+      "y": 90
+    },
+    "facing=north,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device"
+    },
+    "facing=south,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device",
+      "y": 180
+    },
+    "facing=up,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device",
+      "x": -90
+    },
+    "facing=west,powered=false": {
+      "model": "cbcmoreshells:block/torpedo_detection_device",
+      "y": 270
+    },
+        "facing=down,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered",
+      "x": 90
+    },
+    "facing=east,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered",
+      "y": 90
+    },
+    "facing=north,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered"
+    },
+    "facing=south,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered",
+      "y": 180
+    },
+    "facing=up,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered",
+      "x": -90
+    },
+    "facing=west,powered=true": {
+      "model": "cbcmoreshells:block/torpedo_detection_device_powered",
+      "y": 270
+    }
+  }
+}

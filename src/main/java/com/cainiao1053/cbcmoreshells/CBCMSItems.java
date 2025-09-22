@@ -3,6 +3,8 @@ package com.cainiao1053.cbcmoreshells;
 import static com.cainiao1053.cbcmoreshells.Cbcmoreshells.REGISTRATE;
 import com.cainiao1053.cbcmoreshells.datagen.assets.CBCMSBuilderTransformers;
 
+import com.cainiao1053.cbcmoreshells.munitions.autocannon.bullet.AntiairMachineGunRoundItem;
+import com.cainiao1053.cbcmoreshells.munitions.fuzes.ShipProximityFuzeItem;
 import com.simibubi.create.content.processing.sequenced.SequencedAssemblyItem;
 import com.simibubi.create.foundation.data.CreateRegistrate;
 import com.tterrag.registrate.util.entry.ItemEntry;
@@ -10,6 +12,7 @@ import com.tterrag.registrate.util.entry.ItemEntry;
 import net.minecraft.resources.ResourceLocation;
 import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
+import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.datagen.assets.CBCBuilderTransformers;
 import rbasamoyai.createbigcannons.utils.CBCRegistryUtils;
 import rbasamoyai.createbigcannons.utils.CBCUtils;
@@ -24,7 +27,20 @@ public class CBCMSItems {
 
 	STEEL_TORPEDO_SLIDING_BREECHBLOCK = REGISTRATE.item("steel_torpedo_sliding_breechblock", Item::new)
 			.transform(CBCMSBuilderTransformers.torpedoSlidingBreechblock("torpedo_sliding_breech/steel"))
+			.register(),
+
+	ROCKET_BRACKET = REGISTRATE.item("rocket_bracket", Item::new)
 			.register();
+
+	public static final ItemEntry<AntiairMachineGunRoundItem> ANTIAIR_MACHINE_GUN_ROUND = REGISTRATE
+			.item("antiair_machine_gun_round", AntiairMachineGunRoundItem::new)
+			.tag(CBCTags.CBCItemTags.AUTOCANNON_CARTRIDGES)
+			.register();
+
+	public static final ItemEntry<ShipProximityFuzeItem> SHIP_PROXIMITY_FUZE = REGISTRATE.item("ship_proximity_fuze", ShipProximityFuzeItem::new)
+			.tag(CBCTags.CBCItemTags.FUZES)
+			.register();
+
 
 
 	//public static final ItemEntry<SequencedAssemblyItem>

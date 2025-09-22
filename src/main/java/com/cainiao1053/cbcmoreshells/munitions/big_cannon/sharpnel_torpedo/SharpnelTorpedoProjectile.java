@@ -46,9 +46,10 @@ public class SharpnelTorpedoProjectile extends FuzedCannonTorpedoProjectile {
 		int burstCount = 0;
 		if (getTickInWater() > 30){burstCount =properties.torpedoBurst().burstProjectileCount();}
 
-		ShrapnelExplosion explosion = new ShrapnelExplosion(this.level(), null, this.indirectArtilleryFire(false), position.x(),
-				position.y(), position.z(), properties.explosion().explosivePower(),
+		ShellExplosion explosion = new ShellExplosion(this.level(), null, this.indirectArtilleryFire(false), position.x(),
+				position.y(), position.z(), properties.explosion().explosivePower(), false,
 				CBCConfigs.SERVER.munitions.damageRestriction.get().explosiveInteraction());
+
 
 		CreateBigCannons.handleCustomExplosion(this.level(), explosion);
 		CBCProjectileBurst.spawnConeBurst(this.level(), CBCMSEntityTypes.TORPEDO_BURST.get(), new Vec3(position.x(), position.y(), position.z()),

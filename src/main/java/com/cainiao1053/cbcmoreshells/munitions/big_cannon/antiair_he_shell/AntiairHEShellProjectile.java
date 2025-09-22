@@ -45,7 +45,7 @@ public class AntiairHEShellProjectile extends ShellessFuzedBigCannonProjectile {
 
 	@Override
 	public BlockState getRenderedBlockState() {
-		return CBCBlocks.HE_SHELL.getDefaultState().setValue(BlockStateProperties.FACING, Direction.NORTH);
+		return CBCMSBlocks.ANTIAIR_HE_SHELL.getDefaultState().setValue(BlockStateProperties.FACING, Direction.NORTH);
 	}
 
 	@Nonnull

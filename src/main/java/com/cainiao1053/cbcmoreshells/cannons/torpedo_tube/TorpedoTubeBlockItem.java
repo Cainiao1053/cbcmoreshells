@@ -1,6 +1,8 @@
 package com.cainiao1053.cbcmoreshells.cannons.torpedo_tube;
 
+import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.material.TorpedoTubeMaterial;
+import net.minecraft.client.gui.screens.Screen;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.entity.player.Player;
@@ -16,6 +18,8 @@ import rbasamoyai.createbigcannons.base.CBCTooltip;
 import javax.annotation.Nullable;
 import java.util.List;
 
+import static com.cainiao1053.cbcmoreshells.base.CBCMSTooltip.addHoldShift;
+
 public class TorpedoTubeBlockItem<T extends Block & TorpedoTubeBlock> extends BlockItem {
 
 	private final T cannonBlock;
@@ -28,7 +32,12 @@ public class TorpedoTubeBlockItem<T extends Block & TorpedoTubeBlock> extends Bl
 	@Override
 	public void appendHoverText(ItemStack stack, @Nullable Level level, List<Component> tooltip, TooltipFlag flag) {
 		super.appendHoverText(stack, level, tooltip, flag);
-		//if (level != null) CBCTooltip.appendCannonBlockText(stack, level, tooltip, flag, this.cannonBlock);
+		boolean desc = Screen.hasShiftDown();
+		if (!desc) {
+			addHoldShift(desc, tooltip);
+			return;
+		}
+		CBCMSTooltip.appendTorpedoTubeInfo(stack,level,tooltip,flag);
 	}
 
 	@Override

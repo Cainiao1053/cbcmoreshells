@@ -1,0 +1,27 @@
+{
+  "variants": {
+    "facing=down": {
+      "model": "cbcmoreshells:block/landing_indicator",
+      "x": 270
+    },
+    "facing=east": {
+      "model": "cbcmoreshells:block/landing_indicator",
+      "y": 270
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/landing_indicator",
+      "y": 180
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/landing_indicator"
+    },
+    "facing=up": {
+      "model": "cbcmoreshells:block/landing_indicator",
+      "x": 90
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/landing_indicator",
+      "y": 90
+    }
+  }
+}

@@ -1,0 +1,112 @@
+{
+  "variants": {
+    "axis_along_first=false,facing=down,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=east,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 90
+    },
+    "axis_along_first=false,facing=north,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180
+    },
+    "axis_along_first=false,facing=south,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 180
+    },
+    "axis_along_first=false,facing=up,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=west,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 270
+    },
+    "axis_along_first=true,facing=down,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=east,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 90
+    },
+    "axis_along_first=true,facing=north,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180
+    },
+    "axis_along_first=true,facing=south,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 180
+    },
+    "axis_along_first=true,facing=up,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=west,ceiling=false": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 180,
+      "y": 270
+    },
+        "axis_along_first=false,facing=down,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=east,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 90
+    },
+    "axis_along_first=false,facing=north,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0
+    },
+    "axis_along_first=false,facing=south,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 180
+    },
+    "axis_along_first=false,facing=up,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=west,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 270
+    },
+    "axis_along_first=true,facing=down,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=east,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 90
+    },
+    "axis_along_first=true,facing=north,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0
+    },
+    "axis_along_first=true,facing=south,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 180
+    },
+    "axis_along_first=true,facing=up,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=west,ceiling=true": {
+      "model": "cbcmoreshells:block/steel_projectile_rack_quickfiring_breech",
+      "x": 0,
+      "y": 270
+    }
+  }
+}

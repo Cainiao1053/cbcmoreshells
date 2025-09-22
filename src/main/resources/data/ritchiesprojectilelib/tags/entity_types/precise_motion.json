@@ -26,6 +26,19 @@
     "cbcmoreshells:shelless_incendiary_he_shell",
     "cbcmoreshells:deepwater_shrapnel_torpedo",
     "cbcmoreshells:medium_range_torpedo_typeb",
-    "cbcmoreshells:medium_range_deepwater_torpedo_typeb"
+    "cbcmoreshells:medium_range_deepwater_torpedo_typeb",
+    "cbcmoreshells:he_bouncing_bomb",
+    "cbcmoreshells:he_bomb",
+    "cbcmoreshells:racked_torpedo",
+    "cbcmoreshells:he_rocket",
+    "cbcmoreshells:aphe_rocket",
+    "cbcmoreshells:aphe_bouncing_bomb",
+    "cbcmoreshells:aphe_bomb",
+    "cbcmoreshells:dual_he_rocket",
+    "cbcmoreshells:dual_aphe_rocket",
+    "cbcmoreshells:antiair_machine_gun_bullet",
+    "cbcmoreshells:long_range_shrapnel_torpedo",
+    "cbcmoreshells:depth_charge",
+    "cbcmoreshells:antiair_shrapnel_shell"
   ]
 }

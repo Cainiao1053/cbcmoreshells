@@ -1,5 +1,5 @@
 {
-  "entity_damage": 10.0,
+  "entity_damage": 100.0,
   "durability_mass": 0.1,
   "renders_invulnerable": false,
   "ignores_invulnerability": true,
@@ -13,15 +13,15 @@
   "can_squib": true,
   "added_recoil": 1.0,
   "base_fuze": false,
-  "explosive_power": 0,
+  "explosive_power": 6,
   "max_charges": 10,
   "penetration": 2.5,
-  "lifetime": 448,
+  "lifetime": 523,
   "toughness": 1,
   "deflection": 0.70,
-  "shrapnel_spread": 1.8,
-  "shrapnel_count": 64,
-  "buoyancy_factor": 0.10,
+  "shrapnel_spread": 3.2,
+  "shrapnel_count": 78,
+  "buoyancy_factor": 0.12,
   "torpedo_speed": 0.67,
-  "torpedo_spread": 4.0
+  "torpedo_spread": 5.0
 }

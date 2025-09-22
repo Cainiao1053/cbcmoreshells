@@ -32,7 +32,9 @@ public abstract class ShellessFuzedBigCannonProjectile extends AbstractBigCannon
 		super(type, level);
 	}
 
-	public void setFuze(ItemStack stack) { this.fuze = stack == null || stack.isEmpty() ? ItemStack.EMPTY : stack; }
+	public void setFuze(ItemStack stack) {
+		this.fuze = stack == null || stack.isEmpty() ? ItemStack.EMPTY : stack;
+	}
 
 	@Override
 	public void tick() {

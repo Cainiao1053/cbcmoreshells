@@ -1,6 +1,8 @@
 package com.cainiao1053.cbcmoreshells.datagen.assets;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.ProjectileRackBlock;
+import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.ProjectileRackBlockItem;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.TorpedoTubeBlock;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.TorpedoTubeBlockItem;
 
@@ -154,6 +156,33 @@ public class CBCMSBuilderTransformers {
 				.texture("breechblock_side", breechblockSideLoc)
 				.texture("breechblock_bottom", breechblockBottomLoc))
 			.build();
+	}
+
+	public static <T extends Block & ProjectileRackBlock, P> NonNullUnaryOperator<BlockBuilder<T, P>> projectileRackSlidingBreech(String pathAndMaterial) {
+		ResourceLocation itemBaseLoc = Cbcmoreshells.resource("block/projectile_rack_sliding_breech_item");
+		ResourceLocation holeLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_hole");
+		ResourceLocation sideLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_side");
+		ResourceLocation sideHoleLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_side_hole");
+		ResourceLocation insideLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_inside");
+		ResourceLocation breechblockTopLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_breechblock_top");
+		ResourceLocation breechblockEndLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_breechblock_end");
+		ResourceLocation breechblockSideLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_breechblock_side");
+		ResourceLocation breechblockBottomLoc = Cbcmoreshells.resource("block/" + pathAndMaterial + "_projectile_rack_sliding_breech_breechblock_bottom");
+		return b -> b.properties(p -> p.noOcclusion())
+				.addLayer(() -> RenderType::cutoutMipped)
+				//.blockstate(SlidingBreechBlockGen.create(pathAndMaterial)::generate)
+				.tag(AllBlockTags.SAFE_NBT.tag)
+				.item(ProjectileRackBlockItem::new)
+				.model((c, p) -> p.getBuilder(c.getName()).parent(p.getExistingFile(itemBaseLoc))
+						.texture("hole", holeLoc)
+						.texture("side", sideLoc)
+						.texture("side_hole", sideHoleLoc)
+						.texture("inside", insideLoc)
+						.texture("breechblock_top", breechblockTopLoc)
+						.texture("breechblock_end", breechblockEndLoc)
+						.texture("breechblock_side", breechblockSideLoc)
+						.texture("breechblock_bottom", breechblockBottomLoc))
+				.build();
 	}
 
 

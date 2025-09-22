@@ -8,7 +8,7 @@ plugins {
     id 'org.spongepowered.mixin' version '0.7.+'
 }
 
-version = '0.0.18'
+version = mod_version
 group = 'com.cainiao1053.cbcmoreshells' // http://maven.apache.org/guides/mini/guide-naming-conventions.html
 archivesBaseName = 'cbcmoreshells'
 
@@ -141,6 +141,12 @@ repositories {
         url = 'https://maven.tterrag.com/'
     }
 
+    maven {
+        name = 'Kotlin for Forge'
+        url = 'https://thedarkcolour.github.io/KotlinForForge/'
+    }
+
+
 
     maven { url 'https://maven.valkyrienskies.org/' }
 
@@ -199,6 +205,16 @@ dependencies {
     implementation fg.deobf("com.tterrag.registrate:Registrate:${registrate_version}")
 
     implementation fg.deobf("curse.maven:createbigcannons-646668:6064368")
+
+    implementation fg.deobf("org.valkyrienskies:valkyrienskies-120-forge:${vs2_version}") { transitive = false }
+
+    compileOnly ("org.valkyrienskies.core:api:${vs_core_version}")
+    compileOnly ("org.valkyrienskies.core:api-game:${vs_core_version}")
+    compileOnly ("org.valkyrienskies.core:util:${vs_core_version}")
+    compileOnly ("org.valkyrienskies.core:impl:${vs_core_version}")
+
+    implementation "com.fasterxml.jackson.core:jackson-annotations:2.13.3"
+    implementation "thedarkcolour:kotlinforforge:$forge_kotlin_version"
 
     //implementation files('libs/createbigcannons-5.8.3-dev+mc.1.20.1-forge.jar')
 

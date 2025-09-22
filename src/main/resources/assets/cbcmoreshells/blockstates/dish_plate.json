@@ -1,0 +1,20 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cbcmoreshells:block/dish_plate",
+      "y": 0
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/dish_plate",
+      "y": 270
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/dish_plate",
+      "y": 90
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/dish_plate",
+      "y": 180
+    }
+  }
+}

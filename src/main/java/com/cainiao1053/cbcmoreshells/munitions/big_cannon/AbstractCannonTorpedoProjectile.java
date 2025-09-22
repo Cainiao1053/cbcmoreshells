@@ -8,8 +8,12 @@ import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.TorpedoProjecti
 import com.mojang.math.Constants;
 
 import com.simibubi.create.content.kinetics.fan.AirFlowParticleData;
+import net.minecraft.client.particle.BubbleParticle;
+import net.minecraft.client.particle.BubblePopParticle;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleOptions;
+import net.minecraft.core.particles.ParticleTypes;
+import net.minecraft.core.particles.SimpleParticleType;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.nbt.Tag;
 import net.minecraft.network.syncher.EntityDataAccessor;
@@ -36,6 +40,7 @@ import rbasamoyai.createbigcannons.block_armor_properties.BlockArmorPropertiesPr
 import rbasamoyai.createbigcannons.config.CBCCfgMunitions;
 import rbasamoyai.createbigcannons.config.CBCConfigs;
 import rbasamoyai.createbigcannons.effects.particles.smoke.TrailSmokeParticleData;
+import rbasamoyai.createbigcannons.effects.particles.splashes.SplashSprayParticleData;
 import rbasamoyai.createbigcannons.index.CBCDamageTypes;
 import rbasamoyai.createbigcannons.index.CBCSoundEvents;
 import rbasamoyai.createbigcannons.multiloader.EnvExecute;
@@ -73,31 +78,27 @@ public abstract class AbstractCannonTorpedoProjectile extends AbstractCannonProj
 		if (this.level().isClientSide || this.level().hasChunk(cpos.x, cpos.z)) {
 			Vec3 oldPos = this.position();
 			super.tick();
-			if (!this.isInGround()) {
-				TrailType trailType = TrailType.NONE;
-				if (trailType != TrailType.NONE) {
-					int lifetime = trailType == TrailType.SHORT ? 100 : 280 + this.level().random.nextInt(50);
-					ParticleOptions options = new TrailSmokeParticleData(lifetime);
-					//ParticleOptions options = new AirFlowParticleData();
-					for (int i = 0; i < 10; ++i) {
-						double partial = i * 0.1f;
-						double dx = Mth.lerp(partial, this.xOld, this.getX());
-						double dy = Mth.lerp(partial, this.yOld, this.getY());
-						double dz = Mth.lerp(partial, this.zOld, this.getZ());
-						double sx = this.level().random.nextDouble() * 0.004d - 0.002d;
-						double sy = this.level().random.nextDouble() * 0.004d - 0.002d;
-						double sz = this.level().random.nextDouble() * 0.004d - 0.002d;
-						this.level().addAlwaysVisibleParticle(options, true, dx, dy, dz, sx, sy, sz);
-					}
-				}
-				Vec3 newPos = this.position();
-				if (this.level().isClientSide && this.localSoundCooldown == 0) {
-					Vec3 displacement = newPos.subtract(oldPos);
-					double dispLen = displacement.length();
-					Vec3 originPos = newPos.subtract(displacement.scale(0.5));
-					double radius = Math.min(200, dispLen * 30);
-				}
-			}
+//			if (!this.isInGround() && this.isInWater()) {
+//				ParticleOptions options = new SplashSprayParticleData(0.92f,0.97f,1f,0.2f,2,20);
+//					//ParticleOptions options = new AirFlowParticleData();
+//					for (int i = 0; i < 5; ++i) {
+//						double partial = i * 0.1f;
+//						double dx = Mth.lerp(partial, this.xOld, this.getX());
+//						double dy = Mth.lerp(partial, this.yOld, this.getY())+0.5;
+//						double dz = Mth.lerp(partial, this.zOld, this.getZ());
+//						double sx = this.level().random.nextDouble() * 0.004d - 0.002d;
+//						double sy = this.level().random.nextDouble() * 0.004d - 0.002d;
+//						double sz = this.level().random.nextDouble() * 0.004d - 0.002d;
+//						this.level().addAlwaysVisibleParticle(options, true, dx, dy, dz, sx, sy, sz);
+//					}
+//				Vec3 newPos = this.position();
+//				if (this.level().isClientSide && this.localSoundCooldown == 0) {
+//					Vec3 displacement = newPos.subtract(oldPos);
+//					double dispLen = displacement.length();
+//					Vec3 originPos = newPos.subtract(displacement.scale(0.5));
+//					double radius = Math.min(200, dispLen * 30);
+//				}
+//			}
 		}
 	}
 

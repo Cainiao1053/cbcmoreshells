@@ -66,10 +66,11 @@ public abstract class ShellessInertBigCannonProjectile extends AbstractBigCannon
 			double toughness = BlockArmorPropertiesHandler.getProperties(state).toughness(this.level(),state,blockHitResult.getBlockPos(),true);
 			if(toughness > 11) {
 				Vec3 oldDelta = this.getDeltaMovement();
-				Vec3 location = blockHitResult.getLocation();
+				//Vec3 location = blockHitResult.getLocation();
+				Vec3 location = new Vec3(this.getX(), this.getY(), this.getZ());
 				int shrapnelCount = (int) (toughness / 5) + 2;
 				CBCProjectileBurst.spawnConeBurst(this.level(), CBCEntityTypes.SHRAPNEL_BURST.get(), location,
-						oldDelta, shrapnelCount, 1.5);
+						oldDelta, shrapnelCount, 0.7);
 			}
 		}
 		return result;

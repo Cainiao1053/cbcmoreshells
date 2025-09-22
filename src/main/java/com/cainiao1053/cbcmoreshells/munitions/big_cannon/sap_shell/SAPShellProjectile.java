@@ -2,6 +2,9 @@ package com.cainiao1053.cbcmoreshells.munitions.big_cannon.sap_shell;
 
 import javax.annotation.Nonnull;
 
+import com.cainiao1053.cbcmoreshells.index.CBCMSMunitionPropertiesHandlers;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.ShellessFuzedBigCannonProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.BigCannonShellessShellProperties;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Position;
 import net.minecraft.world.entity.EntityType;
@@ -21,12 +24,13 @@ import rbasamoyai.createbigcannons.munitions.config.components.EntityDamagePrope
 
 import com.cainiao1053.cbcmoreshells.CBCMSBlocks;
 
-public class SAPShellProjectile extends FuzedBigCannonProjectile {
+public class SAPShellProjectile extends ShellessFuzedBigCannonProjectile {
 
 	public SAPShellProjectile(EntityType<? extends SAPShellProjectile> type, Level level) {
 		super(type, level);
 	}
 
+	protected int lifetime = this.getAllProperties().lifetime();
 
 	protected void detonate(Position position) {
 		ShellExplosion explosion = new ShellExplosion(this.level(), this, this.indirectArtilleryFire(false), position.x(),
@@ -50,6 +54,13 @@ public class SAPShellProjectile extends FuzedBigCannonProjectile {
 		return this.getAllProperties().bigCannonProperties();
 	}
 
+	@Override
+	public void setChargePower(float power) {
+		float maxCharges = this.getAllProperties().maxCharges();
+		this.tooManyCharges = maxCharges >= 0 && power > maxCharges;
+		setLifetime(lifetime);
+	}
+
 	@Nonnull
 	public EntityDamagePropertiesComponent getDamageProperties() {
 		return this.getAllProperties().damage();
@@ -60,8 +71,8 @@ public class SAPShellProjectile extends FuzedBigCannonProjectile {
 		return this.getAllProperties().ballistics();
 	}
 
-	protected BigCannonCommonShellProperties getAllProperties() {
-		return CBCMunitionPropertiesHandlers.COMMON_SHELL_BIG_CANNON_PROJECTILE.getPropertiesOf(this);
+	protected BigCannonShellessShellProperties getAllProperties() {
+		return CBCMSMunitionPropertiesHandlers.SHELLESS_SHELL_BIG_CANNON_PROJECTILE.getPropertiesOf(this);
 	}
 
 

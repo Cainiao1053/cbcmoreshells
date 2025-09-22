@@ -1,0 +1,29 @@
+{
+  "rocket_launch": {
+    "sounds": [
+      {
+        "type": "file",
+        "name": "cbcmoreshells:rocket_launch"
+      }
+    ],
+    "subtitle": "cbcmoreshells.subtitle.rocket_launch"
+  },
+    "sonar_pulse": {
+    "sounds": [
+      {
+        "type": "file",
+        "name": "cbcmoreshells:sonar_pulse"
+      }
+    ],
+    "subtitle": "cbcmoreshells.subtitle.sonar_pulse"
+  },
+      "servicebell": {
+    "sounds": [
+      {
+        "type": "file",
+        "name": "cbcmoreshells:servicebell"
+      }
+    ],
+    "subtitle": "cbcmoreshells.subtitle.servicebell"
+  }
+}

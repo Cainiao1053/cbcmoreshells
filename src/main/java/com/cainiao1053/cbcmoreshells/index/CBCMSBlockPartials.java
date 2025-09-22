@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.material.ProjectileRackMaterial;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.material.TorpedoTubeMaterial;
 import com.jozufozu.flywheel.core.PartialModel;
 
@@ -20,6 +21,7 @@ public class CBCMSBlockPartials {
 
 	private static final Map<TorpedoTubeMaterial, PartialModel> BREECHBLOCK_BY_MATERIAL = new HashMap<>();
 	private static final Map<TorpedoTubeMaterial, PartialModel> SCREW_LOCK_BY_MATERIAL = new HashMap<>();
+	private static final Map<ProjectileRackMaterial, PartialModel> PROJECTILE_LOCK_BY_MATERIAL = new HashMap<>();
 
 
 
@@ -32,10 +34,8 @@ public class CBCMSBlockPartials {
 
 		QUICKFIRING_BREECH_LEVER = block("quickfiring_breech_lever"),
 
-
-
-
-		GAS_MASK = block("gas_mask");
+	    STEEL_PROJECTILE_RACK_SLIDING_BREECHBLOCK = projectileLockBlockPartial(CBCMSProjectileRackMaterials.STEEL, "steel_projectile_rack_sliding_breechblock")
+	;
 
 
 	private static PartialModel block(String path) {
@@ -55,6 +55,20 @@ public class CBCMSBlockPartials {
 
 	public static PartialModel breechblockFor(TorpedoTubeMaterial material) {
 		return BREECHBLOCK_BY_MATERIAL.getOrDefault(material, STEEL_TORPEDO_SLIDING_BREECHBLOCK);
+	}
+
+	private static PartialModel projectileLockBlockPartial(ProjectileRackMaterial material, String path) {
+		return projectileLockBlockPartial(material, Cbcmoreshells.resource("item/" + path));
+	}
+
+	public static PartialModel projectileLockBlockPartial(ProjectileRackMaterial material, ResourceLocation loc) {
+		PartialModel model = new PartialModel(loc);
+		PROJECTILE_LOCK_BY_MATERIAL.put(material, model);
+		return model;
+	}
+
+	public static PartialModel projectileLockBlockFor(ProjectileRackMaterial material) {
+		return PROJECTILE_LOCK_BY_MATERIAL.getOrDefault(material, STEEL_PROJECTILE_RACK_SLIDING_BREECHBLOCK);
 	}
 
 

@@ -10,9 +10,10 @@ import net.minecraftforge.registries.ForgeRegistries;
 import com.cainiao1053.cbcmoreshells.client.render.*;
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
 
-@Mod.EventBusSubscriber(modid = Cbcmoreshells.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
+//@Mod.EventBusSubscriber(modid = Cbcmoreshells.MODID, value = Dist.CLIENT, bus = Mod.EventBusSubscriber.Bus.MOD)
 public class CbcmoreshellsClient {
 
+    public static final DynamicOutliner CLIENT_LERPED_OUTLINER = new DynamicOutliner();
 //	@SubscribeEvent
 //	public static void onClientSetup(FMLClientSetupEvent event) {
 //		event.enqueueWork(() -> {
@@ -30,4 +31,7 @@ public class CbcmoreshellsClient {
 //			}
 //		});
 //	}
+
+    public static void clientInit(){}
+
 }

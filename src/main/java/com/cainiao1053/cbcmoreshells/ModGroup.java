@@ -38,13 +38,13 @@ public class ModGroup {
 				CBCMSBlocks.MEDIUM_RANGE_TORPEDO.asStack(),
 				CBCMSBlocks.MEDIUM_RANGE_DEEPWATER_TORPEDO.asStack(),
 				CBCMSBlocks.HIGHSPEED_TORPEDO.asStack(),
-				CBCMSBlocks.AIRDROPPED_TORPEDO.asStack(),
 				CBCMSBlocks.LONG_RANGE_TORPEDO.asStack(),
 				CBCMSBlocks.APFSDS_SHOT.asStack(),
 				CBCMSBlocks.ANTIAIR_HE_SHELL.asStack(),
+				CBCMSBlocks.ANTIAIR_SHRAPNEL_SHELL.asStack(),
 				CBCMSBlocks.SHARPNEL_TORPEDO.asStack(),
-				CBCMSBlocks.AIRDROPPED_SHRAPNEL_TORPEDO.asStack(),
 				CBCMSBlocks.DEEPWATER_SHRAPNEL_TORPEDO.asStack(),
+				CBCMSBlocks.LONG_RANGE_SHRAPNEL_TORPEDO.asStack(),
 				CBCMSBlocks.APBC_SHOT.asStack(),
 				CBCMSBlocks.AP_SUPER_HEAVY_SHOT.asStack(),
 				CBCMSBlocks.BAKED_APFSDS_SHOT.asStack(),
@@ -53,8 +53,19 @@ public class ModGroup {
 				CBCMSBlocks.SHELLESS_INCENDIARY_HE_SHELL.asStack(),
 				CBCMSBlocks.MEDIUM_RANGE_TORPEDO_TYPEB.asStack(),
 				CBCMSBlocks.MEDIUM_RANGE_DEEPWATER_TORPEDO_TYPEB.asStack(),
-
-
+				CBCMSBlocks.HE_BOMB.asStack(),
+				CBCMSBlocks.APHE_BOMB.asStack(),
+				CBCMSBlocks.HE_BOUNCING_BOMB.asStack(),
+				CBCMSBlocks.APHE_BOUNCING_BOMB.asStack(),
+				CBCMSBlocks.RACKED_TORPEDO.asStack(),
+				CBCMSBlocks.HE_ROCKET.asStack(),
+				CBCMSBlocks.APHE_ROCKET.asStack(),
+				CBCMSBlocks.DUAL_HE_ROCKET.asStack(),
+				CBCMSBlocks.DUAL_APHE_ROCKET.asStack(),
+				CBCMSBlocks.DEPTH_CHARGE.asStack(),
+				CBCMSItems.ROCKET_BRACKET.asStack(),
+				CBCMSItems.ANTIAIR_MACHINE_GUN_ROUND.asStack(),
+				CBCMSItems.SHIP_PROXIMITY_FUZE.asStack(),
 
 
 
@@ -63,6 +74,15 @@ public class ModGroup {
 				CBCMSBlocks.STEEL_TORPEDO_BARREL.asStack(),
 				CBCMSBlocks.NETHERSTEEL_SLIDING_BREECH.asStack(),
 				CBCMSBlocks.NETHERSTEEL_QUICKFIRING_BREECH.asStack(),
+				CBCMSBlocks.STEEL_PROJECTILE_RACK_QUICKFIRING_BREECH.asStack(),
+				CBCMSBlocks.STEEL_PROJECTILE_RACK_CHAMBER.asStack(),
+
+				CBCMSBlocks.TORPEDO_DETECTION_DEVICE.asStack(),
+				CBCMSBlocks.AMMO_RACK.asStack(),
+				CBCMSBlocks.STEEL_AMMO_RACK.asStack(),
+				CBCMSBlocks.LANDING_INDICATOR.asStack(),
+				CBCMSBlocks.DISH_PLATE.asStack(),
+				CBCMSBlocks.ROUND_DISH_PLATE.asStack(),
 
 				CBCMSBlocks.ANTIBLAST_COPYCAT_PANEL.asStack()
 			));

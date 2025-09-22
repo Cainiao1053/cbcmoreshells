@@ -5,10 +5,14 @@ import static com.cainiao1053.cbcmoreshells.Cbcmoreshells.REGISTRATE;
 import java.util.function.Consumer;
 
 import com.cainiao1053.cbcmoreshells.index.CBCMSMunitionPropertiesHandlers;
+import com.cainiao1053.cbcmoreshells.munitions.autocannon.bullet.AntiairMachineGunProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.AbstractCannonTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.airdropped_shrapnel_torpedo.AirdroppedShrapnelTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.airdropped_torpedo.AirdroppedTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.antiair_he_shell.AntiairHEShellProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.antiair_shrapnel_shell.AntiairShrapnelBurst;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.antiair_shrapnel_shell.AntiairShrapnelBurstRenderer;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.antiair_shrapnel_shell.AntiairShrapnelShellProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.ap_super_heavy.APSuperHeavyShotProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.apbc_shot.APBCShotProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.apfsds_shot.APFSDSShotProjectile;
@@ -21,6 +25,7 @@ import com.cainiao1053.cbcmoreshells.munitions.big_cannon.hesh_shell.HESHShellPr
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.highspeed_torpedo.HighspeedTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.incendiary_he_shell.IncendiaryHEShellProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.inferior_he_shell.InferiorHEShellProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.big_cannon.long_range_shrapnel_torpedo.LongRangeShrapnelTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.long_range_torpedo.LongRangeTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.medium_range_deepwater_torpedo.MediumRangeDeepwaterTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.medium_range_deepwater_torpedo_typeb.MediumRangeDeepwaterTorpedoTypeBProjectile;
@@ -34,6 +39,18 @@ import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shelless_incendiary_he
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shelless_sap_shell.ShellessSAPShellProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shellless_ap_shot.ShellessAPShotProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.CannonTorpedoProjectileRenderer;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.AbstractRackedProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.RackedProjectileRenderer;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.aphe_bomb.APHEBombProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.aphe_bouncing_bomb.APHEBouncingBombProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.aphe_rocket.APHERocketProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.depth_charge.DepthChargeProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.dual_aphe_rocket.DualAPHERocketProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.dual_he_rocket.DualHERocketProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.he_bomb.HEBombProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.he_bouncing_bomb.HEBouncingBombProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.he_rocket.HERocketProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.racked_torpedo.RackedTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.torpedo_tube.medium_range_torpedo.MediumRangeTorpedoProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.baguette_shot.BaguetteShotProjectile;
 
@@ -48,6 +65,8 @@ import net.minecraft.world.entity.EntityType.EntityFactory;
 import net.minecraft.world.entity.MobCategory;
 import rbasamoyai.createbigcannons.index.CBCMunitionPropertiesHandlers;
 import rbasamoyai.createbigcannons.multiloader.EntityTypeConfigurator;
+import rbasamoyai.createbigcannons.munitions.autocannon.AbstractAutocannonProjectile;
+import rbasamoyai.createbigcannons.munitions.autocannon.AutocannonProjectileRenderer;
 import rbasamoyai.createbigcannons.munitions.big_cannon.AbstractBigCannonProjectile;
 import rbasamoyai.createbigcannons.munitions.big_cannon.BigCannonProjectileRenderer;
 import rbasamoyai.createbigcannons.munitions.big_cannon.ap_shot.APShotProjectile;
@@ -61,7 +80,7 @@ public class CBCMSEntityTypes {
 
 
 	public static final EntityEntry<InferiorHEShellProjectile> Inferior_HE_SHELL = cannonProjectile("inferior_he_shell", InferiorHEShellProjectile::new, "Inferior High Explosive Shell", CBCMunitionPropertiesHandlers.COMMON_SHELL_BIG_CANNON_PROJECTILE);
-	public static final EntityEntry<SAPShellProjectile> SAP_SHELL = cannonProjectile("sap_shell", SAPShellProjectile::new, "SAP Shell", CBCMunitionPropertiesHandlers.COMMON_SHELL_BIG_CANNON_PROJECTILE);
+	public static final EntityEntry<SAPShellProjectile> SAP_SHELL = cannonProjectile("sap_shell", SAPShellProjectile::new, "SAP Shell", CBCMSMunitionPropertiesHandlers.SHELLESS_SHELL_BIG_CANNON_PROJECTILE);
 	public static final EntityEntry<HESHShellProjectile> HESH_SHELL = cannonProjectile("hesh_shell", HESHShellProjectile::new, "HESH Shell", CBCMunitionPropertiesHandlers.COMMON_SHELL_BIG_CANNON_PROJECTILE);
 	public static final EntityEntry<ShellessHEShellProjectile> SHELLESS_HE_SHELL = cannonProjectile("shelless_he_shell", ShellessHEShellProjectile::new, "Shelless HE Shell", CBCMSMunitionPropertiesHandlers.SHELLESS_SHELL_BIG_CANNON_PROJECTILE);
 	public static final EntityEntry<APHECannonRocketProjectile> APHE_CANNON_ROCKET = cannonProjectile("aphe_cannon_rocket", APHECannonRocketProjectile::new, "APHE Cannon Rocket", CBCMSMunitionPropertiesHandlers.SHELLESS_SHELL_BIG_CANNON_PROJECTILE);
@@ -74,6 +93,7 @@ public class CBCMSEntityTypes {
 	public static final EntityEntry<BaguetteShotProjectile> BAGUETTE_SHOT = cannonProjectile("baguette_shot",BaguetteShotProjectile::new, "Baguette Shot",CBCMSMunitionPropertiesHandlers.SHELLESS_INERT_BIG_CANNON_PROJECTILE);
 	public static final EntityEntry<IncendiaryHEShellProjectile> INCENDIARY_HE_SHELL = cannonProjectile("incendiary_he_shell", IncendiaryHEShellProjectile::new, "Incendiary HE Shell", CBCMSMunitionPropertiesHandlers.INCENDIARY_SHELL_PROJECTILE);
 	public static final EntityEntry<ShellessIncendiaryHEShellProjectile> SHELLESS_INCENDIARY_HE_SHELL = cannonProjectile("shelless_incendiary_he_shell", ShellessIncendiaryHEShellProjectile::new, "Shelless Incendiary HE Shell", CBCMSMunitionPropertiesHandlers.INCENDIARY_SHELL_PROJECTILE);
+	public static final EntityEntry<AntiairShrapnelShellProjectile> ANTIAIR_SHRAPNEL_SHELL = cannonProjectile("antiair_shrapnel_shell", AntiairShrapnelShellProjectile::new, "Antiair Shrapnel Shell", CBCMSMunitionPropertiesHandlers.SHRAPNEL_SHELLESS_BIG_CANNON_PROJECTILE);
 
 
 	public static final EntityEntry<CannonTorpedoProjectile> CANNON_TORPEDO = torpedoProjectile("cannon_torpedo", CannonTorpedoProjectile::new, "Cannon Torpedo", CBCMSMunitionPropertiesHandlers.TORPEDO_PROJECTILE);
@@ -89,9 +109,20 @@ public class CBCMSEntityTypes {
 	public static final EntityEntry<MediumRangeTorpedoTypeBProjectile> MEDIUM_RANGE_TORPEDO_TYPEB = torpedoProjectile("medium_range_torpedo_typeb", MediumRangeTorpedoTypeBProjectile::new, "Medium Range Torpedo Type B", CBCMSMunitionPropertiesHandlers.TORPEDO_PROJECTILE);
 	public static final EntityEntry<MediumRangeDeepwaterTorpedoTypeBProjectile> MEDIUM_RANGE_DEEPWATER_TORPEDO_TYPEB = torpedoProjectile("medium_range_deepwater_torpedo_typeb", MediumRangeDeepwaterTorpedoTypeBProjectile::new, "Medium Range Deepwater Torpedo Type B", CBCMSMunitionPropertiesHandlers.TORPEDO_PROJECTILE);
 	public static final EntityEntry<DeepwaterShrapnelTorpedoProjectile> DEEPWATER_SHRAPNEL_TORPEDO = torpedoProjectile("deepwater_shrapnel_torpedo", DeepwaterShrapnelTorpedoProjectile::new, "Deepwater Shrapnel Torpedo", CBCMSMunitionPropertiesHandlers.SHRAPNEL_TORPEDO_PROJECTILE);
+	public static final EntityEntry<LongRangeShrapnelTorpedoProjectile> LONG_RANGE_SHRAPNEL_TORPEDO = torpedoProjectile("long_range_shrapnel_torpedo", LongRangeShrapnelTorpedoProjectile::new, "Long Range Shrapnel Torpedo", CBCMSMunitionPropertiesHandlers.SHRAPNEL_TORPEDO_PROJECTILE);
 
+	public static final EntityEntry<HEBombProjectile> HE_BOMB = rackedProjectile("he_bomb", HEBombProjectile::new, "HE Bomb", CBCMSMunitionPropertiesHandlers.RACKED_PROJECTILE);
+	public static final EntityEntry<HEBouncingBombProjectile> HE_BOUNCING_BOMB = rackedProjectile("he_bouncing_bomb", HEBouncingBombProjectile::new, "HE Bouncing Bomb", CBCMSMunitionPropertiesHandlers.RACKED_PROJECTILE);
+	public static final EntityEntry<RackedTorpedoProjectile> RACKED_TORPEDO = rackedProjectile("racked_torpedo", RackedTorpedoProjectile::new, "Racked Torpedo", CBCMSMunitionPropertiesHandlers.RACKED_TORPEDO);
+	public static final EntityEntry<HERocketProjectile> HE_ROCKET = rackedProjectile("he_rocket", HERocketProjectile::new, "HE Rocket", CBCMSMunitionPropertiesHandlers.RACKED_ROCKET);
+	public static final EntityEntry<APHEBombProjectile> APHE_BOMB = rackedProjectile("aphe_bomb", APHEBombProjectile::new, "APHE Bomb", CBCMSMunitionPropertiesHandlers.RACKED_PROJECTILE);
+	public static final EntityEntry<APHEBouncingBombProjectile> APHE_BOUNCING_BOMB = rackedProjectile("aphe_bouncing_bomb", APHEBouncingBombProjectile::new, "APHE Bouncing Bomb", CBCMSMunitionPropertiesHandlers.RACKED_PROJECTILE);
+	public static final EntityEntry<APHERocketProjectile> APHE_ROCKET = rackedProjectile("aphe_rocket", APHERocketProjectile::new, "APHE Rocket", CBCMSMunitionPropertiesHandlers.RACKED_ROCKET);
+	public static final EntityEntry<DualHERocketProjectile> DUAL_HE_ROCKET = rackedProjectile("dual_he_rocket", DualHERocketProjectile::new, "Dual HE Rocket", CBCMSMunitionPropertiesHandlers.RACKED_ROCKET);
+	public static final EntityEntry<DualAPHERocketProjectile> DUAL_APHE_ROCKET = rackedProjectile("dual_aphe_rocket", DualAPHERocketProjectile::new, "Dual APHE Rocket", CBCMSMunitionPropertiesHandlers.RACKED_ROCKET);
+	public static final EntityEntry<DepthChargeProjectile> DEPTH_CHARGE = rackedProjectile("depth_charge", DepthChargeProjectile::new, "Depth Charge", CBCMSMunitionPropertiesHandlers.RACKED_SHRAPNEL_PROJECTILE);
 
-
+	public static final EntityEntry<AntiairMachineGunProjectile> ANTIAIR_MACHINE_GUN_BULLET = autocannonProjectile("antiair_machine_gun_bullet", AntiairMachineGunProjectile::new, CBCMSMunitionPropertiesHandlers.ANTIAIR_AUTOCANNON);
 
 
 
@@ -99,6 +130,13 @@ public class CBCMSEntityTypes {
 			.entity("torpedo_burst", TorpedoBurst::new, MobCategory.MISC)
 			.properties(shrapnel())
 			.renderer(() -> TorpedoBurstRenderer::new)
+			.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, CBCMunitionPropertiesHandlers.PROJECTILE_BURST))
+			.register();
+
+	public static final EntityEntry<AntiairShrapnelBurst> ANTIAIR_SHRAPNEL_BURST = REGISTRATE
+			.entity("antiair_shrapnel_burst", AntiairShrapnelBurst::new, MobCategory.MISC)
+			.properties(shrapnel())
+			.renderer(() -> AntiairShrapnelBurstRenderer::new)
 			.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, CBCMunitionPropertiesHandlers.PROJECTILE_BURST))
 			.register();
 
@@ -136,6 +174,17 @@ public class CBCMSEntityTypes {
 				.register();
 	}
 
+	private static <T extends AbstractRackedProjectile> EntityEntry<T>
+	rackedProjectile(String id, EntityFactory<T> factory, String enUSdiffLang, PropertiesTypeHandler<EntityType<?>, ?> handler) {
+		return REGISTRATE
+				.entity(id, factory, MobCategory.MISC)
+				.properties(cannonProperties())
+				.renderer(() -> RackedProjectileRenderer::new)
+				.tag(RPLTags.PRECISE_MOTION)
+				.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, handler))
+				.register();
+	}
+
 	private static <T> NonNullConsumer<T> configure(Consumer<EntityTypeConfigurator> cons) {
 		return b -> cons.accept(EntityTypeConfigurator.of(b));
 	}
@@ -146,6 +195,29 @@ public class CBCMSEntityTypes {
 			.updateInterval(1)
 			.updateVelocity(false) // Mixin ServerEntity to not track motion
 			.trackingRange(16));
+	}
+
+	private static <T extends AbstractAutocannonProjectile> EntityEntry<T>
+	autocannonProjectile(String id, EntityFactory<T> factory, PropertiesTypeHandler<EntityType<?>, ?> handler) {
+		return REGISTRATE
+				.entity(id, factory, MobCategory.MISC)
+				.properties(autocannonProperties())
+				.renderer(() -> AutocannonProjectileRenderer::new)
+				.tag(RPLTags.PRECISE_MOTION)
+				.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, handler))
+				.register();
+	}
+
+	private static <T extends AbstractAutocannonProjectile> EntityEntry<T>
+	autocannonProjectile(String id, EntityFactory<T> factory, String enUSdiffLang, PropertiesTypeHandler<EntityType<?>, ?> handler) {
+		return REGISTRATE
+				.entity(id, factory, MobCategory.MISC)
+				.properties(autocannonProperties())
+				.renderer(() -> AutocannonProjectileRenderer::new)
+				.lang(enUSdiffLang)
+				.tag(RPLTags.PRECISE_MOTION)
+				.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, handler))
+				.register();
 	}
 
 	private static <T> NonNullConsumer<T> cannonProperties() {

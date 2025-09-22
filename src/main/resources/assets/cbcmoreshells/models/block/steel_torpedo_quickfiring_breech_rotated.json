@@ -1,6 +1,6 @@
 {
-  "parent": "createbigcannons:block/torpedo_sliding_breech_rotated",
+  "parent": "cbcmoreshells:block/steel_torpedo_quickfiring_breech",
   "textures": {
-    "7": "cbcmoreshells:block/torpedo_sliding_breech/steel_torpedo_sliding_breech_rotated"
+    "0": "cbcmoreshells:block/torpedo_tube"
   }
 }

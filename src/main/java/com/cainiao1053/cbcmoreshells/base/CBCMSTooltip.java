@@ -84,6 +84,117 @@ public class CBCMSTooltip {
 		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI),explosion,String.format("%.0f",100*fireChance),fireRange), palette.primary(), palette.highlight(), 1));
 	}
 
+	public static void appendBombInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+											TooltipFlag flag, float durabilityMass, float penetration, float deflection, float explosion, float lifetime) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI),explosion,String.format("%.0f",lifetime/20)), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendRackedTorpedoInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+									  TooltipFlag flag, float explosion, float lifetime, float buoyancyFactor, float ssVel, float waterDamp) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main",explosion,String.format("%.0f",lifetime/20), buoyancyFactor, String.format("%.1f",ssVel*38.8), waterDamp), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendRackedRocketInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+									  TooltipFlag flag, float durabilityMass, float penetration, float deflection, float explosion, float lifetime, float ssVel, float thrustTime) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip.ballisticInfo";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", durabilityMass,penetration,String.format("%.0f",Math.acos(deflection)*180/Math.PI),explosion,String.format("%.0f",lifetime/20), String.format("%.0f",ssVel*20), String.format("%.0f",thrustTime/20)), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendTorpedoDetectorInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+											  TooltipFlag flag, float activationTime, float cooldown) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = stack.getDescriptionId() + ".tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main", String.format("%.0f",activationTime/20), String.format("%.0f",cooldown/20)), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendAmmoRackInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+												 TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "block.cbcmoreshells.ammo_rack.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendDishPlateInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										  TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "block.cbcmoreshells.dish_plate.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendTorpedoTubeInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										  TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "block.cbcmoreshells.torptube.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendProxyFuzeInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										  TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "item.cbcmoreshells.ship_proximity_fuze.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendLandingIndicatorInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+										  TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "block.cbcmoreshells.landing_indicator.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+	public static void appendProjectileRackInfo(ItemStack stack, @Nullable Level level, List<Component> tooltip,
+											 TooltipFlag flag) {
+		if (!Screen.hasShiftDown()) {
+			return;
+		}
+		TooltipHelper.Palette palette = getPalette(level, stack);
+		String key1 = "block.cbcmoreshells.projrack.tooltip";
+		tooltip.add(Components.translatable(key1).withStyle(ChatFormatting.GRAY));
+		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key1 + ".main"), palette.primary(), palette.highlight(), 1));
+	}
+
+
 	private static Component getNoGogglesMeter(int outOfFive, boolean invertColor, boolean canBeInvalid) {
 		int value = invertColor ? 5 - outOfFive : outOfFive;
 		ChatFormatting color = switch (value) {

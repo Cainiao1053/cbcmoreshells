@@ -14,7 +14,7 @@
   "added_recoil": 1.0,
   "penetration": 1.9,
   "max_charges": 32,
-  "lifetime": 80,
+  "lifetime": 65,
   "toughness": 1.0,
   "deflection": 0.7
 }
