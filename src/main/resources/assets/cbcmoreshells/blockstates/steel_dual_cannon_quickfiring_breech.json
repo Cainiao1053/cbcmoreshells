@@ -1,0 +1,50 @@
+{
+  "variants": {
+    "axis_along_first=false,facing=down": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=east": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 90
+    },
+    "axis_along_first=false,facing=north": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech"
+    },
+    "axis_along_first=false,facing=south": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 180
+    },
+    "axis_along_first=false,facing=up": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=false,facing=west": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 270
+    },
+    "axis_along_first=true,facing=down": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=east": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 90
+    },
+    "axis_along_first=true,facing=north": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech"
+    },
+    "axis_along_first=true,facing=south": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 180
+    },
+    "axis_along_first=true,facing=up": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "x": 90
+    },
+    "axis_along_first=true,facing=west": {
+      "model": "cbcmoreshells:block/steel_dual_cannon_quickfiring_breech",
+      "y": 270
+    }
+  }
+}

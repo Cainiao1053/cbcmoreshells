@@ -1,0 +1,21 @@
+{
+  "type": "minecraft:block",
+  "pools": [
+    {
+      "bonus_rolls": 0.0,
+      "conditions": [
+        {
+          "condition": "minecraft:survives_explosion"
+        }
+      ],
+      "entries": [
+        {
+          "type": "minecraft:item",
+          "name": "cbcmoreshells:tough_steel_dual_cannon_chamber"
+        }
+      ],
+      "rolls": 1.0
+    }
+  ],
+  "random_sequence": "cbcmoreshells:blocks/tough_steel_dual_cannon_chamber"
+}

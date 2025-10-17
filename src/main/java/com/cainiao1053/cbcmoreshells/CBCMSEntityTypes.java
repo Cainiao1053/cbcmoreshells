@@ -39,6 +39,13 @@ import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shelless_incendiary_he
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shelless_sap_shell.ShellessSAPShellProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shellless_ap_shot.ShellessAPShotProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.CannonTorpedoProjectileRenderer;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.AbstractDualCannonProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.DualCannonProjectileRenderer;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_ap_shot.ExtendedAPShotProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_ap_shell.NormalAPShellProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_ap_shot.NormalAPShotProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_he_shell.NormalHEShellProjectile;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_sap_shell.NormalSAPShellProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.AbstractRackedProjectile;
 import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.RackedProjectileRenderer;
 import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.aphe_bomb.APHEBombProjectile;
@@ -122,6 +129,13 @@ public class CBCMSEntityTypes {
 	public static final EntityEntry<DualAPHERocketProjectile> DUAL_APHE_ROCKET = rackedProjectile("dual_aphe_rocket", DualAPHERocketProjectile::new, "Dual APHE Rocket", CBCMSMunitionPropertiesHandlers.RACKED_ROCKET);
 	public static final EntityEntry<DepthChargeProjectile> DEPTH_CHARGE = rackedProjectile("depth_charge", DepthChargeProjectile::new, "Depth Charge", CBCMSMunitionPropertiesHandlers.RACKED_SHRAPNEL_PROJECTILE);
 
+	public static final EntityEntry<NormalAPShotProjectile> NORMAL_AP_SHOT = dualCannonProjectile("normal_ap_shot", NormalAPShotProjectile::new, "Normal AP Shot", CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES);
+	public static final EntityEntry<NormalHEShellProjectile> NORMAL_HE_SHELL = dualCannonProjectile("normal_he_shell", NormalHEShellProjectile::new, "Normal HE Shell", CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES);
+	public static final EntityEntry<NormalSAPShellProjectile> NORMAL_SAP_SHELL = dualCannonProjectile("normal_sap_shell", NormalSAPShellProjectile::new, "Normal SAP Shell", CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES);
+	public static final EntityEntry<NormalAPShellProjectile> NORMAL_AP_SHELL = dualCannonProjectile("normal_ap_shell", NormalAPShellProjectile::new, "Normal AP Shell", CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES);
+	public static final EntityEntry<ExtendedAPShotProjectile> EXTENDED_AP_SHOT = dualCannonProjectile("extended_ap_shot", ExtendedAPShotProjectile::new, "Extended AP Shot", CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES);
+
+
 	public static final EntityEntry<AntiairMachineGunProjectile> ANTIAIR_MACHINE_GUN_BULLET = autocannonProjectile("antiair_machine_gun_bullet", AntiairMachineGunProjectile::new, CBCMSMunitionPropertiesHandlers.ANTIAIR_AUTOCANNON);
 
 
@@ -180,6 +194,17 @@ public class CBCMSEntityTypes {
 				.entity(id, factory, MobCategory.MISC)
 				.properties(cannonProperties())
 				.renderer(() -> RackedProjectileRenderer::new)
+				.tag(RPLTags.PRECISE_MOTION)
+				.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, handler))
+				.register();
+	}
+
+	private static <T extends AbstractDualCannonProjectile> EntityEntry<T>
+	dualCannonProjectile(String id, EntityFactory<T> factory, String enUSdiffLang, PropertiesTypeHandler<EntityType<?>, ?> handler) {
+		return REGISTRATE
+				.entity(id, factory, MobCategory.MISC)
+				.properties(cannonProperties())
+				.renderer(() -> DualCannonProjectileRenderer::new)
 				.tag(RPLTags.PRECISE_MOTION)
 				.onRegister(type -> MunitionPropertiesHandler.registerProjectileHandler(type, handler))
 				.register();

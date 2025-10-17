@@ -43,11 +43,14 @@ public class CBCMSClientEvents {
         float partialTicks = AnimationTickHolder.getPartialTicks();
         Vec3 camera = Minecraft.getInstance().gameRenderer.getMainCamera()
                 .getPosition();
+        RenderSystem.disableDepthTest();
 
         CbcmoreshellsClient.CLIENT_LERPED_OUTLINER.renderOutlines(ms, buffer, camera, partialTicks);
 
+        RenderSystem.enableDepthTest();
         buffer.draw();
-        RenderSystem.enableCull();
+        //RenderSystem.enableCull();
+        RenderSystem.disableCull();
         ms.popPose();
 
     }

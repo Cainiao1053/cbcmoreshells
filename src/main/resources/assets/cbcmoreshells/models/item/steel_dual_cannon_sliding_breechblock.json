@@ -1,0 +1,9 @@
+{
+  "parent": "cbcmoreshells:item/dual_cannon_sliding_breechblock",
+  "textures": {
+		"side": "cbcmoreshells:block/dual_cannon/steel_dual_cannon_breechblock_side",
+		"front": "cbcmoreshells:block/dual_cannon/steel_dual_cannon_breechblock_front",
+    "top": "cbcmoreshells:block/dual_cannon/steel_dual_cannon_breechblock_top",
+    "back": "cbcmoreshells:block/dual_cannon/steel_dual_cannon_breechblock_fback"
+  }
+}

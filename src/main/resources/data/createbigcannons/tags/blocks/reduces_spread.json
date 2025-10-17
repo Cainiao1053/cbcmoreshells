@@ -1,0 +1,29 @@
+{
+  "replace": false,
+  "values": [
+    "cbcmoreshells:steel_dual_cannon_barrel",
+    "cbcmoreshells:steel_dual_cannon_chamber",
+    "cbcmoreshells:wide_steel_dual_cannon_barrel",
+    "cbcmoreshells:wide_steel_dual_cannon_chamber",
+    "cbcmoreshells:cast_iron_dual_cannon_barrel",
+    "cbcmoreshells:cast_iron_dual_cannon_chamber",
+    "cbcmoreshells:brass_dual_cannon_barrel",
+    "cbcmoreshells:brass_dual_cannon_chamber",
+    "cbcmoreshells:bronze_dual_cannon_barrel",
+    "cbcmoreshells:bronze_dual_cannon_chamber",
+    "cbcmoreshells:tough_steel_dual_cannon_barrel",
+    "cbcmoreshells:tough_steel_dual_cannon_chamber",
+    "cbcmoreshells:nether_steel_dual_cannon_barrel",
+    "cbcmoreshells:nether_steel_dual_cannon_chamber",
+    "cbcmoreshells:rosequartz_brass_dual_cannon_barrel",
+    "cbcmoreshells:rosequartz_brass_dual_cannon_chamber",
+    "cbcmoreshells:wide_tough_steel_dual_cannon_barrel",
+    "cbcmoreshells:wide_tough_steel_dual_cannon_chamber",
+    "cbcmoreshells:wide_brass_dual_cannon_barrel",
+    "cbcmoreshells:wide_brass_dual_cannon_chamber",
+    "cbcmoreshells:wide_rosequartz_brass_dual_cannon_barrel",
+    "cbcmoreshells:wide_rosequartz_brass_dual_cannon_chamber",
+    "cbcmoreshells:wide_nether_steel_dual_cannon_barrel",
+    "cbcmoreshells:wide_nether_steel_dual_cannon_chamber"
+  ]
+}

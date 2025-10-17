@@ -5,7 +5,7 @@
   "ignores_invulnerability": true,
   "ignores_entity_armor": true,
   "gravity": -0.05,
-  "drag": 0.11,
+  "drag": 0.18,
   "quadratic_drag": false,
   "knockback": 2,
   "added_charge_power": 3,
@@ -16,10 +16,10 @@
   "explosive_power": 2.5,
   "max_charges": 10,
   "penetration": 2.5,
-  "lifetime": 294,
+  "lifetime": 330,
   "toughness": 1,
   "deflection": 0.70,
-  "buoyancy_factor": 0.15,
-  "torpedo_speed": 0.85,
+  "buoyancy_factor": 0.18,
+  "torpedo_speed": 0.91,
   "torpedo_spread": 4.5
 }

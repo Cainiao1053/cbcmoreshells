@@ -117,21 +117,41 @@ public abstract class AbstractCannonTorpedoProjectile extends AbstractCannonProj
 
 	//Redo Start
 
+//	@Override
+//	protected Vec3 getForces(Vec3 position, Vec3 velocity) {
+//		Vec3 parentForces = Vec3.ZERO;
+//		double gravityForce = this.getGravity();
+//		double dampForce = this.getDragForce();
+//		return parentForces.add(0.0d, gravityForce - dampForce, 0.0d);
+//	}
+
 	@Override
 	protected Vec3 getForces(Vec3 position, Vec3 velocity) {
-		Vec3 parentForces = Vec3.ZERO;
-		double gravityForce = this.getGravity();
-		double dampForce = this.getDragForce();
-		return parentForces.add(0.0d, gravityForce - dampForce, 0.0d);
+		return velocity.normalize().scale(-this.getDragForce()).add((double)0.0F, this.getGravity(), (double)0.0F);
 	}
+
+//	@Override
+//	protected double getGravity() {
+//		FluidState fluidState = this.level().getFluidState(this.blockPosition());
+//		double gForce = this.getBallisticProperties().gravity();
+//		if (!fluidState.isEmpty()){
+//			gForce *= -getBuoyancyFactor();
+//		}
+//		return gForce;
+//	}
 
 	@Override
 	protected double getGravity() {
+		double vel = this.getDeltaMovement().y;
+		double damp = getBallisticProperties().drag();
+		double waterDamp = 0;
 		FluidState fluidState = this.level().getFluidState(this.blockPosition());
 		double gForce = this.getBallisticProperties().gravity();
 		if (!fluidState.isEmpty()){
-			gForce *= -getBuoyancyFactor();
+			gForce *= -getBigCannonProjectileProperties().buoyancyFactor();
+			waterDamp = Math.max(damp,0) * vel;
 		}
+		gForce = gForce - waterDamp;
 		return gForce;
 	}
 
@@ -141,15 +161,31 @@ public abstract class AbstractCannonTorpedoProjectile extends AbstractCannonProj
 		return false;
     }
 
+//	@Override
+//	protected double getDragForce() {//rewrote to get vertical damping force
+//		BallisticPropertiesComponent properties = this.getBallisticProperties();
+//		double vel = this.getDeltaMovement().y;
+//		double formDrag = properties.drag();
+//		double drag = 0;
+//		FluidState fluidState = this.level().getFluidState(this.blockPosition());
+//		if (!fluidState.isEmpty())
+//			drag = Math.max(formDrag,0) * vel;
+//
+//		return drag;
+//	}
+
 	@Override
-	protected double getDragForce() {//rewrote to get vertical damping force
+	protected double getDragForce() {
 		BallisticPropertiesComponent properties = this.getBallisticProperties();
-		double vel = this.getDeltaMovement().y;
-		double formDrag = properties.drag();
-		double drag = 0;
+		double vel = this.getDeltaMovement().length();
+		double ssVel = getBigCannonProjectileProperties().torpedoSpeed();
+		double formDrag = properties.drag()/10;
+		double drag = formDrag * vel;
 		FluidState fluidState = this.level().getFluidState(this.blockPosition());
-		if (!fluidState.isEmpty())
-			drag = Math.max(formDrag,0) * vel;
+		if (!fluidState.isEmpty()) {
+			drag = 0.07 * (vel - ssVel);
+		}
+
 
 		return drag;
 	}

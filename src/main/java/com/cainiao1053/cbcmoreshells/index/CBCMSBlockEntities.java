@@ -5,11 +5,22 @@ import static rbasamoyai.createbigcannons.CreateBigCannons.REGISTRATE;
 import com.cainiao1053.cbcmoreshells.CBCMSBlocks;
 import com.cainiao1053.cbcmoreshells.blocks.ammo_rack.AmmoRackBlockEntity;
 import com.cainiao1053.cbcmoreshells.blocks.ammo_rack.AmmoRackRenderer;
+import com.cainiao1053.cbcmoreshells.blocks.command_deployer.CommandDeployerBlockEntity;
+import com.cainiao1053.cbcmoreshells.blocks.command_deployer.CommandDeployerRenderer;
+import com.cainiao1053.cbcmoreshells.blocks.command_displayer.CommandDisplayerBlockEntity;
 import com.cainiao1053.cbcmoreshells.blocks.dish_plate.DishPlateBlockEntity;
 import com.cainiao1053.cbcmoreshells.blocks.dish_plate.DishPlateRenderer;
 import com.cainiao1053.cbcmoreshells.blocks.landing_indicator.LandingIndicatorBlockEntity;
 import com.cainiao1053.cbcmoreshells.blocks.torpedo_detection_device.TorpedoDetectionDeviceBlockEntity;
 import com.cainiao1053.cbcmoreshells.blocks.torpedo_detection_device.TorpedoDetectionDeviceInstance;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.DualCannonBlockEntity;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.quick_firing_breech.DualCannonQuickfiringBreechBlockEntity;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.quick_firing_breech.DualCannonQuickfiringBreechBlockEntityRenderer;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.quick_firing_breech.DualCannonQuickfiringBreechInstance;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.sliding_breech.DualCannonSlidingBreechBlockEntity;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.sliding_breech.DualCannonSlidingBreechBlockEntityRenderer;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.breeches.sliding_breech.DualCannonSlidingBreechInstance;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.dual_cannon_end.DualCannonEndBlockEntity;
 import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.ProjectileRackBlockEntity;
 import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.ProjectileRackBlockRenderer;
 import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.breeches.quick_firing_breech.ProjectileRackQuickfiringBreechInstance;
@@ -73,6 +84,69 @@ public class CBCMSBlockEntities {
 			.validBlocks(CBCMSBlocks.STEEL_TORPEDO_SLIDING_BREECH)
 			.register();
 
+	public static final BlockEntityEntry<DualCannonBlockEntity> DUAL_CANNON_BODY = REGISTRATE
+			.blockEntity("dual_cannon_body", DualCannonBlockEntity::new)
+			.validBlocks(
+					CBCMSBlocks.STEEL_DUAL_CANNON_BARREL, CBCMSBlocks.STEEL_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.WIDE_STEEL_DUAL_CANNON_BARREL, CBCMSBlocks.WIDE_STEEL_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.CAST_IRON_DUAL_CANNON_BARREL, CBCMSBlocks.CAST_IRON_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.BRONZE_DUAL_CANNON_BARREL,CBCMSBlocks.BRONZE_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.BRASS_DUAL_CANNON_BARREL,CBCMSBlocks.BRASS_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.ROSEQUARTZ_BRASS_DUAL_CANNON_BARREL,CBCMSBlocks.ROSEQUARTZ_BRASS_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.TOUGH_STEEL_DUAL_CANNON_BARREL,CBCMSBlocks.TOUGH_STEEL_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.NETHER_STEEL_DUAL_CANNON_BARREL, CBCMSBlocks.NETHER_STEEL_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.WIDE_TOUGH_STEEL_DUAL_CANNON_BARREL,CBCMSBlocks.WIDE_TOUGH_STEEL_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.WIDE_BRASS_DUAL_CANNON_BARREL, CBCMSBlocks.WIDE_BRASS_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.WIDE_ROSEQUARTZ_BRASS_DUAL_CANNON_BARREL, CBCMSBlocks.WIDE_ROSEQUARTZ_BRASS_DUAL_CANNON_CHAMBER,
+					CBCMSBlocks.WIDE_NETHER_STEEL_DUAL_CANNON_BARREL, CBCMSBlocks.WIDE_NETHER_STEEL_DUAL_CANNON_CHAMBER
+					)
+			.register();
+
+	public static final BlockEntityEntry<DualCannonEndBlockEntity> DUAL_CANNON_END = REGISTRATE
+			.blockEntity("dual_cannon_end", DualCannonEndBlockEntity::new)
+			.validBlocks(
+//					CBCMSBlocks.CAST_IRON_CANNON_END, CBCMSBlocks.BRONZE_CANNON_END
+			)
+			.register();
+
+	public static final BlockEntityEntry<DualCannonQuickfiringBreechBlockEntity> DUAL_CANNON_QUICKFIRING_BREECH = REGISTRATE
+			.blockEntity("dual_cannon_quickfiring_breech", DualCannonQuickfiringBreechBlockEntity::new)
+			.instance(() -> DualCannonQuickfiringBreechInstance::new)
+			//.renderer(() -> DualCannonQuickfiringBreechBlockEntityRenderer::new)
+			.validBlocks(
+					CBCMSBlocks.STEEL_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.WIDE_STEEL_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.CAST_IRON_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.BRONZE_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.ROSEQUARTZ_BRASS_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.BRASS_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.TOUGH_STEEL_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.NETHER_STEEL_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.WIDE_TOUGH_STEEL_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.WIDE_BRASS_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.WIDE_ROSEQUARTZ_BRASS_DUAL_CANNON_QUICKFIRING_BREECH,
+					CBCMSBlocks.WIDE_NETHER_STEEL_DUAL_CANNON_QUICKFIRING_BREECH
+			)
+			.register();
+
+	public static final BlockEntityEntry<DualCannonSlidingBreechBlockEntity> DUAL_CANNON_SLIDING_BREECH = REGISTRATE
+			.blockEntity("dual_cannon_sliding_breech", DualCannonSlidingBreechBlockEntity::new)
+			.instance(() -> DualCannonSlidingBreechInstance::new, false)
+			//.renderer(() -> DualCannonSlidingBreechBlockEntityRenderer::new)
+			.validBlocks(CBCMSBlocks.STEEL_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.WIDE_STEEL_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.CAST_IRON_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.BRONZE_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.BRASS_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.ROSEQUARTZ_BRASS_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.TOUGH_STEEL_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.NETHER_STEEL_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.WIDE_TOUGH_STEEL_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.WIDE_BRASS_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.WIDE_ROSEQUARTZ_BRASS_DUAL_CANNON_SLIDING_BREECH,
+					CBCMSBlocks.WIDE_NETHER_STEEL_DUAL_CANNON_SLIDING_BREECH)
+			.register();
+
 	public static final BlockEntityEntry<QuickfiringBreechBlockEntity> NETHERSTEELQUICKFIRING_BREECH = REGISTRATE
 			.blockEntity("nethersteel_quickfiring_breech", QuickfiringBreechBlockEntity::new)
 			.instance(() -> QuickfiringBreechInstance::new)
@@ -119,24 +193,18 @@ public class CBCMSBlockEntities {
 
 	public static final BlockEntityEntry<TorpedoDetectionDeviceBlockEntity> TORPEDO_DETECTION_DEVICE = REGISTRATE
 			.blockEntity("torpedo_detection_device", TorpedoDetectionDeviceBlockEntity::new)
-			//.instance(() -> TorpedoDetectionDeviceInstance::new, false)
 			.validBlocks(CBCMSBlocks.TORPEDO_DETECTION_DEVICE)
-			//.renderer(() -> ShaftRenderer::new)
 			.register();
 
 	public static final BlockEntityEntry<AmmoRackBlockEntity> AMMO_RACK = REGISTRATE
 			.blockEntity("ammo_rack", AmmoRackBlockEntity::new)
 			.validBlocks(CBCMSBlocks.AMMO_RACK, CBCMSBlocks.STEEL_AMMO_RACK)
-			//.renderer(() -> ChuteRenderer::new)
-			//.renderer(()-> SmartBlockEntityRenderer::new)
 			.renderer(()-> AmmoRackRenderer::new)
 			.register();
 
 	public static final BlockEntityEntry<DishPlateBlockEntity> DISH_PLATE = REGISTRATE
 			.blockEntity("dish_plate", DishPlateBlockEntity::new)
 			.validBlocks(CBCMSBlocks.DISH_PLATE, CBCMSBlocks.ROUND_DISH_PLATE)
-			//.renderer(()-> SmartBlockEntityRenderer::new)
-			//.renderer(()-> AmmoRackRenderer::new)
 			.renderer(()-> DishPlateRenderer::new)
 			.register();
 
@@ -145,6 +213,19 @@ public class CBCMSBlockEntities {
 			//.instance(() -> TorpedoDetectionDeviceInstance::new, false)
 			.validBlocks(CBCMSBlocks.LANDING_INDICATOR)
 			//.renderer(() -> ShaftRenderer::new)
+			.register();
+
+	public static final BlockEntityEntry<CommandDisplayerBlockEntity> COMMAND_DISPLAYER = REGISTRATE
+			.blockEntity("command_displayer", CommandDisplayerBlockEntity::new)
+			//.instance(() -> TorpedoDetectionDeviceInstance::new, false)
+			.validBlocks(CBCMSBlocks.COMMAND_DISPLAYER)
+			//.renderer(() -> ShaftRenderer::new)
+			.register();
+
+	public static final BlockEntityEntry<CommandDeployerBlockEntity> COMMAND_DEPLOYER = REGISTRATE
+			.blockEntity("command_deployer", CommandDeployerBlockEntity::new)
+			.validBlocks(CBCMSBlocks.COMMAND_DEPLOYER)
+			.renderer(() -> CommandDeployerRenderer::new)
 			.register();
 
 

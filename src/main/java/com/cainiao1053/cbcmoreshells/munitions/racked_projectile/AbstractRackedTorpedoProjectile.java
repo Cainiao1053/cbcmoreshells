@@ -71,7 +71,6 @@ public abstract class AbstractRackedTorpedoProjectile extends FuzedRackedProject
 
 	@Override
 	protected Vec3 getForces(Vec3 position, Vec3 velocity) {
-		//return parentForces.add(0.0d, gravityForce, 0.0d);
 		return velocity.normalize().scale(-this.getDragForce()).add((double)0.0F, this.getGravity(), (double)0.0F);
 	}
 

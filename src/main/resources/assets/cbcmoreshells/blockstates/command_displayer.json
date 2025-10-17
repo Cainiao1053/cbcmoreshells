@@ -1,0 +1,25 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cbcmoreshells:block/command_displayer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/command_displayer"
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/command_displayer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/command_displayer",
+      "y": 270
+    },
+    "facing=up": {
+      "model": "cbcmoreshells:block/command_displayer"
+    },
+    "facing=down": {
+      "model": "cbcmoreshells:block/command_displayer"
+    }
+  }
+}

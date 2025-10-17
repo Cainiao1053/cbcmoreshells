@@ -49,23 +49,6 @@ public class AbstractBigCannonProjectileMixin {
 	public void tick(CallbackInfo ci) {
 			if (sendTrail<0) {
 				AbstractBigCannonProjectile self = (AbstractBigCannonProjectile)(Object) this;
-//				if (!self.isInGround() && !self.isInWater()) {
-//					if (!self.level().isClientSide && self.level() instanceof ServerLevel serverLevel) {
-//						if(traced == 0){
-//							xOld = self.getX();
-//							yOld = self.getY();
-//							zOld = self.getZ();
-//							traced++;
-//						}
-//						for (ServerPlayer players : serverLevel.players()) {
-//							sendTrailToClient(self.getX(), self.getY(), self.getZ(), xOld, yOld, zOld, players);
-//						}
-//						sendTrail = 5;
-//						xOld = self.getX();
-//						yOld = self.getY();
-//						zOld = self.getZ();
-//					}
-//				}
 				if(traced == 1){
 					if (!self.isInGround() && !self.isInWater()) {
 						if (!self.level().isClientSide && self.level() instanceof ServerLevel serverLevel) {

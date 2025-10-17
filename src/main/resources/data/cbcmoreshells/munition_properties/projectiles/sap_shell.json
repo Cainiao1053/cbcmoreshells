@@ -1,7 +1,7 @@
 {
   "entity_damage": 120.0,
   "durability_mass": 4,
-  "renders_invulnerable": false,
+  "renders_invulnerable": true,
   "ignores_invulnerability": true,
   "ignores_entity_armor": true,
   "gravity": -0.05,
@@ -14,7 +14,7 @@
   "added_recoil": 1.0,
   "base_fuze": false,
   "explosive_power": 5.0,
-  "max_charges": 8,
+  "max_charges": 16,
   "penetration": 2.55,
   "lifetime": 160,
   "toughness": 1,

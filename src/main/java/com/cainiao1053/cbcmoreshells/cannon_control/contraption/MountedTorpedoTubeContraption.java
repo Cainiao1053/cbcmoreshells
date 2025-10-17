@@ -10,6 +10,8 @@ import java.util.function.Consumer;
 
 import javax.annotation.Nullable;
 
+import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.api.vs.ValkyrienSkies;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.ITorpedoTubeBlockEntity;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.TorpedoTubeBlock;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.breeches.TorpedoTubeBreechStrengthHandler;
@@ -52,6 +54,11 @@ import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.levelgen.structure.templatesystem.StructureTemplate.StructureBlockInfo;
 import net.minecraft.world.phys.Vec3;
+import org.joml.Vector3d;
+import org.joml.Vector3dc;
+import org.joml.Vector4d;
+import org.slf4j.Logger;
+import org.valkyrienskies.core.api.ships.Ship;
 import rbasamoyai.createbigcannons.CBCTags;
 import rbasamoyai.createbigcannons.cannon_control.ControlPitchContraption;
 //import rbasamoyai.createbigcannons.cannon_control.cannon_types.CBCCannonContraptionTypes;
@@ -94,6 +101,7 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 
 	protected int mortarDelay = 0;
 	protected ItemStack cachedMortarRound = ItemStack.EMPTY;
+	Logger LOGGER = Cbcmoreshells.LOGGER;
 
 	@Override
 	public boolean assemble(Level level, BlockPos pos) throws AssemblyException {
@@ -423,6 +431,26 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 					return;
 				}
 			}
+
+			float torpVel = projectile.getTorpedoSpeed();
+			Ship ship = getShipOn(level, this.anchor);
+			if(ship !=null){
+//				LOGGER.info("vec" + vec);
+				Vector3dc shipVel = ship.getVelocity().div(20, new Vector3d());
+				Vector3dc shipVelInShip = ship.getWorldToShip().transformDirection(shipVel, new Vector3d());
+				Vec3 shipVelVec3 = new Vec3(shipVelInShip.x(), shipVelInShip.y(), shipVelInShip.z());
+				double scale = shipVelVec3.dot(vec);
+				Vec3 proj = new Vec3(vec.x() * scale, vec.y() * scale, vec.z() * scale);
+				Vec3 rej = shipVelVec3.subtract(proj);
+				Vec3 vecOut = vec.scale(torpVel).subtract(rej); //extract normal
+				//Vec3 vecOut = vec.scale(torpVel).subtract(shipVelVec3); //extract all
+				torpVel =(float) vecOut.length();
+				vec = vecOut.normalize();
+//				LOGGER.info("torpVel " + torpVel);
+//				LOGGER.info("shipvel "+ shipVelVec3);
+//				LOGGER.info("proj " + proj);
+//				LOGGER.info("rej " + rej);
+			}
 			StructureBlockInfo muzzleInfo = this.blocks.get(currentPos);
 			if (canFail && muzzleInfo != null && !muzzleInfo.state().isAir()) {
 				this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
@@ -430,7 +458,7 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 			}
 			projectile.setPos(spawnPos);
 			projectile.setChargePower(propelCtx.chargesUsed);
-			projectile.shoot(vec.x, vec.y, vec.z, projectile.getTorpedoSpeed(), projectile.getTorpedoSpread());
+			projectile.shoot(vec.x, vec.y, vec.z, torpVel, projectile.getTorpedoSpread());
 			projectile.xRotO = projectile.getXRot();
 			projectile.yRotO = projectile.getYRot();
 
@@ -574,6 +602,10 @@ public class MountedTorpedoTubeContraption extends AbstractMountedCannonContrapt
 			Vec3 pos = this.entity.toGlobalVector(Vec3.atCenterOf(this.startPos), 0);
 			world.addFreshEntity(new ItemEntity(world, pos.x, pos.y, pos.z, this.cachedMortarRound.copy()));
 		}
+	}
+
+	protected @Nullable Ship getShipOn(Level level, BlockPos pos) {
+		return ValkyrienSkies.getShipManagingBlock(level, pos);
 	}
 
 	@Override

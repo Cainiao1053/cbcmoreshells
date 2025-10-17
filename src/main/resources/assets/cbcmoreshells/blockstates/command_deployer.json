@@ -1,0 +1,19 @@
+{
+  "variants": {
+    "facing=east": {
+      "model": "cbcmoreshells:block/command_deployer",
+      "y": 90
+    },
+    "facing=north": {
+      "model": "cbcmoreshells:block/command_deployer"
+    },
+    "facing=south": {
+      "model": "cbcmoreshells:block/command_deployer",
+      "y": 180
+    },
+    "facing=west": {
+      "model": "cbcmoreshells:block/command_deployer",
+      "y": 270
+    }
+  }
+}

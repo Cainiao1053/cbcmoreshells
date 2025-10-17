@@ -6,6 +6,7 @@ import com.cainiao1053.cbcmoreshells.CbcmoreshellsClient;
 import com.cainiao1053.cbcmoreshells.api.vs.ValkyrienSkies;
 import com.cainiao1053.cbcmoreshells.index.CBCMSSoundEvents;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.AbstractCannonTorpedoProjectile;
+import com.mojang.blaze3d.systems.RenderSystem;
 import com.simibubi.create.foundation.blockEntity.SmartBlockEntity;
 import com.simibubi.create.foundation.blockEntity.behaviour.BlockEntityBehaviour;
 import com.simibubi.create.foundation.utility.Color;
@@ -75,12 +76,14 @@ public class LandingIndicatorBlockEntity extends SmartBlockEntity {
         Vec3 cast = new Vec3(step.x, step.y, step.z).scale(castRange);
         Vec3 end = start.add(cast);
 
+
         CbcmoreshellsClient.CLIENT_LERPED_OUTLINER.showLine(
                         "clip_ray_" + getBlockPos().asLong(),
                         start,
                         end
                 )
                 .colored(PALETTE.get(colorIndex))
+                .disableCull()
                 .lineWidth(0.2f);
     }
 

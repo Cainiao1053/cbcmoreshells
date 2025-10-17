@@ -2,6 +2,7 @@ package com.cainiao1053.cbcmoreshells.network;
 
 import java.util.Map;
 
+import com.cainiao1053.cbcmoreshells.cannon_control.contraption.MountedDualCannonContraption;
 import net.minecraft.client.Minecraft;
 import net.minecraft.client.resources.sounds.SimpleSoundInstance;
 import net.minecraft.client.resources.sounds.SoundInstance;
@@ -13,6 +14,7 @@ import net.minecraft.util.RandomSource;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Explosion;
 import net.minecraft.world.phys.Vec3;
+import rbasamoyai.createbigcannons.cannon_control.contraption.PitchOrientedContraptionEntity;
 import rbasamoyai.createbigcannons.effects.particles.smoke.TrailSmokeParticleData;
 import rbasamoyai.createbigcannons.effects.particles.splashes.ProjectileSplashParticleData;
 
@@ -45,6 +47,22 @@ public class CBCMSClientHandlers {
 		double dz = -(pkt.z()-pkt.zOld())*0.03;
 		ParticleOptions splash = new ProjectileSplashParticleData(0.92f,0.97f,1f,0);
 		mc.level.addAlwaysVisibleParticle(splash, true, pkt.x(), pkt.y(), pkt.z(), dx, dy, dz);
+	}
+
+	public static void applyCannonCmdSync(int entityId, boolean effect, int cooldown, int left) {
+		Minecraft mc = Minecraft.getInstance();
+		if (mc.level == null) return;
+
+		Entity e = mc.level.getEntity(entityId);
+		if (!(e instanceof PitchOrientedContraptionEntity poce)) return;
+		if (!(poce.getContraption() instanceof MountedDualCannonContraption dual)) return;
+
+		dual.commandEffect   = effect;
+		dual.commandCooldown = cooldown;
+		dual.commandLeft     = left;
+
+		// 若你的渲染/GUI依赖这些值，可在这里触发可视刷新（按你的实现需要决定是否调用）
+		// 例如：poce.setChanged(); 或请求重渲染等
 	}
 
 

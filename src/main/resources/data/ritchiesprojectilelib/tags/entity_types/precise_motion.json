@@ -39,6 +39,11 @@
     "cbcmoreshells:antiair_machine_gun_bullet",
     "cbcmoreshells:long_range_shrapnel_torpedo",
     "cbcmoreshells:depth_charge",
-    "cbcmoreshells:antiair_shrapnel_shell"
+    "cbcmoreshells:antiair_shrapnel_shell",
+    "cbcmoreshells:normal_ap_shot",
+    "cbcmoreshells:normal_he_shell",
+    "cbcmoreshells:normal_sap_shell",
+    "cbcmoreshells:normal_ap_shell",
+    "cbcmoreshells:extended_ap_shot"
   ]
 }

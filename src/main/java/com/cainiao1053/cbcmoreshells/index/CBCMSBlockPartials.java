@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.function.Supplier;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.material.DualCannonMaterial;
 import com.cainiao1053.cbcmoreshells.cannons.projectile_rack.material.ProjectileRackMaterial;
 import com.cainiao1053.cbcmoreshells.cannons.torpedo_tube.material.TorpedoTubeMaterial;
 import com.jozufozu.flywheel.core.PartialModel;
@@ -22,6 +23,7 @@ public class CBCMSBlockPartials {
 	private static final Map<TorpedoTubeMaterial, PartialModel> BREECHBLOCK_BY_MATERIAL = new HashMap<>();
 	private static final Map<TorpedoTubeMaterial, PartialModel> SCREW_LOCK_BY_MATERIAL = new HashMap<>();
 	private static final Map<ProjectileRackMaterial, PartialModel> PROJECTILE_LOCK_BY_MATERIAL = new HashMap<>();
+	private static final Map<DualCannonMaterial, PartialModel> DUAL_CANNON_BREECHBLOCK_BY_MATERIAL = new HashMap<>();
 
 
 
@@ -34,7 +36,15 @@ public class CBCMSBlockPartials {
 
 		QUICKFIRING_BREECH_LEVER = block("quickfiring_breech_lever"),
 
-	    STEEL_PROJECTILE_RACK_SLIDING_BREECHBLOCK = projectileLockBlockPartial(CBCMSProjectileRackMaterials.STEEL, "steel_projectile_rack_sliding_breechblock")
+	    STEEL_PROJECTILE_RACK_SLIDING_BREECHBLOCK = projectileLockBlockPartial(CBCMSProjectileRackMaterials.STEEL, "steel_projectile_rack_sliding_breechblock"),
+
+		STEEL_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.STEEL, "steel_dual_cannon_sliding_breechblock"),
+		WIDE_STEEL_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.WIDE_STEEL, "wide_steel_dual_cannon_sliding_breechblock"),
+		WIDE_TOUGH_STEEL_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.WIDE_TOUGH_STEEL, "wide_steel_dual_cannon_sliding_breechblock"),
+		WIDE_BRASS_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.WIDE_BRASS, "wide_steel_dual_cannon_sliding_breechblock"),
+		WIDE_ROSEQUARTZ_BRASS_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.WIDE_ROSEQUARTZ_BRASS, "wide_steel_dual_cannon_sliding_breechblock"),
+		WIDE_NETHER_STEEL_DUAL_CANNON_SLIDING_BREECHBLOCK = dualCannonBreechblockPartial(CBCMSDualCannonMaterials.WIDE_NETHER_STEEL, "wide_steel_dual_cannon_sliding_breechblock")
+
 	;
 
 
@@ -71,13 +81,19 @@ public class CBCMSBlockPartials {
 		return PROJECTILE_LOCK_BY_MATERIAL.getOrDefault(material, STEEL_PROJECTILE_RACK_SLIDING_BREECHBLOCK);
 	}
 
+	private static PartialModel dualCannonBreechblockPartial(DualCannonMaterial material, String path) {
+		return dualCannonBreechblockPartial(material, Cbcmoreshells.resource("item/" + path));
+	}
 
+	public static PartialModel dualCannonBreechblockPartial(DualCannonMaterial material, ResourceLocation loc) {
+		PartialModel model = new PartialModel(loc);
+		DUAL_CANNON_BREECHBLOCK_BY_MATERIAL.put(material, model);
+		return model;
+	}
 
-
-
-
-
-
+	public static PartialModel dualCannonBreechblockFor(DualCannonMaterial material) {
+		return DUAL_CANNON_BREECHBLOCK_BY_MATERIAL.getOrDefault(material, STEEL_DUAL_CANNON_SLIDING_BREECHBLOCK);
+	}
 
 
 

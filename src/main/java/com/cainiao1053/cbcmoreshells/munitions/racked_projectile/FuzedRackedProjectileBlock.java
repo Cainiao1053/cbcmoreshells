@@ -128,16 +128,17 @@ public abstract class FuzedRackedProjectileBlock<BLOCK_ENTITY extends FuzedBlock
 	public void neighborChanged(BlockState state, Level level, BlockPos pos, Block block, BlockPos neighbour, boolean p_60514_) {
 		super.neighborChanged(state, level, pos, block, neighbour, p_60514_);
 		if (!level.isClientSide()) {
-			if(level.hasNeighborSignal(pos) && directDrop()){
+			if(level.hasNeighborSignal(pos) && directDrop() &&(level.getRandom().nextDouble()<0.8)) {
 				FuzedRackedProjectile projectile = (FuzedRackedProjectile) this.getProjectile(level,pos,state);
 				projectile.setFuze(getFuzeFromBlock(level,pos));
 				projectile.setLifetime(getLifetimeFromBlock()-15);
 				Vec3 initVel = getInitialVelDir(state);
 				projectile.setPos(pos.getX() + 1.5*initVel.x,pos.getY(),pos.getZ() + 1.5*initVel.z);
-				projectile.shoot(initVel.x, initVel.y - 0.1 + getVerticalInitVelRefine(), initVel.z, 0.2f + extraInitVel(), 1.5f);
+				projectile.shoot(initVel.x, initVel.y - 0.1 + getVerticalInitVelRefine(), initVel.z, 0.3f + extraInitVel(), 10f);
 				level.addFreshEntity(projectile);
 				playSoundForLaunching(level, pos);
-				level.setBlock(pos, Blocks.AIR.defaultBlockState(),2);
+				//level.setBlock(pos, Blocks.AIR.defaultBlockState(),2);
+				level.setBlock(pos, Blocks.IRON_BARS.defaultBlockState(),1);
 			}
 		}
 	}

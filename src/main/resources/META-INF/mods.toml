@@ -4,7 +4,7 @@ license="GPLv3"
 
 [[mods]]
 modId="cbcmoreshells"
-version="0.1.1-1.20.1"
+version="0.2.0a-1.20.1"
 displayName="Create Big Cannons More Shells"
 displayURL="https://www.curseforge.com/minecraft/mc-mods/"
 logoFile=""
@@ -38,7 +38,7 @@ side="BOTH"
 [[dependencies.cbcmoreshells]]
 modId="createbigcannons"
 mandatory=true
-versionRange="[5.6.0,)"
+versionRange="[5.8.0,)"
 ordering="AFTER"
 side="BOTH"
 

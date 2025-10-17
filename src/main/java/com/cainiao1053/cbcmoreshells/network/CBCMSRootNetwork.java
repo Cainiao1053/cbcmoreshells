@@ -20,6 +20,7 @@ public class CBCMSRootNetwork {
 		int id = 0;
 		addMsg(id++, ClientboundCBCMSTrailPacket.class, ClientboundCBCMSTrailPacket::new);
 		addMsg(id++, ClientboundCBCMSSplashPacket.class, ClientboundCBCMSSplashPacket::new);
+		addMsg(id++, ClientboundCannonCmdSyncPacket.class, ClientboundCannonCmdSyncPacket::new);
 
 	}
 

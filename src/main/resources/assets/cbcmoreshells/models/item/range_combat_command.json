@@ -1,0 +1,7 @@
+{
+  "parent": "cbcmoreshells:item/combat_command",
+  "textures": {
+    "0": "cbcmoreshells:item/combat_command",
+    "1": "cbcmoreshells:item/range_combat_command"
+  }
+}

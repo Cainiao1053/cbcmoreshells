@@ -1,0 +1,8 @@
+{
+  "variants": {
+    "": {
+      "model": "cbcmoreshells:block/normal_ap_shell_block",
+      "x": 90
+    }
+  }
+}
