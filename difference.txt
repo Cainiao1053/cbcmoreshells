@@ -1,0 +1,532 @@
+================================================================================
+新旧 Dual Cannon 炮弹机制差异对照
+  旧 = 继承 AbstractDualCannonProjectile 的实体炮弹（9 个 *Projectile 类）
+  新 = munitions/dual_cannon/shaolib/ 下的 Shaolib 投射物实现
+  对照日期：2026-09-07     范围：阶段一～三已落地的代码
+================================================================================
+
+【阅读须知】
+  本文只做对照，不改代码。
+  每条差异标注了确认程度：
+    [已核对]  两边源码都读过，结论确定
+    [未验证]  受限于反编译/无法构建，只能推断，需实机确认
+  另有 §12 列出旧代码里的既有 bug，§13 说明当前接线状态。
+
+================================================================================
+0. 一句话总结
+================================================================================
+
+  弹道积分、爆炸威力公式、纵火公式、防空高度加成、耐久质量惩罚系数
+  ——**这些是逐字复刻的，数值一致**。
+
+  真正的差异集中在四处：
+    (1) 炮弹不再是 Entity，架构层面完全不同（§1）
+    (2) 阻力/重力丢了 CBC 的维度倍率与流体阻力（§2）
+    (3) 击穿模型多了若干上限与门槛，跳弹概率公式也不同（§3）
+    (4) 引信语义有三处落差，且 AP/APBC 的「禁止定时空爆」规则没了（§5）
+
+  另外新系统**多出**旧系统没有的能力（嵌入、刚体感知等，见 §10），
+  也**少了**旧系统的一些东西（实体身份、区块强加载方式，见 §1/§8）。
+
+================================================================================
+1. 架构：Entity vs ProjectileInstance                                   [已核对]
+================================================================================
+
+  项目                旧                              新
+  ----------------------------------------------------------------------------
+  本体                net.minecraft Entity            ProjectileInstance
+                      （MobCategory.MISC）            （非实体，shaolib 运行时管理）
+  注册                CBCMSEntityTypes 9 条           ShaolibProjectiles 9 个 ProjectileType
+                      EntityType + Registrate
+  是否进实体表        是                              否
+  是否有碰撞箱        是                              否（只有射线扫掠）
+  是否占实体上限      是                              否
+  存档                随区块实体数据                  shaolib 自己的 save/restore
+  客户端同步          vanilla 实体追踪                shaolib 自定义同步
+                      （updateInterval/trackingRange）（syncIntervalTicks = 10）
+  旋转                yRot/xRot + onTickRotate        四元数 orientation
+                      （lerpRotation 插值）           （本次注册用 OrientationSync.NONE）
+
+  ⚠ 由此产生的连带影响（**这是最容易被低估的一类差异**）：
+    - 任何靠 `level.getEntities(...)` 找炮弹的东西都看不到新炮弹了。
+      包括但不限于：雷达/预警类模组、拦截系统、
+      CBC 自己的近炸引信（它就是扫实体的，见 §5）、
+      其他模组的「击落炮弹」功能。
+    - 炮弹不再能被攻击、被推、被 /kill、被实体选择器命中。
+    - 旧的 `ignoreExplosion()` 返回 true 用来免疫爆炸；
+      新系统因为压根不是实体，天然免疫，效果相同但成因不同。
+    - VS2/物理子世界的交互路径完全不同（旧靠 CBCCompatTransformers
+      对实体坐标做变换，新靠 shaolib 的 body 体系）。
+
+================================================================================
+2. 运动与弹道
+================================================================================
+
+2.1 积分器：**完全一致**                                              [已核对]
+
+  旧（CBC AbstractCannonProjectile.tick）：
+      newPos = pos + vel + accel*0.5
+      newVel = vel + accel
+  新（MunitionMotionModels.configured，scale=1）：
+      position + velocity*s + accel*0.5*s²
+      velocity + accel*s
+  s=1 时两式相同。
+
+2.2 阻力：形式相同，但**丢了两个乘数**                                [已核对]
+
+  旧 CBC getDragForce()：
+      drag = formDrag * dimensionDragMultiplier * |v|
+      若 isQuadraticDrag 再 *= |v|
+      若处于流体中： density += FluidDragHandler.getFluidDrag(fluidState)
+      返回 min(drag, |v|)
+    再由 getForces 做 normalize(v) * -drag
+    → 净效果 = -v * formDrag * density   （线性阻力）
+
+  新 MunitionMotionModels.acceleration()：
+      非二次： -v * drag
+      二次：   normalize(v) * -drag * |v|²
+
+  差异：
+    a) **维度阻力倍率丢失**
+       旧有 DimensionMunitionPropertiesHandler.dragMultiplier()，
+       新恒等于 1。若整合包配置过异world的空气密度，新系统不再生效。
+    b) **流体阻力丢失** ← 影响最直观
+       旧炮弹入水后 density 会加上 FluidDragHandler.getFluidDrag()，
+       急剧减速；新系统入水后阻力不变，几乎不减速地穿水而过。
+       对鱼雷/深弹类玩法、对打水面目标的手感都有影响。
+    c) 旧有 min(drag, |v|) 的防倒飞钳制，新没有。
+       drag=0.011 时不会触发，只有 drag ≥ 1 才有区别。
+
+2.3 重力：**丢了维度倍率**                                            [已核对]
+
+  旧： gravity * DimensionMunitionPropertiesHandler.gravityMultiplier()
+       且 isNoGravity() 时为 0
+  新： 直接用 ballistics.gravity()
+
+================================================================================
+3. 击穿 / 跳弹模型
+================================================================================
+
+3.1 主判定：**一致**                                                  [已核对]
+
+  两边都是：
+      bonusMomentum = 1 + max(0, (|v| - 2) * 0.15)
+      momentum      = min(mass * bonusMomentum * |v|, maximumMomentum) * incidence
+      momentum > toughness*2                        → 必穿
+      momentum > toughness*0.5                      → 概率穿，p = (momentum/toughness - 0.15)/2
+      smashToughness > toughness                    → 强行穿
+  质量惩罚系数也一致：
+      momentum > toughness*3  → penalty * 1.3
+      momentum > toughness*2  → penalty * 1.08
+      否则                    → 质量压到 0.1
+      跳弹                    → penalty * (1/3)
+      penalty = toughness / incidentVelocity
+
+3.2 跳弹概率公式：**不同**                                            [已核对]
+
+  旧： bounceChance = max(0, 1 - incidence/deflection + baseChance)
+       baseChance 来自 CBC 服务器配置 baseProjectileBounceChance
+  新： bounceChance = max(baseBounceChance, 1 - incidence/deflection)
+       baseBounceChance 来自弹药 JSON（本次统一写 0.05）
+
+  → 旧是**相加**，新是**取最大值**。
+    在入射角很浅（1 - incidence/defl 接近 1）时两者接近；
+    在接近临界角时，旧会额外 +baseChance，新则被 0.05 兜底。
+  → 数据来源也变了：旧读 CBC 全局服务器配置，新读每种弹自己的 JSON。
+    整合包若调过 baseProjectileBounceChance，新系统不再响应。
+
+3.3 新增的三道上限/门槛（旧没有）                                     [已核对]
+
+  a) **跳弹次数上限** maxRicochets = 1
+     旧完全没有计数，理论上可以无限跳。
+  b) **穿透次数上限** maxPenetrations = 32
+     旧没有计数。
+  c) **stopSpeed 早退** 速度 < 0.25 直接判定停止；
+     以及 mass ≤ 1e-6 直接停止。旧没有这两个早退。
+
+3.4 不可破坏方块：**行为反转**                                        [已核对]
+
+  旧 AbstractDualCannonProjectile 里这一行是**被注释掉的**：
+      //boolean unbreakable = projectileContext.griefState() == NO_DAMAGE
+      //                      || state.getDestroySpeed(...) == -1;
+  即旧代码**根本不检查方块是否可破坏**，只要动量够就会把基岩类方块打成空气
+  （`level().setBlock(pos, AIR, UPDATE_ALL_IMMEDIATE)`）。
+
+  新 DualCannonPenetrationModel 检查：
+      unbreakable = !impact.breakBlocks() || state.getDestroySpeed(...) < 0
+  不可破坏则转入跳弹/停止分支。
+
+  → **这是一处明确的行为收紧**。如果服务器依赖旧行为（比如用炮打掉保护方块），
+    迁移后会失效；反过来说旧行为大概率是个 bug。
+
+3.5 旧代码内部的不一致（新系统统一了）                                [已核对]
+
+  旧的 calculateBlockPenetration 有三份实现，彼此有细微差别：
+    - AbstractDualCannonProjectile（HE / 防空 / 纵火 / AP 弹丸 用）
+        跳弹条件额外要求 `getSmashToughness() < toughness`
+        onImpact 在**所有**分支末尾调用（穿透/跳弹/停止都触发引信判定）
+    - NormalAPShellProjectile / NormalAPBCShellProjectile
+        跳弹条件**没有** smashToughness 限制
+        onImpact **只在 PENETRATE 分支**调用 → 天然的「弹底引信」行为
+    - NormalSAPShellProjectile
+        同上，且穿透后直接 setProjectileMass(0)
+        另有一整段 alternativePenetration() 死代码（见 §12）
+
+  新系统统一为一个 DualCannonBehavior：
+    - 跳弹不再受 smashToughness 影响（对齐 AP/APBC 那一版）
+    - 「穿透后才问引信」由 Kind.isApheLike()（APHE/APBC）提供
+    - SAP 单独分支：穿透即清空质量并在入射面引爆（对齐旧 SAP）
+    - HE/防空/纵火：跳弹**不再**触发引信判定
+      （旧会触发，但 CBC 的 ImpactFuzeItem 自己会拒绝在 BOUNCE 时起爆，
+        所以对触发引信而言结果相同；
+        但 **InertiaFuzeItem 不检查 BOUNCE**，旧系统里惯性引信有可能
+        在跳弹时起爆，新系统不会。）
+
+3.6 穿透后的速度                                                      [未验证]
+
+  新：明确 `velocity * retainedAfterPenetration(mass, nextMass, impact)`，
+      并用 penetrationVelocityRetained=0.92 / minimumVelocityRetained=0.25 约束。
+  旧：cbcms 的 calculateBlockPenetration 里**没有**改速度，只改质量；
+      速度变化发生在 CBC 的 clipAndDamage 内部。
+      该方法在反编译产物里退化成了字节码注释，无法读全，
+      因此两边的减速幅度是否一致**未能确认**，需实机对比初速衰减。
+
+3.7 新增：刚体抗性倍率（旧没有）                                       [已核对]
+
+  新在 toughness 上再乘一个 BodyPenetrationResistanceModifierServices.multiplier(...)，
+  允许「同样的方块，装在船上和放在地面上抗性不同」。
+  旧没有这个概念，默认倍率 1.0 时行为一致。
+
+3.8 崩落（spall）爆炸：威力一致，**归属者不同**                        [已核对]
+
+  两边都是 ImpactExplosion(power=1, power=1, BlockInteraction.KEEP)。
+  旧： new ImpactExplosion(level, **this**, **indirectArtilleryFire(false)**, ...)
+  新： new ImpactExplosion(level, **null**, **null**, ...)
+  → 新系统崩落爆炸**没有伤害来源与归属实体**。
+    崩落造成的击杀不会记到炮弹/开炮者名下，死亡消息与统计会不同。
+    （新系统改为挂 ProjectileTraceSnapshot 做溯源，但那不是 vanilla 的
+      DamageSource 归属。）
+
+  另：旧在停止/跳弹分支会额外 playSound(方块破坏音) 于崩落点；
+      新交给 CbcMunitionEffectPipeline.playStop 处理，是否含该音效 [未验证]。
+
+================================================================================
+4. 耐久质量（durability mass）                                          [已核对]
+================================================================================
+
+  旧：fireShot 里 setProjectileMass(durabilityMassModifier * ballistics.durabilityMass())
+  新：把 ballistics.durability_mass = base * modifier 写进 DYNAMIC_PROPERTIES，
+      由 initializeDurabilityMass 读取
+
+  数值等价。改走属性的原因：DualCannonPenetrationModel.resolve 里也会调
+  initializeDurabilityMass(ballistics.durabilityMass() * durabilityModifier)，
+  只有把值放进属性里，两条路径才不会打架。
+
+  ⚠ 注意新系统里 durabilityModifier 与 durabilityMass 是**两个独立量**：
+      durabilityModifier → 只驱动爆炸威力倍率
+      durabilityMass     → 只驱动穿深
+    旧系统里 durabilityMassModifier 同时承担这两件事。数值结果一致。
+
+================================================================================
+5. 引信
+================================================================================
+
+5.1 机制：从「CBC 引信直接驱动」变成「翻译成 Shaolib 引信」          [已核对]
+
+  旧：弹药方块里的 CBC FuzeItem 原样交给实体，
+      由 FuzedDualCannonProjectile 在 tick/onClip/onImpact 三处回调
+      fz.onProjectileTick / onProjectileClip / onProjectileImpact。
+  新：发射瞬间由 CBCMSDualCannonFuzeMapper 翻译成
+      shaolib_munitions 已注册的三种引信之一，装进 FuzedMunitionState。
+
+5.2 三处行为落差                                                      [已核对]
+
+  a) **哑弹机制丢失**
+     CBC 的 ImpactFuzeItem / InertiaFuzeItem 有 FUZE_DAMAGE 耐久
+     和 getDetonateChance() 概率失效；Shaolib 的对应引信必定起爆。
+     → 迁移后这两种引信比原来更可靠（不再有瞎火）。
+
+  b) **近炸引信的探测对象改变** ← 影响最大
+     CBC ProximityFuzeItem 扫描的是**实体**（level().getEntities(...)）。
+     Shaolib 只有 BodyOnlyProximityFuzeItem，扫描的是**物理刚体**（船体等）。
+     → 近炸弹会在靠近船体时引爆，但**不会**在靠近飞机/生物时引爆。
+       防空弹是近炸引信的主要用户，受影响最直接。
+     → 与 §1 的「炮弹不再是实体」叠加后，
+       「用近炸弹打炮弹」这类玩法双向失效。
+
+  c) **有线引信失去触发源**
+     WiredFuzeItem 靠发射点红石触发，炮弹出膛后够不着，退化为触发引信。
+
+5.3 AP / APBC 的「禁止定时空爆」规则**消失了**                        [已核对]
+
+  旧：NormalAPShellProjectile 与 NormalAPBCShellProjectile 覆写了
+        public boolean additionalDetonateCondition(Item fuze) {
+            return !(fuze instanceof TimedFuzeItem);
+        }
+      而 FuzedDualCannonProjectile.tick() 里是
+        if (canDetonate(fz -> fz.onProjectileTick(...)) && additionalDetonateCondition(...))
+      → **AP / APBC 装定时引信时，永远不会在飞行途中起爆**，
+        只能靠撞击/穿透起爆。这是一条刻意的平衡规则
+        （防止穿甲弹被当空爆弹用）。
+      注意 SAP **没有**这条覆写，HE/防空/纵火也没有。
+
+  新：DualCannonBehavior.tickServer 无条件调用 MunitionFuzes.serverTick(context)，
+      TIMED_FUZE 到点就 detonate，**APHE/APBC 也会空爆**。
+
+  → 这是一条**平衡性回归**，不是等价迁移。若要保留旧规则，
+    需要在 DualCannonBehavior.tickServer 里对 isApheLike() 的 Kind
+    跳过 serverTick 的定时分支（或在 FuzeMapper 里对这两种弹拒绝 TIMED_FUZE）。
+
+5.4 引信过期路径不再可达                                              [已核对]
+
+  CBC 引信有 onProjectileExpiry 钩子（TimedFuzeItem / ProximityFuzeItem
+  都返回 true，即寿命耗尽时引爆）。
+  旧 cbcms 的 AbstractDualCannonProjectile.tick() 在 age > maxAge 时
+  直接 this.discard()，**绕过**了 expireProjectile/onProjectileExpiry，
+  所以旧系统实际上也不会在寿命耗尽时引爆。
+  新系统 discard("cbcms_lifetime") 同样不引爆。
+  → 结果一致，但新系统连这个钩子本身都不存在了。
+
+5.5 安装时机（已查明，不是隐患）                                      [已核对]
+
+  ServerProjectileRuntime.spawn 顺序：
+      initializeInstance → createServerState → **initializeHandle** → **onSpawn**
+  handle 阶段在 onSpawn 之前，因此在 handle 阶段 installFuze 之后，
+  onSpawn 里的 MunitionFuzes.onInstalled 能正常初始化这枚引信。
+
+================================================================================
+6. 爆炸与伤害
+================================================================================
+
+6.1 威力公式：**逐条一致**                                            [已核对]
+
+  弹种        旧公式                              新 explosionPowerMultiplier
+  ----------------------------------------------------------------------------
+  AP 弹丸     无爆炸                              0.0（detonatePayload 直接 false）
+  HE          (mod-1)/1.2 + 1                     同
+  纵火        (mod-1)/1.2 + 1                     同
+  防空 HE     ((mod-1)/1.5 + 1) * 高度倍率        同
+  APHE        mod*0.47 + 0.4                      同
+  APBC        mod*0.45 + 0.4                      同
+  SAP         mod*0.82 + 0.18                     同
+
+  防空高度倍率也一致： min(max(0, ΔY)/80 + 1, 3)
+
+6.2 防空基准高度 yInit 的持久化                                       [已核对]
+
+  旧：`protected double yInit = 68;`，在 setChargePower() 里赋值为发射点 Y，
+      且**不参与 NBT 序列化**。
+      → 存档重进后飞行中的防空弹 yInit 回落到 68（海平面），
+        高度加成按「相对 Y=68」重算，与实际发射点无关。
+  新：launchY 在 onSpawn 写入，并由 DualCannonSerializer 存盘。
+      → 跨存档保持正确。属于新系统修正了旧的一个缺陷。
+
+6.3 爆炸归属者                                                        [已核对]
+
+  旧： new ShellExplosion(level, **this**, **indirectArtilleryFire(false)**,
+                          x, y, z, power, power, false, damageRestriction)
+  新： CbcMunitionEffectPipeline.detonateShell(context, effects, position)
+       （ExplosionKind.CBC_SHELL）
+
+  → 旧的爆炸挂着炮弹实体作为 owner 和一个 CannonDamageSource，
+    击杀归属/死亡消息走 CBC 的火炮伤害类型。
+    新系统没有实体可挂。具体归属如何处理取决于 CbcMunitionEffectPipeline 内部，
+    **[未验证]**，建议实机确认死亡消息与 damageRestriction 是否仍然生效。
+
+6.4 实体命中伤害                                                      [未验证]
+
+  旧：getEntityDamage() 显式返回
+      CannonDamageSource(CBCDamageTypes.**BIG_CANNON_PROJECTILE**, ignoresEntityArmor)
+  新：CbcLikeEntityImpact.applyShellHit(...)，伤害类型由 shaolib 决定
+      （很可能是 CBCDamageTypes.CANNON_PROJECTILE）。
+  → 伤害类型标签若不同，会影响针对该类型的抗性/免疫/进度判定。需确认。
+
+6.5 免伤实体（发射者自身）                                            [已核对]
+
+  旧：fireShot 里 projectile.addUntouchableEntity(entity, 1)，
+      配合 canHitEntity 排除 Projectile 与 untouchable 列表，
+      避免刚出膛就打到自己的载具。
+  新：等价物是 state.sourceBodies()（刚体级忽略）+
+      MunitionImpactPipeline.withIgnoringBodies。
+  ⚠ 但 **DualCannonBehavior 用的是不带 RaycastOptions 的 sweep 重载**，
+    走的是 DEFAULT_BROAD_PHASE / DEFAULT_NARROW_PHASE，
+    并没有套用 AbstractFuzedShellBehavior.raycastBroadPhaseOptions 里的
+    withSourceBodiesIgnored。这是照搬 shaolib 原实现的结果。
+    → 阶段四接线 fireShot 时必须确认自伤问题，
+      否则可能出现出膛即命中自己船体。**这是最需要实机验证的一条。**
+
+================================================================================
+7. 生命周期与消亡                                                       [已核对]
+================================================================================
+
+  项目                旧                            新
+  ----------------------------------------------------------------------------
+  寿命公式            (lifetime + barrelLifetime)   同（CBCMSDualCannonLaunchProfile
+                      * cmdMod * eqpMod             .resolveLifetimeTicks，且下限 1）
+  寿命判定范围        所有状态，包括已落地          **豁免终末状态**
+  落地后停留          inGroundTime == 400 → discard terminalTtlTicks = 80
+                      （canLingerInGround 时不计数）
+  引爆后残留          无专门处理                    detonationTtlTicks = 10（防空扩展弹 5）
+  距离上限            **无**                        runtime.max_distance = 5000
+  硬性上限            **无**                        ProjectileType.maxLifetimeTicks = 600
+
+  → 落地残留时间从 400 tick 缩到 80 tick（**缩短 5 倍**），
+    地上的哑弹/弹壳消失得更快。
+  → 新增了 5000 格距离上限与 600 tick 硬上限，正常射击不会触及，
+    但极端配置（超长炮管 + 指挥加成）有被截断的可能。
+
+================================================================================
+8. 区块加载                                                              [已核对]
+================================================================================
+
+  旧：CBC 基类每 tick 都做一次
+        if (config.projectilesCanChunkload) RitchiesProjectileLib.queueForceLoad(...)
+      （落地时还会先 CBCCompatTransformers.transformBlockPos 转坐标）
+      另外 fireShot 在发射瞬间也 queueForceLoad 一次。
+  新：改为 ProjectileChunkLoadPolicy（枚举，随投射物走），
+      由 shaolib 运行时处理。
+
+  → 机制完全不同。且**当前 policy 尚未设置**（阶段四才写），
+    默认走 FuzedShellData.LOAD_POLICY 的默认值 IF_ALREADY_LOADED，
+    即新炮弹目前不会强制加载区块。
+    旧系统在 config 打开时是会强加载的 → 打未加载区域的行为会不同。
+
+================================================================================
+9. 曳光 / 尾迹 / 音效 / 渲染
+================================================================================
+
+9.1 尾迹网络包：**逐条复刻**                                          [已核对]
+
+  发包节奏（首发延迟 20 tick、之后每 5 tick 一段、落地/入水补一段
+  并以 0.75 系数回拉端点、随后停止）与旧 AbstractDualCannonProjectile.tick()
+  里的 sendTrail/traced 状态机等价。
+  广播范围也保持旧行为：`level.players()`，**发给全服玩家**（未按距离过滤）。
+
+  差异：旧的状态机字段（sendTrail/traced/xOldT..）不序列化，
+        新的（trailStage/trailCooldown/trailAnchor）由 DualCannonSerializer 存盘。
+
+9.2 客户端烟迹粒子                                                    [已核对]
+
+  旧：客户端 tick 里直接 addAlwaysVisibleParticle，
+      每 tick 沿 oldPos→pos 插值撒 10 个 TrailSmokeParticleData，
+      lifetime 固定 100（TrailType 硬编码为 SHORT，LONG 分支永不生效）。
+  新：交给 shaolib 的 effects.trail_smoke（JSON 里为 true），
+      具体密度/寿命由 shaolib 决定，**与旧的视觉不会完全一致**。
+
+9.3 飞行音效                                                          [已核对]
+
+  旧：客户端 CBCClientCommon.playShellFlyingSoundOnClient，
+      半径 min(200, 位移长度*30)，且用点积过滤只对「弹道前方」的玩家播放，
+      受 CBCConfigs.client().enableBigCannonFlybySounds 控制。
+  新：effects.flyby_sound = true，由 shaolib 的 MunitionFlyingSound 实现。
+      **过滤逻辑与半径与旧的不同**。
+
+9.4 渲染：**当前完全没有**                                            [已核对]
+
+  旧：DualCannonProjectileRenderer（EntityRenderer），渲染 getRenderedBlockState()。
+  新：需要 ClientProjectileBehaviors.register(...)，属于阶段五，**尚未做**。
+      → 现在即使把 fireShot 切过去，新炮弹也是**隐形的**。
+
+9.5 曳光弹                                                            [已核对]
+
+  旧：TRACER 是同步的 ItemStack（EntityDataAccessor），
+      hasTracer() 还会看 CBCConfigs.server().munitions.allBigCannonProjectilesAreTracers。
+  新：FuzedShellData.TRACER 是 boolean，SPAWN_ONLY 同步。
+      **全局曳光配置项目前没有接**（阶段四设置 TRACER 时需要补上）。
+
+================================================================================
+10. 新系统独有的能力（旧完全没有）                                      [已核对]
+================================================================================
+
+  - **嵌入（embed）**：无引信弹命中后可以钉进方块/船体并随之运动，
+    而不是像旧系统那样直接 setInGround 停在世界坐标。
+  - **UNCERTAIN 命中**：区块未加载时不硬判，先跳过再重扫。
+  - **刚体抗性倍率**、**源刚体忽略**（见 §3.7 / §6.5）。
+  - 穿透/跳弹计数器、最大射程、终末 TTL 分级。
+  - 每发动态属性覆盖（DYNAMIC_PROPERTIES），旧系统只能靠实体字段。
+
+================================================================================
+11. 属性与配置来源                                                      [已核对]
+================================================================================
+
+  项目            旧                                新
+  ----------------------------------------------------------------------------
+  数据路径        data/cbcmoreshells/               data/cbcmoreshells/
+                  munition_properties/projectiles/  shaolib_munitions/munitions/
+  结构            扁平（30+ 个平铺字段）            分组（ballistics/runtime/impact/
+                                                    effects/damage/dual_cannon/dual_impact）
+  加载            CBC MunitionPropertiesHandler     shaolib MunitionConfigManager
+  客户端同步      CBC 的属性同步包                  shaolib MunitionPropertiesSync
+  发射期参数      DualCannonPropertiesComponent     DualCannonLaunchProperties
+                  （12 字段，塞在同一个 record）    + CBCMSDualCannonLaunchProfile
+                                                    （只留 baseLifetimeTicks）
+
+  ⚠ 两套 JSON **目前并存**：旧的 9 个文件还在，因为旧实体炮弹仍在用。
+    阶段六才会删除。期间改数值需要**改两处**，否则新旧表现不一致。
+
+  另：effects.cbc_projectile_effect_entity 现在指向
+      createbigcannons:ap_shell / he_shell（CBC 的实体），
+      而不是 cbcmoreshells 自己的实体 —— 这样阶段六删掉 cbcms 实体后
+      不会变成悬空引用。旧系统的方块命中特效用的是炮弹自己的 EntityType，
+      因此**方块命中粒子的外观可能有细微差别**。
+
+================================================================================
+12. 旧代码里的既有 bug（新实现没有复刻）                                 [已核对]
+================================================================================
+
+  a) **excessMomentum 恒为 0**
+       if (rawMomentum > maximumMomentum) {
+           rawMomentum = maximumMomentum;              // 先赋值
+           excessMomentum = rawMomentum - maximumMomentum;  // 再相减 → 恒 0
+       }
+     所以 durabilityPenalty 里的 `+ excessMomentum*1.5f` 一直是 +0。
+     新模型压根没有这一项 → **行为凑巧一致**，但要知道这是「对齐了 bug 的结果」，
+     不是对齐了设计意图。若原意是「超出动量上限要额外掉耐久」，
+     那么新旧都没实现，需要另行补。
+
+  b) **isBaseFuze() 查错了处理器**
+     NormalHEShellBlock / NormalAPShellBlock / NormalSAPShellBlock 三个类
+     查的是 CBCMSMunitionPropertiesHandlers.**RACKED_PROJECTILE**
+     而不是 DUAL_CANNON_PROPERTIES —— 拿双联装的 EntityType 去问弹架处理器，
+     只会拿到缺省值。因为所有 base_fuze 本来就是 false，一直没暴露。
+     （另外四个类查的是对的。）
+
+  c) **alternativePenetration() 死代码**
+     NormalSAPShellProjectile 里有一整段面积采样式击穿分支，
+     但 alternativePenetration() 恒返回 false，永不执行。
+     已按要求移植保存为 CBCMSLegacyPenetration（技术储备，未接线）。
+
+  d) **不检查不可破坏方块**（见 §3.4）。
+
+  e) **TrailType.LONG 分支永不生效**（局部变量硬编码为 SHORT）。
+
+================================================================================
+13. 当前接线状态（很重要）                                              [已核对]
+================================================================================
+
+  阶段一～三已完成，但 **阶段四（fireShot 改造）尚未做**，因此：
+
+    - MountedDualCannonContraption.fireShot 仍然 `level.addFreshEntity(旧实体)`
+    - 新的 9 个 ProjectileType 已注册，但**没有任何代码去 spawn 它们**
+    - 新的 9 个 JSON 已加载进 MunitionConfigManager，但没有被消费
+    - 客户端行为未注册（阶段五）
+
+  → **游戏内表现目前与迁移前完全相同**，本文列出的差异都是
+    「阶段四接线之后才会显现」的差异，不是当前已经生效的差异。
+
+================================================================================
+14. 建议实机验证清单（按风险排序）
+================================================================================
+
+  1. **自伤**：出膛是否会命中自己的载具/船体（§6.5，sweep 未套 sourceBodies）
+  2. **近炸引信**：防空弹对飞机/生物是否还能起爆（§5.2b）——大概率不能
+  3. **AP/APBC + 定时引信**：是否会空爆（§5.3）——大概率会，属回归
+  4. **入水弹道**：入水后减速是否明显变弱（§2.2b）
+  5. **穿透后减速幅度**：与旧系统对比初速衰减（§3.6，未验证项）
+  6. **爆炸击杀归属与死亡消息**（§6.3）
+  7. **实体命中的伤害类型标签**（§6.4）
+  8. 不可破坏方块是否还能被打穿（§3.4，行为收紧）
+  9. 落地残留时间 80 vs 400 tick 的观感（§7）
+ 10. 未加载区块方向的射击（§8，区块强加载机制变更）
+
+================================================================================
