@@ -1,1 +1,3 @@
-先使用B方案完成阶段1，同时，把AbstractDualCannonProjectile中那些未调用的击穿方法也保留，这是以前的技术储备作为备选算法
+不复用代码指的是不直接调用Shaolib Munition里面已有的专门对于DualCannon 的注册和定义内容，因为这一块是临时的，未来会移除，
+需要把这些内容复制过来，在自己的mod里面再注册一遍，因此像DualCannonShellProperties这样的需要再这个mod里面单独做一个，改为DualCannonProjectileProperties
+同时完成类似的改动比如DualCannonState
