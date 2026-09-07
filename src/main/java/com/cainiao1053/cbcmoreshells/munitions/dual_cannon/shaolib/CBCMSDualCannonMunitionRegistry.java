@@ -43,9 +43,12 @@ public final class CBCMSDualCannonMunitionRegistry {
 	 * @param kind            impact/detonation class, see {@link DualCannonBehavior.Kind}
 	 * @param launchProfile   the launch facts the property set cannot express
 	 * @param fuzed           whether the block accepts a fuze at all; inert shot does not
-	 * @param baseFuze        base-fuzed shells only consult their fuze once through the armour.
-	 *                        Mirrors the old {@code FuzedDualCannonProjectileBlock.isBaseFuze()},
-	 *                        which also decides which face the fuze socket sits on
+	 * @param baseFuze        whether the shell is base-fuzed. Informational for now: the fuze socket
+	 *                        face still comes from {@code FuzedDualCannonProjectileBlock.isBaseFuze()}
+	 *                        on the block, and the "only fuze after penetrating" behaviour comes from
+	 *                        {@link DualCannonBehavior.Kind#isApheLike()}. Recorded here so a future
+	 *                        munition that needs base-fuze semantics outside APHE/APBC has somewhere
+	 *                        to declare it. Every shipped dual cannon munition is {@code false}
 	 * @param renderedBlock   block whose model represents this shell in flight; the extended
 	 *                        variants borrow their normal sibling's model
 	 */

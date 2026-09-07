@@ -226,7 +226,72 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
   3) 旧的 data/cbcmoreshells/munition_properties/projectiles/*.json **暂不删除**，
      因为旧的 9 个实体炮弹还在用它们。阶段六一并清理。
 
-【尚未完成】阶段三～六：引信映射、fireShot 改造、
+【已完成】阶段三（第 6 节）。新增 1 个文件：
+
+  munitions/dual_cannon/shaolib/CBCMSDualCannonFuzeMapper.java
+    map(ItemStack) → MappedFuze，以及 install(FuzedMunitionState, ItemStack) 便捷方法。
+    不注册任何物品：翻译出来的 ItemStack 只存在于投射物服务端状态里，
+    不掉落、不进背包、不序列化成玩家可获得的物品形态。
+
+  映射表（已按 CBC 实际实现核对，非照抄 6.2 的草案）：
+    空                          → EMPTY（无引信弹，走 shaolib 的嵌入分支）
+    已是 MunitionFuzeItem       → 原样透传
+    CBC TimedFuzeItem           → TIMED_FUZE，TimeTicks = FUZE_TIMER（默认 20）
+    DelayedImpact/DelayedInertia→ IMPACT_DELAY_FUZE，DelayTicks = FUZE_TIMER（默认 20）
+    Impact / Inertia            → IMPACT_DELAY_FUZE，DelayTicks = 0
+    Proximity                   → BODY_ONLY_PROXIMITY_FUZE
+                                  Radius = max(1, DETONATION_DISTANCE)（默认 1）
+                                  ArmingTicks = CBCConfigs...proximityFuzeArmingTime
+                                  ArmingDistance = 0
+    Wired                       → IMPACT_DELAY_FUZE(0)（采纳 6.2 的建议 b）
+    其他 FuzeItem               → EMPTY + LOGGER.debug
+
+【§6.5 的顺序问题已经查明，不需要再实测】
+  ServerProjectileRuntime.spawn 的实际顺序（反编译确认）：
+    60: initializer.initializeInstance(projectile)
+    61: state = type.createServerState(...)
+    63: initializer.initializeHandle(entry)     ← handle 阶段
+    64: type.onSpawn(level, projectile, state)  ← onSpawn 在其后
+  → **initializeHandle 在 onSpawn 之前**。
+    所以 6.5 写的方案成立：在 handle 阶段 installFuze，
+    随后 onSpawn 里的 MunitionFuzes.onInstalled 能看到并初始化这枚引信。
+  → 同理也说明：在 handle 阶段直接 setDurabilityMass 不会被 onSpawn 的
+    initializeDurabilityMass 覆盖（后者只在未设值时写入）。
+    但阶段二仍然选择走 DYNAMIC_PROPERTIES，因为
+    DualCannonPenetrationModel.resolve 里也会调
+    initializeDurabilityMass(ballistics.durabilityMass() * durabilityModifier)，
+    只有把值放进属性里，两条路径才一致。
+
+【§6.3 要求的 base_fuze 审计结果：9 个弹种全部 false，无例外】
+  normal_ap_shot / extended_ap_shot —— 惰性弹，无引信插孔（InertDualCannonProjectileBlock）
+  其余 7 个 JSON 里 base_fuze 均为 false。
+  → Registry 里 9 条 Entry 的 baseFuze 一律 false，与审计一致。
+  → APHE / APBC 的「穿透后才引爆」由 Kind.isApheLike() 提供，与 base_fuze 无关。
+
+  ⚠ 审计时发现一个**既有 bug**（与本次迁移无关，阶段六会随类删除一并消失）：
+    NormalHEShellBlock / NormalAPShellBlock / NormalSAPShellBlock 三个类的
+    isBaseFuze() 查的是 CBCMSMunitionPropertiesHandlers.RACKED_PROJECTILE，
+    而不是 DUAL_CANNON_PROPERTIES —— 拿双联装的 EntityType 去问弹架的处理器，
+    只会拿到该处理器的缺省值。
+    因为所有 base_fuze 本来就是 false，实际表现没有差异，所以一直没暴露。
+    （NormalAntiairHEShellBlock / NormalAPBCShellBlock /
+      ExtendedAntiairHEShellBlock 查的是对的；
+      NormalIncendiaryHEShellBlock 查 DUAL_CANNON_INCENDIARY_PROPERTIES，也是对的。）
+
+【三处 CBC → shaolib 的行为落差（已在代码 javadoc 中写明）】
+  1) **哑弹机制丢失**：CBC 的 Impact / Inertia 引信有 FUZE_DAMAGE 耐久
+     与 getDetonateChance() 的概率失效，shaolib 的对应引信必定起爆。
+     迁移后这两种引信比原来更可靠。
+  2) **近炸引信的探测对象改变**：CBC 的 ProximityFuzeItem 扫描的是**实体**
+     （level().getEntities(...)），而 shaolib 只有 BodyOnlyProximityFuzeItem，
+     扫描的是**物理刚体**（船体等）。
+     → 迁移后近炸弹会在靠近船体时引爆，但**不会**在靠近飞机/生物时引爆。
+     这对防空弹影响最大。彻底解决需要 shaolib 侧提供实体近炸引信；
+     目前没有，而 cbcms 不注册物品就无法自己补一个。
+  3) **有线引信失去触发源**：WiredFuzeItem 靠发射点的红石信号触发，
+     炮弹出膛后红石够不着，退化为触发引信。
+
+【尚未完成】阶段四～六：fireShot 改造、
   客户端行为注册、旧实体类删除。
   旧的 9 个实体炮弹与 CBCMSEntityTypes 注册**目前仍然存在且仍在使用**，
   新旧两套并存，游戏行为暂时没有变化。
@@ -1195,7 +1260,7 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     CBCMSDualCannonLaunchProfile.java            [阶段二 已建]
     CBCMSDualCannonMunitionRegistry.java         [阶段二 已建]
     CBCMSDualCannonShotOverrides.java            [阶段二 已建]
-    CBCMSDualCannonFuzeMapper.java               [阶段三 待建]
+    CBCMSDualCannonFuzeMapper.java               [阶段三 已建]
     client/CBCMSDualCannonProjectileClient.java  [阶段五 待建，
        需自行移植 DualCannonShellClientBehavior，同样不能直接用 shaolib 的]
 
