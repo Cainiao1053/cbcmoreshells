@@ -2,6 +2,9 @@ package com.cainiao1053.cbcmoreshells;
 
 import com.cainiao1053.cbcmoreshells.cannon_control.cannon_types.CBCMSCannonContraptionTypes;
 import com.cainiao1053.cbcmoreshells.index.*;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonProjectiles;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonPropertyTypes;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSIncendiaryEffectService;
 import com.cainiao1053.cbcmoreshells.network.CBCMSNetwork;
 import com.cainiao1053.cbcmoreshells.network.CBCMSRootNetwork;
 import com.mojang.logging.LogUtils;
@@ -68,6 +71,12 @@ public class Cbcmoreshells {
         CBCMSRootNetwork.init();
         //CBCMSArmInteractionPointTypes.register();
         //CBCMSDataComponents.init();
+
+        // Shaolib-backed dual cannon munitions. Property types must initialise before the
+        // projectile types that resolve against them.
+        CBCMSDualCannonPropertyTypes.register();
+        CBCMSDualCannonProjectiles.register();
+        CBCMSIncendiaryEffectService.install();
 
     }
 

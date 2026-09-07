@@ -73,6 +73,86 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     的 ItemStack 来实现。
 
 ================================================================================
+0.5 实施状态（2026-09-07 更新）
+================================================================================
+
+【已完成】阶段一（第 4 节），路线 B。新增 6 个文件：
+
+  munitions/dual_cannon/shaolib/
+    CBCMSDualCannonData.java             扩展 schema（lifetime / 动态属性 / 尾迹锚点）
+    CBCMSDualCannonPropertyTypes.java    9 个 MunitionPropertyType
+    CBCMSDualCannonShellBehavior.java    extends DualCannonShellBehavior
+    CBCMSDualCannonProjectiles.java      9 个 ProjectileType 注册
+    CBCMSIncendiaryEffectService.java    IncendiaryEffectService 实现（链式安装）
+    CBCMSLegacyPenetration.java          备选击穿算法（技术储备，见下）
+
+  Cbcmoreshells.init() 末尾追加三行调用。
+
+【本次实施与第 4 节原计划的两处偏离 —— 原计划在此处是错的】
+
+  偏离 1：不再新建 CBCMSDualCannonShellState（原 §4.2）
+    原因：DualCannonShellBehavior 的签名是
+          `extends AbstractFuzedShellBehavior<DualCannonShellState, P>`
+          —— 状态类型是**写死的 DualCannonShellState，不是类型变量**。
+          因此它实现的是 ProjectileBehavior<DualCannonShellState>。
+          Java 泛型不协变，ProjectileType<CBCMSDualCannonShellState> 无法
+          接受 ProjectileBehavior<DualCannonShellState>。
+          要么放弃继承库的 behavior（等于重写整条穿深/引信流水线），
+          要么不加 State 子类。选后者。
+    做法：cbcms 的每发数据全部放进扩展 schema
+          （ProjectileInstance 的 data accessor）。
+          已核实 ProjectileInstance.save 里 `tag.put("Data", this.data.saveNbt())`
+          对所有 accessor 无差别落盘（不看 syncPolicy），
+          所以 LOCAL_ONLY 的字段同样持久化，语义上等价于放在 State 里。
+
+  偏离 2：不再新建 CBCMSDualCannonShellSerializer（原 §4.2 末 / §10）
+    原因：DualCannonShellSerializer 是 `public final class`，不能继承。
+    做法：偏离 1 之后已无额外 State 字段需要序列化，
+          直接 `new DualCannonShellSerializer<DualCannonShellState>()` 即可。
+
+【CBCMSLegacyPenetration —— 保留的备选击穿算法】
+  来源：AbstractDualCannonProjectile.getHitNearbyAverageToughness(...)
+        + NormalSAPShellProjectile 里 `if (this.alternativePenetration())` 分支
+        （alternativePenetration() 恒返回 false，所以那段是死代码）。
+  与在用模型的区别：
+    在用（DualCannonPenetrationModel）：动量制。
+        mass × velocity × bonus × incidence  vs  被击中那一格的 toughness，
+        中间有概率带。对入射角/速度敏感，薄板与厚板拦阻能力接近。
+    备选（CBCMSLegacyPenetration）：装甲厚度制。
+        对命中面背后 3×3×3 深共 27 格取平均 toughness，
+        对比纯质量导出的 mass²×0.4 + mass×1.2 − 1.5。
+        不看速度与入射角，因此奖励间隔/复合装甲，口径成为主导变量，
+        更接近真实穿深表的行为。
+  当前未接线。shaolib 是在 DualCannonShellBehavior.tickServer 里把
+  DualCannonPenetrationModel::resolve 传进 MunitionImpactSweep.sweep(...) 的，
+  要换模型必须整体覆写 tickServer 并自建 sweep。这是有意不做的。
+
+【验证情况 —— 未做完整构建验证】
+  本环境 Gradle 无法解析 settings.gradle 的 foojay-resolver 插件（无网络），
+  `gradlew compileJava` 无法运行，因此**没有做过项目自身的完整编译**。
+  替代验证：用 JDK21 javac + 手工拼装的 classpath
+  （neoformruntime 的 MC+NeoForge jar、模块缓存里的 1.21 依赖、
+    CBC 5.11.7、shaolib/shaolib_munitions 0.1.0）
+  对新增 6 个文件 + 经 sourcepath 牵引的全部依赖做了类型检查：
+    - 新增包内 0 错误，6 个 .class 全部产出
+    - Cbcmoreshells.class 产出（证明 init() 的改动可编译）
+    - 残留 8 个错误全部落在**未改动**的文件上
+      （ShellessFuzedProjectileBlock / TorpedoProjectileBlock /
+        FuzedTorpedoProjectileBlock / FuzedRackedProjectileBlock /
+        DualCannonProjectileBlock / FuzedDualCannonProjectileBlock /
+        CommandDeployerBlockEntity），
+      成因是我拼的 classpath 里 DataFixerUpper 与 fastutil 版本不对
+      （DataResult.resultOrPartial 签名、IntList.of(int)），与本次改动无关。
+  ⚠ shaolib API 是按 0.1.0 反编译核对的，
+    而 build.gradle 用的是 curse 文件 id 8728420 / 8728437，
+    两者是否同版本**未经证实**。请在能联网的环境先跑一次 gradlew compileJava。
+
+【尚未完成】阶段二～六：JSON 数据迁移、引信映射、方块查表、
+  fireShot 改造、客户端行为注册、旧实体类删除。
+  旧的 9 个实体炮弹与 CBCMSEntityTypes 注册**目前仍然存在且仍在使用**，
+  新旧两套并存，游戏行为暂时没有变化。
+
+================================================================================
 1. 现状盘点：cbcms 侧现有 Dual Cannon 弹药架构
 ================================================================================
 
@@ -413,7 +493,10 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     → 由 `DualCannonPenetrationModel.resolve` + `DualCannonImpactProperties`
       （smashToughness / maximumMomentum / highPenetrationMassPenaltyScale /
         penetrationMassPenaltyScale / bounceMassPenaltyScale）取代。
-  - `getHitNearbyAverageToughness(...)` —— 若无人调用，直接删。
+  - `getHitNearbyAverageToughness(...)` / `alternativePenetration()`
+    —— **不要删**。这两个是以前的技术储备（面积采样式击穿模型），
+       已在阶段一移植为 `CBCMSLegacyPenetration`，见 0.5 节。
+       删除旧实体类时确认该文件已存在即可。
   - `onTickRotate()` / `lerpRotation` —— shaolib 用 orientation 四元数。
   - `ignoreExplosion` / `getForces` / `getDragForce` 等 CBC 实体钩子。
   - `FuzedDualCannonProjectile` 整个类（引信逻辑全部移交 MunitionFuzes）。
@@ -1014,16 +1097,17 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     cannons/dual_cannon/** （炮管、炮闩、材质，全部不动）
 
 【新建】munitions/dual_cannon/shaolib/
-    CBCMSDualCannonPropertyTypes.java
-    CBCMSDualCannonProjectiles.java
-    CBCMSDualCannonData.java
-    CBCMSDualCannonShellState.java
-    CBCMSDualCannonShellBehavior.java
-    CBCMSDualCannonShellSerializer.java
-    CBCMSDualCannonMunitionRegistry.java
-    CBCMSDualCannonFuzeMapper.java
-    CBCMSIncendiaryEffectService.java
-    client/CBCMSDualCannonProjectileClient.java
+    CBCMSDualCannonPropertyTypes.java        [阶段一 已建]
+    CBCMSDualCannonProjectiles.java          [阶段一 已建]
+    CBCMSDualCannonData.java                 [阶段一 已建]
+    CBCMSDualCannonShellBehavior.java        [阶段一 已建]
+    CBCMSIncendiaryEffectService.java        [阶段一 已建]
+    CBCMSLegacyPenetration.java              [阶段一 已建，技术储备]
+    CBCMSDualCannonMunitionRegistry.java     [阶段二 待建]
+    CBCMSDualCannonFuzeMapper.java           [阶段三 待建]
+    client/CBCMSDualCannonProjectileClient.java  [阶段五 待建]
+    —— CBCMSDualCannonShellState / CBCMSDualCannonShellSerializer 取消，
+       原因见 0.5 节「两处偏离」。
 
 【新建数据】
     data/cbcmoreshells/shaolib_munitions/munitions/normal_ap_shot.json
