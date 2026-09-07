@@ -1,1 +1,2 @@
-完成answer.txt里面的阶段3，把引信重定向做好
+现在对比新的改动和旧机制，寻找新机制和旧的继承AbstractDualCannonProjectile的机制有哪些不同
+不改代码，把答案写进difference.txt里面
