@@ -54,7 +54,6 @@ public final class CBCMSDualCannonPropertyTypes {
 
 	private CBCMSDualCannonPropertyTypes() {}
 
-	/** Forces static initialisation; call once during mod setup. */
 	public static void register() {}
 
 	private static ResourceLocation id(String path) {
