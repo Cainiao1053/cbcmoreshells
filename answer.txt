@@ -173,8 +173,61 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     而 build.gradle 用的是 curse 文件 id 8728420 / 8728437，
     两者是否同版本**未经证实**。请在能联网的环境先跑一次 gradlew compileJava。
 
-【尚未完成】阶段二～六：JSON 数据迁移、引信映射、方块查表、
-  fireShot 改造、客户端行为注册、旧实体类删除。
+【已完成】阶段二（第 5 节），发射期参数采用**做法 2**。新增 3 个文件 + 9 个数据文件：
+
+  munitions/dual_cannon/shaolib/
+    CBCMSDualCannonLaunchProfile.java     精简 record，只有 baseLifetimeTicks
+    CBCMSDualCannonMunitionRegistry.java  方块 → Entry 查表（懒加载）
+    CBCMSDualCannonShotOverrides.java     每发动态属性 JSON 编码器
+
+  data/cbcmoreshells/shaolib_munitions/munitions/
+    normal_ap_shot.json / normal_he_shell.json / normal_antiair_he_shell.json /
+    normal_ap_shell.json / normal_apbc_shell.json / normal_sap_shell.json /
+    normal_incendiary_he_shell.json / extended_ap_shot.json /
+    extended_antiair_he_shell.json
+    （9 个全部用 Gson 校验通过）
+
+  做法 2 的落实：CBCMSDualCannonLaunchProfile 里**只有 baseLifetimeTicks**，
+  装药/后坐/初速/散布/装填系数/冷却缩减率全部从
+  MunitionConfigManager → DualCannonLaunchProperties 读，
+  smashToughness / maximumMomentum 从 DualCannonImpactProperties 读，
+  数据只有一份来源，不会两边漂移。
+
+  各弹 baseLifetimeTicks（写在 Registry 里，取自旧 JSON 的 lifetime）：
+    normal_ap_shot 40 / extended_ap_shot 20 /
+    normal_he_shell 20 / normal_incendiary_he_shell 20 /
+    normal_ap_shell 30 / normal_apbc_shell 30 / normal_sap_shell 30 /
+    normal_antiair_he_shell 0 / extended_antiair_he_shell 0
+  ⚠ 两个防空弹的 lifetime 本来就是 0，这是**有意义的值**，不是缺省：
+    旧代码 `(lifetime + barrelLifetime) * 修正` 意味着它们完全靠炮管加成活着。
+    CBCMSDualCannonLaunchProfile.resolveLifetimeTicks(...) 复刻了这个公式并
+    对结果取 max(1,...)。注意区分：profile 里的 0 是**基数**，
+    而 DualCannonState.lifetimeTicks() 的 0 才表示「不限制」。
+
+【阶段二的三个取值决定（与第 5 节原文不同，此处为准）】
+
+  1) runtime.max_distance 一律写 5000，而不是「按 lifetime 换算」。
+     原因：旧实现**根本没有距离上限**，只有 tick 寿命。
+     真正的限制器是 DualCannonBehavior.expireOnLifetime，
+     max_distance 只作为跑飞兜底。若照 5.5 表里写成 180（shaolib fallback 值），
+     初速 8 × 寿命 40 tick ≈ 320 格的弹会被腰斩。
+
+  2) effects.cbc_projectile_effect_entity 指向 **CBC 的实体**
+     （createbigcannons:ap_shell / createbigcannons:he_shell），
+     而不是 cbcmoreshells 自己的实体。
+     原因：这个字段被 CbcMunitionEffects 用
+     `BuiltInRegistries.ENTITY_TYPE.getOptional(...)` 解析（找不到会静默回退到
+     CBC 的 AP_SHELL）。阶段六删掉 cbcms 的 9 个实体后，
+     指向 cbcmoreshells:* 就会变成悬空引用并静默降级；
+     现在直接指向 CBC 的稳定实体，跨阶段六不受影响。
+     注意这与客户端渲染无关 —— 渲染用的方块 id 是单独传给
+     DualCannonShellClientBehavior 的（见 Entry.renderedBlock）。
+
+  3) 旧的 data/cbcmoreshells/munition_properties/projectiles/*.json **暂不删除**，
+     因为旧的 9 个实体炮弹还在用它们。阶段六一并清理。
+
+【尚未完成】阶段三～六：引信映射、fireShot 改造、
+  客户端行为注册、旧实体类删除。
   旧的 9 个实体炮弹与 CBCMSEntityTypes 注册**目前仍然存在且仍在使用**，
   新旧两套并存，游戏行为暂时没有变化。
 
@@ -1139,7 +1192,9 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     CBCMSDualCannonData.java                     [阶段一 已建]
     CBCMSIncendiaryEffectService.java            [阶段一 已建]
     CBCMSLegacyPenetration.java                  [阶段一 已建，技术储备]
-    CBCMSDualCannonMunitionRegistry.java         [阶段二 待建]
+    CBCMSDualCannonLaunchProfile.java            [阶段二 已建]
+    CBCMSDualCannonMunitionRegistry.java         [阶段二 已建]
+    CBCMSDualCannonShotOverrides.java            [阶段二 已建]
     CBCMSDualCannonFuzeMapper.java               [阶段三 待建]
     client/CBCMSDualCannonProjectileClient.java  [阶段五 待建，
        需自行移植 DualCannonShellClientBehavior，同样不能直接用 shaolib 的]
