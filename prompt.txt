@@ -1,5 +1,1 @@
-我需要把当前所有的dual cannon的炮弹换成Shaolib Munition的炮弹，参考com.verr1.shaolib.munitions.projectile.dual_cannon.NormalDualCannonProjectiles中的条目
-给出一个完整的流程，不复用代码而是自己重新写代码，需要怎么做来完成炮弹类型的替换
-包括炮弹本身的架构和逻辑重构，炮弹引信部分的重定向，引信需要兼容create big cannons的原版引信并映射到shaolib的引信，不注册任何物品
-炮弹数据结构的重新架构，MountedDualCannonContraption本身需要修改的内容
-给我写一个完成的替换流程，不改代码，把结果写到answer.txt
+先使用B方案完成阶段1，同时，把AbstractDualCannonProjectile中那些未调用的击穿方法也保留，这是以前的技术储备作为备选算法
