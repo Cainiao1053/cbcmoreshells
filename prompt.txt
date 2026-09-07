@@ -1,1 +1,1 @@
-完成answer.txt里面的阶段2，使用做法2保留一个精简的 CBCMSDualCannonLaunchProfile record
+完成answer.txt里面的阶段3，把引信重定向做好
