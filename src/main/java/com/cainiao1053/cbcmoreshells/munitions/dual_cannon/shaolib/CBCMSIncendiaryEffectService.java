@@ -1,7 +1,6 @@
 package com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib;
 
 import com.cainiao1053.cbcmoreshells.CBCMSCompatTransformers;
-import com.verr1.shaolib.munitions.projectile.dual_cannon.IncendiaryEffectService;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.sounds.SoundEvents;
@@ -19,38 +18,38 @@ import net.minecraft.world.phys.Vec3;
 import rbasamoyai.createbigcannons.munitions.big_cannon.fluid_shell.FluidBlobBurst;
 
 /**
- * cbcms' implementation of Shaolib's incendiary SPI.
+ * The default {@link DualCannonIncendiaryService}: scatters fire around the detonation, reaching
+ * into sub-level (ship) worlds as well as the host level.
  *
- * <p>{@code DualCannonShellBehavior} calls {@code IncendiaryEffectService.Holder.get().ignite(...)}
- * when an {@code INCENDIARY} shell detonates, having already applied the durability-derived
- * chance/range multipliers. The library default is a no-op, so without this installed incendiary
- * shells would explode but never start fires.
+ * <p>{@link DualCannonBehavior} calls the installed service when an {@code INCENDIARY} shell
+ * detonates, having already scaled chance and range by the shell's durability modifier. The default
+ * service is a no-op, so without this installed incendiary shells would explode but never ignite.
  */
-public final class CBCMSIncendiaryEffectService implements IncendiaryEffectService {
+public final class CBCMSIncendiaryEffectService implements DualCannonIncendiaryService {
 
 	/** Radius around the detonation searched for sub-level (ship) bodies to also set alight. */
 	private static final double SUBLEVEL_SEARCH_INFLATION = 3.0D;
 
-	private final IncendiaryEffectService delegate;
+	private final DualCannonIncendiaryService delegate;
 
-	private CBCMSIncendiaryEffectService(IncendiaryEffectService delegate) {
+	private CBCMSIncendiaryEffectService(DualCannonIncendiaryService delegate) {
 		this.delegate = delegate;
 	}
 
 	/**
 	 * Installs this service, chaining to whatever was already registered.
 	 *
-	 * <p>{@code Holder} is a process-wide singleton, so a plain {@code set} would silently disable
-	 * any other mod's incendiary handling in the same pack. Chaining keeps both alive.
+	 * <p>The holder is a single slot, so a plain {@code set} would silently drop any service another
+	 * mod had installed. Chaining keeps both alive.
 	 */
 	public static void install() {
-		IncendiaryEffectService previous = IncendiaryEffectService.Holder.get();
-		IncendiaryEffectService.Holder.set(new CBCMSIncendiaryEffectService(previous));
+		DualCannonIncendiaryService previous = DualCannonIncendiaryService.Holder.get();
+		DualCannonIncendiaryService.Holder.set(new CBCMSIncendiaryEffectService(previous));
 	}
 
 	@Override
 	public void ignite(ServerLevel level, Vec3 position, float fireChance, int fireRange) {
-		if (this.delegate != null && this.delegate != IncendiaryEffectService.NOOP) {
+		if (this.delegate != null && this.delegate != DualCannonIncendiaryService.NOOP) {
 			this.delegate.ignite(level, position, fireChance, fireRange);
 		}
 		if (Math.random() > fireChance) return;

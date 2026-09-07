@@ -17,7 +17,7 @@ import rbasamoyai.createbigcannons.block_armor_properties.BlockArmorPropertiesPr
  * momentum model and may be worth switching to later.
  *
  * <h2>How it differs from the shipped model</h2>
- * The live model ({@code DualCannonPenetrationModel}, driven by {@code DualCannonImpactProperties})
+ * The live model ({@link DualCannonPenetrationModel}, driven by {@link DualCannonImpactProperties})
  * is momentum-based: it compares {@code mass * velocity * bonus * incidence} against the toughness
  * of the single block that was hit, with a probabilistic band in between. It is sensitive to
  * impact angle and speed, and a thin plate stops a shell about as well as a thick one.
@@ -28,12 +28,12 @@ import rbasamoyai.createbigcannons.block_armor_properties.BlockArmorPropertiesPr
  * makes shell calibre the dominant variable — closer to how real armour penetration tables behave.
  *
  * <h2>Wiring it in</h2>
- * Not currently called. Shaolib resolves penetration inside
- * {@code DualCannonShellBehavior.tickServer}, which passes {@code DualCannonPenetrationModel::resolve}
- * into {@code MunitionImpactSweep.sweep(...)}. To use this model instead,
- * {@link CBCMSDualCannonShellBehavior} would have to override {@code tickServer} wholesale and run
- * its own sweep with a resolver that consults {@link #penetrates}. That is a deliberate
- * non-goal for now.
+ * Not currently called. {@link DualCannonBehavior#tickServer} passes
+ * {@code DualCannonPenetrationModel::resolve} to {@code MunitionImpactSweep.sweep(...)} as its block
+ * impact resolver; swapping in a resolver that consults {@link #penetrates} is the whole change.
+ * Note that a resolver must still produce a full {@code MunitionImpactOutcome} — durability mass
+ * accounting, bounce handling and the stop/spall effects all live in the resolver, so a replacement
+ * has to cover those too rather than only answering the penetrate/stop question.
  */
 public final class CBCMSLegacyPenetration {
 
