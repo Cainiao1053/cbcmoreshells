@@ -8,6 +8,7 @@ import com.cainiao1053.cbcmoreshells.network.CBCMSNetworkImpl;
 import com.cainiao1053.cbcmoreshells.network.ClientboundCBCMSSplashPacket;
 import com.cainiao1053.cbcmoreshells.network.ClientboundCBCMSTrailPacket;
 import com.mojang.math.Constants;
+import com.verr1.shaolib.munitions.ShaolibMunitions;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.particles.ParticleOptions;

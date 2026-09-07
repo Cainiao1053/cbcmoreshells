@@ -59,22 +59,6 @@ public abstract class FuzedDualCannonProjectileBlock<BLOCK_ENTITY extends FuzedB
 		return projectile;
 	}
 
-//	protected static ItemStack getFuzeFromBlocks(List<StructureBlockInfo> blocks) {
-//		if (blocks.isEmpty()) return ItemStack.EMPTY;
-//		StructureBlockInfo info = blocks.get(0);
-//		if (info.nbt() == null) return ItemStack.EMPTY;
-//		BlockEntity load = BlockEntity.loadStatic(info.pos(), info.state(), info.nbt());
-//		return load instanceof FuzedBlockEntity fuzed ? fuzed.getItem(1) : ItemStack.EMPTY;
-//	}
-//
-//	public ItemStack getFuzeFromBlock(Level level, BlockPos pos) {
-//		BlockEntity be = level.getBlockEntity(pos);
-//		if (be instanceof FuzedBlockEntity fuzed) {
-//			return fuzed.getItem(1);
-//		}
-//		return ItemStack.EMPTY;
-//	}
-
 	protected static ItemStack getFuzeFromBlocks(List<StructureBlockInfo> blocks, HolderLookup.Provider registries) {
 		if (blocks.isEmpty()) return ItemStack.EMPTY;
 		StructureBlockInfo info = blocks.get(0);
