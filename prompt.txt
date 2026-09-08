@@ -1,1 +1,4 @@
-如果我之后要修改击穿的公式和机制，需要怎么修改，把方法简单写入answer2.txt
+从DualCannonPenetrationModel开始简单说明当前dual cannon炮弹的代码架构
+并且说明当前炮弹击穿模型的逻辑
+然后给出一个方案，如果要增加另一种dual cannon炮弹的击穿模型，该如何改代码
+不改代码，只给方案，写进report2.txt

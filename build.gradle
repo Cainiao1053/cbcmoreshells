@@ -137,6 +137,9 @@ dependencies {
     implementation "curse.maven:shaolib-1427600:8728420"
     implementation "curse.maven:shaolib-munitions-1667342:8728437"
     implementation "curse.maven:synaxis-1526348:8606652"
+    implementation "curse.maven:ldlib-626676:8813684"
+    implementation "curse.maven:sable-schematic-tool-1526951:8606655"
+    implementation "curse.maven:jei-238222:8829744"
 //            {
 //        exclude group: "info.journeymap"       // version conflict: old API shadows JourneyMap's bundled newer API
 //        exclude group: "maven.modrinth", module: "journeymap"
@@ -146,13 +149,6 @@ dependencies {
 
     //implementation "curse.maven:sable-1312371:${sable_version_cf}"
     api("dev.ryanhcode.sable:sable-neoforge-${project.minecraft_version}:${project.sable_version}")
-
-    // Valkyrien Skies (version intentionally not updated)
-//    implementation("org.valkyrienskies:valkyrienskies-121-neoforge:${vs2_version}") { transitive = false }
-//    compileOnly "org.valkyrienskies.core:api:${vs_core_version}"
-//    compileOnly "org.valkyrienskies.core:api-game:${vs_core_version}"
-//    compileOnly "org.valkyrienskies.core:util:${vs_core_version}"
-//    compileOnly "org.valkyrienskies.core:impl:${vs_core_version}"
 
     implementation "com.fasterxml.jackson.core:jackson-annotations:2.15.2"
 

@@ -161,9 +161,6 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 		}
 	}
 
-	// -------------------------------------------------------------------------------------------
-	// Impact handling
-	// -------------------------------------------------------------------------------------------
 
 	@Override
 	protected boolean applyImpactOutcome(ProjectileServerContext<DualCannonState> context,
