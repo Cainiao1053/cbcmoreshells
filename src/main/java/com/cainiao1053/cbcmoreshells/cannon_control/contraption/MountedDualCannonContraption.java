@@ -303,10 +303,6 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
             if (clientBe instanceof DualCannonQuickfiringBreechBlockEntity clientQfBreech)
                 clientQfBreech.tickAnimation();
         }
-//		if (!level.isClientSide && this.isDropMortar() && this.mortarDelay > 0) {
-//			--this.mortarDelay;
-//			//if (this.mortarDelay == 0) this.actuallyFireDropMortar();
-//		}
         if (this.commandCooldown > 0) {
             if (!this.reduceCooldownOnHit) {
                 commandCooldown--;
@@ -385,7 +381,6 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
         RandomSource rand = level.getRandom();
         BlockPos currentPos = this.startPos.immutable();
         int count = 0;
-        int maxSafeCharges = this.getMaxSafeCharges();
         boolean canFail = !CBCConfigs.server().failure.disableAllFailure.get();
         float spreadSub = this.cannonMaterial.properties().spreadReductionPerBarrel();
         int subLength = 0;
