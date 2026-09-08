@@ -1,0 +1,365 @@
+================================================================================
+Dual Cannon 炮弹代码架构说明 + 增加第二套击穿模型的方案
+  入口：munitions/dual_cannon/shaolib/DualCannonPenetrationModel.java
+  说明：本文只给方案，未改任何代码
+================================================================================
+
+第一部分  当前架构
+第二部分  当前击穿模型的逻辑
+第三部分  增加另一种击穿模型的方案
+
+================================================================================
+第一部分  当前架构
+================================================================================
+
+1.1  一句话概括
+
+  炮弹不再是 Entity。整条链路是：
+  「注册一个 ProjectileType → 它挂一个 Behavior → Behavior 每 tick 做一次扫掠
+    → 扫掠遇到方块时问击穿模型要一个 Outcome → Behavior 再根据 Outcome 决定后果」
+
+  DualCannonPenetrationModel 就是上面「问击穿模型」的那一步，
+  它只负责**这一次命中在物理上发生了什么**，不负责引信、不负责引爆、不负责计数。
+
+1.2  运行时调用链（从发射到击穿）
+
+  MountedDualCannonContraption.fireShot
+      └─ spawnRound(...)
+           └─ ShaolibProjectiles.spawn(level, type, worldPos, velocity, initializer)
+                    ↑ type 来自 CBCMSDualCannonMunitionRegistry.Entry.projectileType()
+
+  之后每 tick，shaolib 运行时驱动：
+
+  DualCannonBehavior.tickServer(context)                       [第 60 行]
+      ├─ expireOnLifetime(...)          每发寿命判定（cbcms 自加的）
+      ├─ tickTrail(...)                 曳光烟柱网络包（cbcms 自加的）
+      ├─ 按 FuzedShellData.STATE 分流    embedded / armed / terminal 三种状态各走各的
+      ├─ MunitionFuzes.serverTick(...)  引信 tick（到点可能直接引爆）
+      ├─ context.steps().integrateMotion(1.0)   走一个 tick 的弹道积分
+      └─ MunitionImpactSweep.sweep(...)         回退到起点，扫掠这一 tick 走过的线段
+             ├─ clipHandler        → 引信的 onClip（近炸引信在这里起爆）
+             ├─ blockImpactResolver → **DualCannonPenetrationModel::resolve**  ← 击穿判定在这
+             │                         返回 MunitionImpactOutcome
+             ├─ impactHandler      → DualCannonBehavior.applyImpactOutcome(outcome)
+             │                         └─ 命中回调 → Kind 分支 → 引信 → 引爆 → 计数
+             └─ entityImpactHandler → applyEntityImpact（打到实体）
+
+  **关键的责任边界**：
+      resolver（DualCannonPenetrationModel）  ＝ 物理后果：穿/跳/停、扣质量、改速度、放特效、破坏方块
+      impactHandler（DualCannonBehavior）      ＝ 战斗后果：要不要引爆、引信怎么算、穿透/跳弹计数
+  两者通过 MunitionImpactOutcome 这一个对象交接。
+  → 换击穿模型只需要换 resolver，Behavior 那一侧完全不用动。
+
+1.3  文件分工（22 个文件，1797 行）
+
+  ── 数据层（弹药属性，数据包驱动）────────────────────────────────
+    DualCannonProjectileProperties       154  普通弹的属性 record + JSON/网络编解码
+    DualCannonIncendiaryProjectileProperties 103  纵火弹（多一个 incendiary 组件）
+    DualCannonMunitionProperties          11  接口：dualCannon() + dualImpact()
+    DualCannonLaunchProperties            67  发射期参数（初速/散布/装填/冷却缩减）
+    DualCannonImpactProperties            56  **击穿专用参数**（强破阈值/动量上限/三个质量损耗系数）
+    CBCMSDualCannonPropertyTypes          53  把 9 种弹注册成 MunitionPropertyType
+
+  ── 运行时层（服务端）──────────────────────────────────────────
+    DualCannonBehavior                   322  飞行主循环 + 命中后果 + 引爆 + Kind 分支
+    DualCannonPenetrationModel           214  **击穿判定**（本文重点）
+    DualCannonState                       84  每发状态（耐久质量/耐久倍率/发射高度/寿命/曳光锚点）
+    DualCannonSerializer                  61  上面这些状态的存盘
+    DualCannonHitCallback                 13  命中回调接口（用于缩短战斗指令冷却）
+    DualCannonIncendiaryService           34  纵火 SPI
+    CBCMSIncendiaryEffectService          69  纵火 SPI 的实现
+
+  ── 注册与接线 ────────────────────────────────────────────────
+    CBCMSDualCannonProjectiles            70  9 个 ProjectileType 的注册（**resolver 在这里被绑定**）
+    CBCMSDualCannonMunitionRegistry      133  方块 → Entry 查表（type/属性/Kind/寿命/引信/渲染方块）
+    CBCMSDualCannonData                   20  扩展 schema（目前只有动态属性 JSON 一项）
+    CBCMSDualCannonLaunchProfile          12  只放 shaolib 表达不了的 baseLifetimeTicks
+    CBCMSDualCannonShotOverrides          42  每发动态属性覆盖的编码器
+    CBCMSDualCannonFuzeMapper            130  CBC 引信 → shaolib 引信 的翻译
+
+  ── 客户端 ────────────────────────────────────────────────────
+    client/DualCannonProjectileClientBehavior  60  用弹药方块模型渲染
+    client/CBCMSDualCannonProjectileClient     43  注册 9 条客户端行为
+
+  ── 技术储备（未接线）──────────────────────────────────────────
+    CBCMSLegacyPenetration                46  面积采样式击穿模型（旧实体炮弹里的死代码，移植保留）
+
+  这 22 个文件**全部是 cbcms 自己的**，不依赖 shaolib 的 dual_cannon 包
+  （那个包是临时的、将来会被移除）。用到的 shaolib 只有通用运行时：
+  ProjectileType / MunitionImpactSweep / MunitionImpactOutcome /
+  MunitionImpactUtil / BlockImpactSupport / CbcMunitionEffectPipeline /
+  MunitionPropertyComponents 的通用 record 等。
+
+================================================================================
+第二部分  当前击穿模型的逻辑
+================================================================================
+
+2.1  入口签名
+
+    DualCannonPenetrationModel.resolve(context, hit, properties) → MunitionImpactOutcome
+
+  被 sweep 当作 BlockImpactResolver 调用，**扫掠线段上每碰到一个方块就调一次**。
+  properties 进来时是 CbcLikeMunitionProperties，第 42 行强转成 DualCannonMunitionProperties
+  （不是这个类型直接抛异常，属于编程错误而非运行时容错）。
+
+2.2  取输入（resolve 第 45–86 行）
+
+    mass       = state.durabilityMass()            弹丸当前剩余质量（会随穿透递减）
+    speed      = |velocity|
+    normal     = 命中面法向
+    incidence  = max(0, −方向·法向)                 正着打 = 1，擦着打 → 0
+    toughness  = 方块装甲韧性 × bodyResistanceMultiplier(...)
+                 后者让「同样的方块装在船上」可以有不同抗性
+    unbreakable = !impact.breakBlocks() || 方块硬度 < 0
+
+  两个早退（第 52–67 行）：
+    hit 是 UNCERTAIN（区块没加载）    → 返回 uncertain，让扫掠稍后重试，**不当成命中**
+    方块已经消失 / 是空气              → 同上
+    速度 < stopSpeed 或 质量 ≈ 0       → 直接 stopOnBlock
+
+2.3  核心公式（resolve 第 80–92 行）
+
+    bonusMomentum = 1 + max(0, (speed − minVelocityForPenetrationBonus) × penetrationBonusScale)
+    rawMomentum   = mass × bonusMomentum × speed
+    momentum      = min(rawMomentum, maximumMomentum) × incidence
+    durabilityPenalty = toughness / incidentVelocity          （incidentVelocity = speed × incidence）
+
+    穿透判定：
+        momentum > toughness × 2.0   → 必穿
+        momentum > toughness × 0.5   → 概率穿，p = (momentum/toughness − 0.15) / 2.0
+        其余                          → 不穿
+
+  这是**动量制**模型：质量 × 速度 × 入射角，对着单块方块的韧性比。
+  速度和入射角都直接进公式，所以斜射会显著吃亏，薄板厚板拦阻能力接近。
+
+2.4  三条出口
+
+    ┌ 能穿（canPenetrate && !unbreakable && (penetrate || forceSmash)）
+    │     → penetrateBlock()                                    [第 105 行]
+    │         1. BlockImpactSupport.tryDestroyImpactedBlock —— 被保护/grief 规则否决就改走 stop
+    │         2. 播穿透特效
+    │         3. 扣质量，按动量分三档：
+    │              momentum > toughness×3 → penalty × highPenetrationMassPenaltyScale
+    │              momentum > toughness×2 → penalty × penetrationMassPenaltyScale
+    │              否则                    → 质量直接压到 0.1（勉强穿过去，基本报废）
+    │         4. 减速 = velocity × retainedAfterPenetration(旧质量, 新质量, impact)
+    │              受 penetrationVelocityRetained / minimumVelocityRetained 约束
+    │         5. 返回 MunitionImpactOutcome.penetrate(...)
+    │
+    ├ 不能穿 → 先试跳弹 tryBounce()                             [第 145 行]
+    │         条件：canBounce && ricochets < maxRicochets
+    │               && deflection > 0 && incidence <= deflection
+    │         概率：max(baseBounceChance, 1 − incidence/deflection)
+    │         反射：v − n×(1.7 × v·n)，再 × bounceVelocityRetained
+    │               （1.7 是文件顶部的 ELASTICITY 常量）
+    │         反射后速度低于 stopSpeed 也放弃跳弹
+    │         成功则扣 penalty × bounceMassPenaltyScale，返回 bounce Outcome
+    │
+    └ 跳弹也不成 → stopOnBlock()                                [第 176 行]
+              播停止特效 → **质量清零** → 在命中点前方 2 格放一个崩落爆炸
+              （威力 = spallExplosionPower，BlockInteraction.KEEP，不破坏方块）
+              返回 stop Outcome
+
+2.5  返回之后发生什么（不在本类里）
+
+  DualCannonBehavior.applyImpactOutcome 拿到 Outcome：
+    - 先触发 state.hitCallback()（缩短战斗指令冷却）
+    - Kind == AP_SHOT       → 走 applyApShotImpactOutcome，永不引爆，只穿/跳/落地
+    - Kind == SAP && 穿透   → 质量清零并在入射面引爆
+    - Kind 是 APHE/APBC && 穿透 → 先问引信（这就是「弹底引信」效果）
+    - 其余                  → 交给父类 AbstractFuzedShellBehavior
+    - **穿透次数/跳弹次数是在这里根据 outcome.kinematics() 递增的，不在 resolver 里**
+
+2.6  哪些参数真正生效（调平衡时别踩空）
+
+  生效：ballistics.durability_mass / ballistics.deflection
+        impact.* 除 penetration_exit_distance 外基本都生效
+        dual_impact.* 全部生效
+  **不生效**：ballistics.penetration、ballistics.toughness
+              （CBC 遗留字段，双联装的击穿路径根本不读）
+              impact.penetration_exit_distance
+              （被 MunitionImpactUtil.penetrationReclipPosition 忽略，它固定回退 1e-5）
+
+================================================================================
+第三部分  增加另一种击穿模型的方案
+================================================================================
+
+3.0  先做一件事：把「判定」和「后果」拆开
+
+  这是所有方案的共同前提，也是最有价值的一步。
+
+  现在 resolve() 里两件事是揉在一起的：
+      A 判定层（模型特有）：算动量、比韧性、决定 穿 / 跳 / 停、给出质量损耗
+      B 后果层（模型无关）：破坏方块、播特效、扣质量、算减速、构造 Outcome
+  B 大约占 110 行（penetrateBlock + tryBounce + stopOnBlock + 两个 helper）。
+  如果不拆，第二个模型就得把这 110 行抄一遍 —— 之后任何一处改动都要改两遍。
+
+  建议拆成：
+
+      // 模型只回答「判定」，不碰后果
+      public interface DualCannonPenetration {
+          Judgement judge(Input in);
+      }
+
+      // 判定层的输入：全部是已经算好的通用量，模型不用自己再算一遍
+      record Input(ProjectileServerContext<DualCannonState> context,
+                   ShaolibBlockHitResult hit,
+                   DualCannonMunitionProperties properties,
+                   BlockState blockState, BlockPos blockPos,
+                   Vec3 velocity, Vec3 direction, Vec3 normal,
+                   double speed, double incidence, double incidentVelocity,
+                   double mass, double toughness) {}
+
+      // 判定层的输出
+      record Judgement(Decision decision, double durabilityPenalty, MassLossTier tier) {}
+      enum Decision     { PENETRATE, TRY_BOUNCE, STOP }
+      enum MassLossTier { HIGH, NORMAL, MARGINAL }   // 对应现在的 ×3 / ×2 / 压到 0.1 三档
+
+  然后 DualCannonPenetrationModel.resolve 变成一个**通用外壳**：
+
+      resolve(...) {
+          ...算 2.2 那一堆通用输入、跑两个早退...
+          Judgement j = model.judge(input);           ← 唯一的模型差异点
+          if (不可穿 || unbreakable || j.decision() != PENETRATE) {
+              return tryBounce(...).orElseGet(() -> stopOnBlock(...));
+          }
+          return penetrateBlock(..., j.durabilityPenalty(), j.tier());
+      }
+
+  注意：**maxPenetrations / maxRicochets / unbreakable / stopSpeed 这些上限留在外壳里**，
+  它们是安全约束和配置，不是物理模型的一部分，不该让每个模型各写一遍。
+
+  拆完之后，现有的动量制模型就是第一个实现，大约只剩 15 行。
+
+3.1  三个选型方案
+
+  ── 方案 A：按 ProjectileType 静态选择（最省事，推荐起步）──────────
+
+    DualCannonBehavior 增加一个字段：
+        private final DualCannonPenetration penetration;
+    构造器多收一个参数，tickServer 里
+        DualCannonPenetrationModel::resolve
+    改成
+        (ctx, hit, props) -> DualCannonPenetrationModel.resolve(ctx, hit, props, this.penetration)
+
+    CBCMSDualCannonProjectiles.register(...) 多传一个参数，
+    9 条注册里想用新模型的那几条换掉即可。
+
+    优点：不动 JSON、不动网络编解码、零运行时开销、类型安全
+    缺点：换模型要改代码重编译，整合包作者调不了
+    工作量：小
+
+  ── 方案 B：数据驱动，JSON 里指定（推荐终态）────────────────────
+
+    1. 建一个注册表
+           DualCannonPenetrations.register(ResourceLocation id, DualCannonPenetration model)
+           DualCannonPenetrations.get(ResourceLocation id)   // 查不到时回落到默认模型 + 打一条 warn
+       在 Cbcmoreshells.init() 里注册内置的两个（momentum / thickness）。
+
+    2. DualCannonImpactProperties 加一个字段 `ResourceLocation model`
+       **四处都要改，缺一处就出问题**：
+           ① record 参数列表
+           ② 紧凑构造器（Objects.requireNonNull 即可）
+           ③ fromJson：ResourceLocation.parse(GsonHelper.getAsString(json, "model", fallback.model().toString()))
+           ④ write / read：buffer.writeResourceLocation(...) / readResourceLocation()
+              —— 加在**末尾**，且两边位置严格对应
+       DEFAULT 里填 cbcmoreshells:momentum。
+
+    3. 9 个 JSON 的 dual_impact 里按需加 "model": "cbcmoreshells:thickness"，
+       不加的走 DEFAULT。
+
+    4. resolve 外壳里：
+           DualCannonPenetration model = DualCannonPenetrations.get(properties.dualImpact().model());
+
+    优点：数据包可调、每种弹可以不同、加新模型不用改注册代码
+    缺点：要动网络编解码（这是最容易出错的一步，写错的表现是「客户端数值全错位」）
+    工作量：中
+
+    ⚠ 关于同步：客户端并不跑击穿判定，model 字段对客户端没用。
+      但它在 DualCannonImpactProperties 里，而这个 record 是要走网络同步的，
+      所以 write/read 必须写，否则字节流长度对不上，**整个属性同步都会错位**。
+      如果想彻底避开这一步，就用方案 A。
+
+  ── 方案 C：在 resolve 里直接分支（只有两个模型且不打算再加时）──────
+
+    resolve 顶部 switch 一下，两套判定写在同一个类里。
+    优点：最快，不用建接口和注册表
+    缺点：类会膨胀，第三个模型进来时还是得推倒重来；外部模组也扩展不了
+    工作量：最小
+
+  我的建议：**先按 3.0 拆分 + 方案 A 落地**，跑通两个模型确认拆分是对的；
+  确实需要数据包切换时再补方案 B 的那一个字段。
+  拆分（3.0）是真正有价值的部分，选型（A/B/C）随时可以升级。
+
+3.2  第二个模型的现成素材：CBCMSLegacyPenetration
+
+  仓库里已经有一个可以直接用的第二模型（46 行，目前未接线）：
+
+      averageToughnessBehind(level, pos, face)
+          对命中面**背后 3×3、深 3 层共 27 格**取平均韧性
+      penetrationToughness(mass) = mass² × 0.4 + mass × 1.2 − 1.5
+      penetrates(...) = penetrationToughness > averageToughnessBehind
+
+  与现用模型的区别：
+      现用（动量制）：看速度和入射角，对着单块方块判定，斜射吃亏明显
+      备选（厚度制）：不看速度和入射角，看背后一整块装甲的平均厚度，
+                      口径（质量）主导，奖励间隔装甲/复合装甲
+                      更接近真实穿深表的行为
+
+  按 3.0 拆分后，它的 judge() 实现大概是这样（示意，非最终代码）：
+
+      Decision d = CBCMSLegacyPenetration.penetrates(
+              in.context().level(), in.blockPos(), in.hit().getDirection(), in.mass())
+          ? Decision.PENETRATE : Decision.TRY_BOUNCE;
+      double penalty = in.toughness() / Math.max(in.incidentVelocity(), 1e-6);
+      return new Judgement(d, penalty, MassLossTier.NORMAL);
+
+  厚度制没有「动量」概念，所以质量损耗分档要自己定一个规则
+  （比如按 penetrationToughness / averageToughness 的比值分 HIGH / NORMAL / MARGINAL）。
+
+3.3  实现时必须注意的坑
+
+  1. **UNCERTAIN 一定要放行**
+     区块没加载时必须返回 uncertain 让扫掠重试，不能当成命中，
+     否则打未加载区域会凭空引爆。这个在外壳里已经处理，
+     但如果哪个模型自己接管了 resolve，务必保留。
+
+  2. **破坏方块必须走 BlockImpactSupport.tryDestroyImpactedBlock**
+     它会尊重保护插件和 grief 配置，并且返回是否真的破坏成功。
+     自己 level.setBlock 会绕过这些（旧实体炮弹就是这么干的，是个 bug）。
+
+  3. **特效必须自己播**
+     CbcMunitionEffectPipeline.playPenetration / playBounce / playStop
+     不调就完全没有命中特效，而且不会报错，很难发现。
+
+  4. **质量要真的扣到 0 炮弹才会停**
+     stopOnBlock 里的 setDurabilityMass(0.0) 不能省。
+
+  5. **穿透/跳弹计数不在 resolver 里**
+     是 DualCannonBehavior.applyImpactOutcome 根据 outcome.kinematics() 递增的，
+     所以 Outcome 的 kinematics 必须返回对，否则上限判定会失效。
+
+  6. **耐久质量初始化目前有个脆弱点**（顺手可以一起修）
+     两处 initializeDurabilityMass：
+         AbstractFuzedShellBehavior.onSpawn          → 不带 durabilityModifier
+         DualCannonPenetrationModel.resolve 第 49 行 → 带 durabilityModifier
+     因为只在「尚未设值」时写入、且 onSpawn 必定先跑，现在结果是对的。
+     但如果重构时让质量在飞行中被清空重设，第 49 行会再乘一次 modifier，
+     变成 base × modifier²。建议拆分时直接把第 49 行的 × durabilityModifier() 去掉，
+     让「带修正的质量」只有 DYNAMIC_PROPERTIES 那一条来源。
+
+  7. **别在 judge() 里改状态**
+     判定层应该是纯函数。扣质量、改位置、放特效都留在后果层，
+     否则「判定为不穿但质量已经扣了」这类 bug 会很难查。
+
+3.4  改完后建议验证
+
+  1. 同一堵墙连续穿透，记录每层之后的速度和剩余质量 —— 验质量扣减与减速
+  2. 大角度斜射装甲 —— 验跳弹（厚度制模型下斜射不该再有优势，这是预期的差异）
+  3. 间隔装甲 vs 等厚实心装甲 —— 这是两个模型差异最明显的场景，
+     动量制两者接近，厚度制应该有明显区别
+  4. 打基岩/保护区 —— 验 unbreakable 与 tryDestroyImpactedBlock 的否决路径
+  5. 打未加载区块方向 —— 验 UNCERTAIN 分支没被破坏
+  6. 若走方案 B，开一个客户端确认 tooltip 数值正常 —— 验网络编解码顺序没错位
+
+================================================================================
