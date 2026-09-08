@@ -6,13 +6,6 @@ import com.verr1.shaolib.munitions.projectile.shell.FuzedShellSerializer;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Persists the dual-cannon-specific parts of {@link DualCannonState}; the shared shell fields are
- * handled by {@link FuzedShellSerializer}.
- *
- * <p>{@code hitCallback} is intentionally not saved — it is a live reference to the firing
- * contraption and cannot be meaningfully rebuilt on load.
- */
 public class DualCannonSerializer<S extends DualCannonState> extends FuzedShellSerializer<S> {
 
 	private static final String DURABILITY_MODIFIER_KEY = "DurabilityModifier";

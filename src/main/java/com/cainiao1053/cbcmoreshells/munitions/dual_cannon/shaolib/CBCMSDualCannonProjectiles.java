@@ -8,24 +8,8 @@ import com.verr1.shaolib.munitions.config.properties.MunitionPropertyResolver;
 import com.verr1.shaolib.munitions.config.properties.MunitionPropertyType;
 import com.verr1.shaolib.munitions.projectile.motion.MunitionMotionModels;
 
-/**
- * The nine dual cannon projectile types cbcms registers with the Shaolib runtime.
- *
- * <p>Every entry is built from cbcms' own {@link DualCannonState} / {@link DualCannonBehavior} /
- * {@link DualCannonSerializer} rather than Shaolib's dual cannon classes, which are temporary and
- * will be removed. Only the generic runtime — projectile types, motion integration, the shared shell
- * pipeline — is taken from the library.
- */
 public final class CBCMSDualCannonProjectiles {
-
-	/**
-	 * Runtime hard ceiling. The real per-shot budget is {@link DualCannonState#lifetimeTicks()}; this
-	 * only has to sit above anything the barrel, command and equipment modifiers can produce so it
-	 * never truncates a legitimate shot.
-	 */
 	private static final int MAX_LIFETIME_TICKS = 600;
-
-	/** Motion sync cadence. Shells fly ballistically, so clients can interpolate between updates. */
 	private static final int SYNC_INTERVAL_TICKS = 10;
 
 	public static final ProjectileType<DualCannonState> NORMAL_AP_SHOT =
@@ -60,7 +44,6 @@ public final class CBCMSDualCannonProjectiles {
 
 	private CBCMSDualCannonProjectiles() {}
 
-	/** Forces static initialisation; call once during mod setup. */
 	public static void register() {}
 
 	private static <P extends DualCannonMunitionProperties> ProjectileType<DualCannonState> register(

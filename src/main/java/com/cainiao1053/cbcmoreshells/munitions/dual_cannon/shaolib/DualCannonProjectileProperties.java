@@ -10,17 +10,6 @@ import java.util.function.Supplier;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * The datapack-driven property set for a non-incendiary dual cannon projectile.
- *
- * <p>Loaded from {@code data/<ns>/shaolib_munitions/munitions/<path>.json}, where {@code <ns>:<path>}
- * must equal the {@link MunitionPropertyType} id exactly — a mismatched path silently falls back to
- * the values baked in here.
- *
- * <p>Owned by cbcms. Shaolib Munitions ships an equivalent {@code DualCannonShellProperties}, but
- * that whole dual cannon package is temporary and will be removed, so this mod defines and registers
- * its own rather than depending on it.
- */
 public record DualCannonProjectileProperties(
 	MunitionPropertyComponents.BallisticsProperties ballistics,
 	MunitionPropertyComponents.RuntimeProperties runtime,

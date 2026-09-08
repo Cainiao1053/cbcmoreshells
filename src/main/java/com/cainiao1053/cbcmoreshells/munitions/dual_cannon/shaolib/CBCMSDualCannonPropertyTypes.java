@@ -4,16 +4,6 @@ import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
 import com.verr1.shaolib.munitions.config.properties.MunitionPropertyType;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * Registers a {@link MunitionPropertyType} for each cbcms dual cannon munition.
- *
- * <p>Ids are in the {@code cbcmoreshells} namespace and datapack files live at
- * {@code data/cbcmoreshells/shaolib_munitions/munitions/<path>.json}. The file path must match the id
- * exactly; a mismatch is not an error, it just silently leaves the baked-in fallback in place.
- *
- * <p>Registration is one-shot — {@code MunitionPropertyTypes.register} throws on a duplicate id — so
- * {@link #register()} must be reached exactly once, which {@code Cbcmoreshells.init()} guarantees.
- */
 public final class CBCMSDualCannonPropertyTypes {
 
 	public static final MunitionPropertyType<DualCannonProjectileProperties> NORMAL_AP_SHOT =

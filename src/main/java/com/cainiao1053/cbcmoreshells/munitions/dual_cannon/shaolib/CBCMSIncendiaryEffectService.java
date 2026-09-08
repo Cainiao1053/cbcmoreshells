@@ -17,14 +17,6 @@ import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import rbasamoyai.createbigcannons.munitions.big_cannon.fluid_shell.FluidBlobBurst;
 
-/**
- * The default {@link DualCannonIncendiaryService}: scatters fire around the detonation, reaching
- * into sub-level (ship) worlds as well as the host level.
- *
- * <p>{@link DualCannonBehavior} calls the installed service when an {@code INCENDIARY} shell
- * detonates, having already scaled chance and range by the shell's durability modifier. The default
- * service is a no-op, so without this installed incendiary shells would explode but never ignite.
- */
 public final class CBCMSIncendiaryEffectService implements DualCannonIncendiaryService {
 
 	/** Radius around the detonation searched for sub-level (ship) bodies to also set alight. */
@@ -36,12 +28,6 @@ public final class CBCMSIncendiaryEffectService implements DualCannonIncendiaryS
 		this.delegate = delegate;
 	}
 
-	/**
-	 * Installs this service, chaining to whatever was already registered.
-	 *
-	 * <p>The holder is a single slot, so a plain {@code set} would silently drop any service another
-	 * mod had installed. Chaining keeps both alive.
-	 */
 	public static void install() {
 		DualCannonIncendiaryService previous = DualCannonIncendiaryService.Holder.get();
 		DualCannonIncendiaryService.Holder.set(new CBCMSIncendiaryEffectService(previous));
@@ -59,10 +45,6 @@ public final class CBCMSIncendiaryEffectService implements DualCannonIncendiaryS
 		CBCMSCompatTransformers.spawnFireOnSublevel(level, searchRegion, fireRange, position);
 	}
 
-	/**
-	 * Scatters fire through a cube around {@code root}. Preserved verbatim in behaviour from the old
-	 * {@code NormalIncendiaryHEShellProjectile.spawnFire}.
-	 */
 	public static void spawnFire(BlockPos root, Level level, int radius) {
 		float chance = FluidBlobBurst.getBlockAffectChance();
 		if (chance == 0) return;

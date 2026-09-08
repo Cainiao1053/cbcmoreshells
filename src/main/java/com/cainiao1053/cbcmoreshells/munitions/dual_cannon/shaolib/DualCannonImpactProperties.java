@@ -5,17 +5,6 @@ import com.verr1.shaolib.munitions.config.properties.MunitionPropertyComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 
-/**
- * Dual-cannon-specific impact tuning, layered on top of the generic
- * {@link MunitionPropertyComponents.ImpactProperties}.
- *
- * <p>{@code smashToughness} lets a heavy shell force its way through armour it could not otherwise
- * defeat; {@code maximumMomentum} caps the momentum used in the penetration test so muzzle velocity
- * cannot scale without limit; the three penalty scales control how much durability mass is spent per
- * penetration/ricochet.
- *
- * <p>Owned by cbcms — see {@link DualCannonLaunchProperties} for why this is not taken from Shaolib.
- */
 public record DualCannonImpactProperties(
 	double smashToughness,
 	double maximumMomentum,

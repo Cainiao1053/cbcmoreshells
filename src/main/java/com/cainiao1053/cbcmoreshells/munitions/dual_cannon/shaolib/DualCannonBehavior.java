@@ -24,38 +24,14 @@ import net.minecraft.tags.FluidTags;
 import net.minecraft.util.Mth;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Server-side flight and impact logic for every cbcms dual cannon projectile.
- *
- * <p>{@link AbstractFuzedShellBehavior} supplies the shared shell pipeline — fuze ticking, embedding,
- * terminal TTL, detonation. This layers on the dual cannon specifics:
- *
- * <ul>
- *   <li>{@link DualCannonPenetrationModel} instead of the default block impact resolver.
- *   <li>Per-{@link Kind} explosive yield scaling, so one behavior serves AP shot through incendiary.
- *   <li>AP shot's distinct impact handling — it carries no burst charge, so it lingers rather than
- *       detonating.
- *   <li>A per-shot tick budget and cbcms' tracer trail packets, neither of which the shared pipeline
- *       has any notion of.
- * </ul>
- *
- * <p>Owned by cbcms, ported out of Shaolib's temporary dual cannon package.
- */
 public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 	extends AbstractFuzedShellBehavior<DualCannonState, P> {
-
-	/** Ticks between trail segments while in flight. */
 	private static final int TRAIL_INTERVAL = 5;
-	/** Parked cooldown once tracing has finished, so we stop re-checking every tick. */
 	private static final int TRAIL_IDLE = 200;
-	/** Delay before the first segment, so the trail does not start inside the muzzle flash. */
 	private static final int TRAIL_INITIAL_DELAY = 20;
-	/** How far the final trail segment is pulled back toward its anchor, 0..1. */
 	private static final double TRAIL_ENDPOINT_PULLBACK = 0.75;
 
-	/** Altitude gain, in blocks, that doubles an AA shell's burst. */
 	private static final double ANTIAIR_ALTITUDE_SCALE = 80.0;
-	/** Ceiling on the AA altitude bonus. */
 	private static final double ANTIAIR_MAX_MULTIPLIER = 3.0;
 
 	private final Kind kind;
@@ -128,20 +104,6 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 			context.runtime().discard("max_distance");
 		}
 	}
-
-	// -------------------------------------------------------------------------------------------
-	// cbcms additions
-	// -------------------------------------------------------------------------------------------
-
-	/**
-	 * Enforces the per-shot tick budget, replacing the old {@code age > maxAge -> discard()}.
-	 *
-	 * <p>Terminal states are exempt: they run on {@code runtime.terminalTtlTicks} /
-	 * {@code detonationTtlTicks}, and cutting them short here would truncate detonation effects the
-	 * old entity had finished playing before it despawned.
-	 *
-	 * @return true if the projectile was discarded and this tick should stop
-	 */
 	protected boolean expireOnLifetime(ProjectileServerContext<DualCannonState> context) {
 		ProjectileInstance projectile = context.projectile();
 		if (FuzedShellData.isTerminalState(projectile.get(FuzedShellData.STATE))) return false;
@@ -151,11 +113,6 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 		return true;
 	}
 
-	/**
-	 * Sends cbcms' tracer trail. A segment is drawn from the last anchor to the current position
-	 * every {@link #TRAIL_INTERVAL} ticks; on going to ground or entering water one final shortened
-	 * segment is drawn and tracing stops.
-	 */
 	protected void tickTrail(ProjectileServerContext<DualCannonState> context) {
 		DualCannonState state = context.state();
 		if (state.trailStage() != DualCannonState.TRAIL_STAGE_TRACING) return;
@@ -233,10 +190,7 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 		return super.applyImpactOutcome(context, outcome);
 	}
 
-	/**
-	 * AP shot carries no burst charge, so it never detonates — it penetrates, ricochets, or comes to
-	 * rest in the world.
-	 */
+
 	private boolean applyApShotImpactOutcome(ProjectileServerContext<DualCannonState> context,
 											 MunitionImpactOutcome outcome) {
 		DualCannonState state = context.state();

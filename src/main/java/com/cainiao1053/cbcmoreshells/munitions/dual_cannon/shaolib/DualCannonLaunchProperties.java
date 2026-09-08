@@ -5,15 +5,6 @@ import com.verr1.shaolib.munitions.config.properties.MunitionPropertyComponents;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.util.GsonHelper;
 
-/**
- * Launch-side tuning for a dual cannon munition: what it costs to fire and how it leaves the barrel.
- *
- * <p>Read before the projectile exists, so nothing here reaches the flight simulation — it feeds
- * {@code MountedDualCannonContraption.fireShot} and the autoloader's reload timing.
- *
- * <p>Owned by cbcms. Shaolib Munitions carries an equivalent nested record, but that dual cannon
- * support is explicitly temporary and slated for removal, so this mod keeps its own copy.
- */
 public record DualCannonLaunchProperties(
 	double addedChargePower,
 	double minimumChargePower,
@@ -40,11 +31,6 @@ public record DualCannonLaunchProperties(
 		cooldownReductionRate = MunitionPropertyComponents.finiteNonNegative("cooldownReductionRate", cooldownReductionRate);
 	}
 
-	/**
-	 * {@code initial_vel} and {@code reload_time_coef} are the spellings used by the pre-migration
-	 * {@code munition_properties/projectiles} files; they are accepted as aliases so existing
-	 * datapacks keep working.
-	 */
 	public static DualCannonLaunchProperties fromJson(JsonObject json, DualCannonLaunchProperties fallback) {
 		return new DualCannonLaunchProperties(
 			GsonHelper.getAsDouble(json, "added_charge_power", fallback.addedChargePower()),

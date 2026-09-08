@@ -4,26 +4,7 @@ import com.verr1.shaolib.munitions.projectile.shell.FuzedShellState;
 import java.util.Objects;
 import net.minecraft.world.phys.Vec3;
 
-/**
- * Server-side state for a dual cannon projectile.
- *
- * <p>{@link FuzedShellState} already carries the shared shell bookkeeping (travelled distance,
- * durability mass, penetration/ricochet counts, fuze). This adds what dual cannons need on top:
- *
- * <ul>
- *   <li>{@code durabilityModifier} — the barrel/command/equipment multiplier for this shot. Scales
- *       both the shell's durability mass and its explosive yield.
- *   <li>{@code launchY} — muzzle altitude, used by AA shells to scale their burst with climb.
- *   <li>{@code hitCallback} — transient hook back to the firing contraption.
- *   <li>{@code lifetimeTicks} plus the trail fields — cbcms additions with no Shaolib equivalent.
- * </ul>
- *
- * <p>Owned by cbcms rather than taken from Shaolib's {@code DualCannonShellState}, since that class
- * lives in a package scheduled for removal.
- */
 public class DualCannonState extends FuzedShellState {
-
-	/** Sentinel for "not launched yet" — {@link #hasLaunchY()} tests for a finite value. */
 	private static final double NO_LAUNCH_Y = Double.NaN;
 
 	private double durabilityModifier = 1.0;

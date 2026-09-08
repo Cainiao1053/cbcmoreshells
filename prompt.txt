@@ -1,2 +1,3 @@
-现在对比新的改动和旧机制，寻找新机制和旧的继承AbstractDualCannonProjectile的机制有哪些不同
-不改代码，把答案写进difference.txt里面
+我正在使用shaolib的炮弹替换原有的实体炮弹，过程写在了answer.txt中，现在需要执行阶段4
+完成阶段4，同时舍弃projectile.addedChargePower()，这个东西是以前的残留
+保留原有的逻辑和炮弹特性，包括战斗指令，各种临时增幅系数，弹夹机制

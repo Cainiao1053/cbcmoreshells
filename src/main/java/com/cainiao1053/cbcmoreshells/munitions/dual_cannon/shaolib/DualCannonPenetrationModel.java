@@ -27,30 +27,6 @@ import rbasamoyai.createbigcannons.block_armor_properties.BlockArmorPropertiesHa
 import rbasamoyai.createbigcannons.block_armor_properties.BlockArmorPropertiesProvider;
 import rbasamoyai.createbigcannons.munitions.ImpactExplosion;
 
-/**
- * Decides what happens when a dual cannon projectile meets a block: punch through, bounce off, or
- * stop dead.
- *
- * <h2>The model</h2>
- * Momentum-based. Effective momentum is {@code mass * speed * bonus * incidence}, capped by
- * {@link DualCannonImpactProperties#maximumMomentum()}, and compared against the block's armour
- * toughness:
- * <ul>
- *   <li>{@code momentum > toughness * 2} — clean penetration.
- *   <li>{@code momentum > toughness * 0.5} — probabilistic, chance {@code (momentum/toughness - 0.15) / 2}.
- *   <li>otherwise — try to ricochet, else stop.
- * </ul>
- * A shell whose {@code smashToughness} exceeds the block's toughness forces through regardless.
- * Penetrating and bouncing both cost durability mass, scaled per outcome, so a shell degrades as it
- * works through layered armour and eventually stops.
- *
- * <p>Angle matters twice over: {@code incidence} scales the momentum, and a shallow hit within the
- * shell's {@code deflection} envelope can ricochet outright.
- *
- * <p>See {@link CBCMSLegacyPenetration} for the alternative armour-thickness model kept in reserve.
- *
- * <p>Owned by cbcms — ported out of Shaolib's temporary dual cannon package.
- */
 public final class DualCannonPenetrationModel {
 
 	/** Reflection coefficient for ricochets; >1 kicks the shell away from the surface. */

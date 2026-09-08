@@ -10,12 +10,6 @@ import java.util.function.Supplier;
 import net.minecraft.network.RegistryFriendlyByteBuf;
 import net.minecraft.resources.ResourceLocation;
 
-/**
- * {@link DualCannonProjectileProperties} plus a fire-starting payload.
- *
- * <p>The incendiary numbers are consumed by {@link DualCannonBehavior}, which scales them by the
- * shell's durability modifier and hands the result to {@link DualCannonIncendiaryService}.
- */
 public record DualCannonIncendiaryProjectileProperties(
 	MunitionPropertyComponents.BallisticsProperties ballistics,
 	MunitionPropertyComponents.RuntimeProperties runtime,
