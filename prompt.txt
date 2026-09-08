@@ -1,1 +1,2 @@
-完成answer.txt中的阶段6的外围调用收尾，但是先不删除entityTypes，仅去掉调用，也暂时不删除原有的handler
+现在检查验证整个shaolib炮弹的替换，不删除原有的类和json，只检查替换后是否能使用并支持原有的功能
+把结果写进report.txt
