@@ -1,1 +1,1 @@
-完成answer.txt中的阶段5
+完成answer.txt中的阶段6的外围调用收尾，但是先不删除entityTypes，仅去掉调用，也暂时不删除原有的handler
