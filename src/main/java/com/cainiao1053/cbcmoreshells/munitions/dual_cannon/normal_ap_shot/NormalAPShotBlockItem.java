@@ -1,9 +1,8 @@
 package com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_ap_shot;
 
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
-import com.cainiao1053.cbcmoreshells.index.CBCMSMunitionPropertiesHandlers;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.FuzedDualCannonProjectileBlockItem;
-import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.config.DualCannonProperties;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -11,7 +10,6 @@ import net.minecraft.world.level.block.Block;
 
 import java.util.List;
 
-import static com.cainiao1053.cbcmoreshells.CBCMSEntityTypes.NORMAL_AP_SHOT;
 
 public class NormalAPShotBlockItem extends FuzedDualCannonProjectileBlockItem {
 
@@ -33,8 +31,8 @@ public class NormalAPShotBlockItem extends FuzedDualCannonProjectileBlockItem {
 //		String key2 = "block."+Cbcmoreshells.MODID+".dual_cannon_projectile.tooltip.desc";
 //		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key2), palette.primary(), palette.highlight(), 1));
 
-		DualCannonProperties properties = CBCMSMunitionPropertiesHandlers.DUAL_CANNON_PROPERTIES.getPropertiesOf(NORMAL_AP_SHOT.get());
-		CBCMSTooltip.appendInertDualCannonProjectileInfo(stack, context, tooltip, flag, properties);
+		CBCMSTooltip.appendInertDualCannonProjectileInfo(stack, context, tooltip, flag,
+				CBCMSDualCannonMunitionRegistry.of(this.getBlock()));
 	}
 
 }

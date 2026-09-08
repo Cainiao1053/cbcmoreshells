@@ -7,6 +7,7 @@ import com.cainiao1053.cbcmoreshells.cannon_control.contraption.MountedDualCanno
 import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.DualCannonBlock;
 import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.IDualCannonBlockEntity;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.DualCannonProjectileBlock;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
 import com.simibubi.create.content.contraptions.AbstractContraptionEntity;
 import com.simibubi.create.content.kinetics.mechanicalArm.AllArmInteractionPointTypes;
 import com.simibubi.create.content.kinetics.mechanicalArm.ArmInteractionPointType;
@@ -84,12 +85,12 @@ public class DualCannonMountPoint extends AllArmInteractionPointTypes.DepositOnl
 //				ItemStack copy = stack.copy();
 //				copy.shrink(1);
 //				float reloadTimeModifier = bigCannon.getReloadTimeModifier();
-//				float reloadTimeCoef = ((DualCannonProjectileBlock<?>) munition).getProjectile(poce.level(), stack).getReloadTimeCoef();
+//				float reloadTimeCoef = CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack);
 //				breech.setLoadingCooldown(getLoadingCooldown(reloadTimeModifier*reloadTimeCoef));
 //				return copy;
 //			}
 //			float reloadTimeModifier = bigCannon.getReloadTimeModifier();
-//			float reloadTimeCoef = ((DualCannonProjectileBlock<?>) munition).getProjectile(poce.level(), stack).getReloadTimeCoef();
+//			float reloadTimeCoef = CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack);
 //			breech.setLoadingCooldown(getLoadingCooldown(reloadTimeModifier*reloadTimeCoef));
 //			return stack;
 //		}
@@ -115,7 +116,7 @@ public class DualCannonMountPoint extends AllArmInteractionPointTypes.DepositOnl
 //			if (!simulate) {
 //				loadCartridge(stack, munition, poce, bigCannon);
 //				float reloadTimeModifier = bigCannon.getReloadTimeModifier();
-//				float reloadTimeCoef = ((DualCannonProjectileBlock<?>) munition).getProjectile(poce.level(), stack).getReloadTimeCoef();
+//				float reloadTimeCoef = CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack);
 //				breech.setLoadingCooldown(getLoadingCooldown(reloadTimeModifier*reloadTimeCoef));
 //			}
 //			ItemStack copy = stack.copy();
@@ -150,7 +151,7 @@ public class DualCannonMountPoint extends AllArmInteractionPointTypes.DepositOnl
 						toStore.setCount(1);
 						magazine.setStackInSlot(i, toStore);
 						float reloadTimeModifier = bigCannon.getReloadTimeModifier();
-						float reloadTimeCoef = ((DualCannonProjectileBlock<?>)munition).getProjectile(poce.level(), stack).getReloadTimeCoef();
+						float reloadTimeCoef = CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack);
 						breech.setLoadingCooldown(getLoadingCooldown(reloadTimeModifier * reloadTimeCoef));
 					}
 
@@ -184,7 +185,7 @@ public class DualCannonMountPoint extends AllArmInteractionPointTypes.DepositOnl
 			if (!simulate) {
 				loadCartridge(stack, munition, poce, bigCannon);
 				float reloadTimeModifier = bigCannon.getReloadTimeModifier();
-				float reloadTimeCoef = ((DualCannonProjectileBlock<?>) munition).getProjectile(poce.level(), stack).getReloadTimeCoef();
+				float reloadTimeCoef = CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack);
 				breech.setLoadingCooldown(getLoadingCooldown(reloadTimeModifier*reloadTimeCoef));
 			}
 			ItemStack copy = stack.copy();

@@ -153,23 +153,28 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
   耐久质量扣减、跳弹处理、stop/spall 特效都在 resolver 内部，
   替换实现要把这些一并覆盖，而不只是回答「穿不穿」。
 
-【验证情况 —— 未做完整构建验证】
-  本环境 Gradle 无法解析 settings.gradle 的 foojay-resolver 插件（无网络），
-  `gradlew compileJava` 无法运行，因此**没有做过项目自身的完整编译**。
-  替代验证：用 JDK21 javac + 手工拼装的 classpath
+【验证情况 —— 2026-09-07 阶段六收尾时更新，现在是全量干净编译】
+
+  本环境 Gradle 仍然无法解析 settings.gradle 的 foojay-resolver 插件（无网络），
+  `gradlew compileJava` 跑不起来。替代方案是 JDK21 javac + 手工拼装的 classpath
   （neoformruntime 的 MC+NeoForge jar、模块缓存里的 1.21 依赖、
-    CBC 5.11.7、shaolib/shaolib_munitions 0.1.0）
-  对新增 16 个文件 + 经 sourcepath 牵引的全部依赖做了类型检查：
-    - 新增包内 0 错误，16 个 .class 全部产出
-    - Cbcmoreshells.class 产出（证明 init() 的改动可编译）
-    - 残留 8 个错误全部落在**未改动**的文件上
-      （ShellessFuzedProjectileBlock / TorpedoProjectileBlock /
-        FuzedTorpedoProjectileBlock / FuzedRackedProjectileBlock /
-        DualCannonProjectileBlock / FuzedDualCannonProjectileBlock /
-        CommandDeployerBlockEntity），
-      成因是我拼的 classpath 里 DataFixerUpper 与 fastutil 版本不对
-      （DataResult.resultOrPartial 签名、IntList.of(int)），与本次改动无关。
-  ⚠ shaolib API 是按 0.1.0 反编译核对的，
+    CBC 5.11.7、shaolib/shaolib_munitions 0.1.0）。
+
+  ✅ **对 src/main/java 下全部 502 个源文件做了整体编译，结果 exit=0，零错误。**
+     （唯一排除的是 mixin/CompatMountPointMixin.java，它依赖可选前置
+       cbc_compact_mount，我的 classpath 里根本没有这个 jar；
+       与本次改动无关。）
+
+  ⚠ **更正此前几轮报告中的一个说法**：之前每轮都写「残留 8 个错误落在未改动文件上」，
+    并推断成因是 classpath 版本不对。现已证实那个推断是对的，
+    而且那 8 个错误**根本不是既有问题**，纯粹是我的 classpath 里
+    同时混进了两个版本造成的：
+      datafixerupper 6.0.8 遮蔽了 8.0.16 → DataResult.resultOrPartial 签名不符
+      fastutil 8.3.1/8.5.9 遮蔽了 8.5.12 → IntList.of(int) 不存在
+    去掉旧版本后全部消失。之前几轮的「8 个 pre-existing 错误」措辞是误导性的，
+    正确表述是「我的验证环境有问题」。
+
+  ⚠ 仍然成立的保留意见：shaolib API 是按 **0.1.0 反编译**核对的，
     而 build.gradle 用的是 curse 文件 id 8728420 / 8728437，
     两者是否同版本**未经证实**。请在能联网的环境先跑一次 gradlew compileJava。
 
@@ -376,11 +381,57 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
   shaolib 的 MunitionFlyingSound。过滤半径与判定逻辑与旧的
   playShellFlyingSoundOnClient 不同（见 difference.txt §9.3）。
 
-【尚未完成】阶段六：删除旧实体类与相关注册。
+【已完成】阶段六的**外围调用收尾**（第 9 节）。
+  按要求：只去掉调用，**不删除 CBCMSEntityTypes，也不删除旧 handler**。
+
+  9.1 DualCannonMountPoint（装填）
+      两处 `((DualCannonProjectileBlock<?>) munition).getProjectile(level, stack).getReloadTimeCoef()`
+      → `CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient(stack)`
+      不再为读一个 float 而 new 一个实体（旧写法每次装填都在造并丢弃实体）。
+
+  9.2 CBCMSTooltip + 9 个 BlockItem
+      三个 append*DualCannonProjectileInfo 的入参
+      从 DualCannonProperties / DualCannonIncendiaryProperties
+      改为 CBCMSDualCannonMunitionRegistry.Entry，内部再取新属性。
+      字段来源映射：
+        durabilityMass  → ballistics().durabilityMass()
+        explosion       → effects().explosion().power()
+        initVel         → dualCannon().initialVelocity()
+        projectileSpread/minimumSpread → dualCannon().*
+        lifetime        → entry.launchProfile().baseLifetimeTicks()
+        deflection      → ballistics().deflection()
+        smashToughness / maximumMomentum → dualImpact().*
+        reloadTimeCoef  → dualCannon().reloadTimeCoefficient()
+        fireChance / fireRange → incendiary().*
+      **I18n 参数顺序与格式化写法一字未动**，并把 double 显式转回 float，
+      保证 lang 文件里的占位符渲染结果与旧的完全一致。
+      9 个 BlockItem 改为 `CBCMSDualCannonMunitionRegistry.of(this.getBlock())`，
+      不再 import CBCMSEntityTypes 的静态字段，也不再调 CBCMSMunitionPropertiesHandlers。
+
+  9.3 / 9.4 按要求**跳过**：CBCMSEntityTypes 的 9 条注册与
+      CBCMSMunitionPropertiesHandlers 的两个 handler 原样保留。
+
+  9.5 combat_command / equipments：本来就不碰炮弹，未动。
+
+【收尾后的引用现状（已核查）】
+  除旧子系统内部外，**没有任何外围代码再调用旧的 handler 或旧实体类型**。
+  仍然存在的引用全部位于阶段六正式删除时会一起消失的地方：
+    - CBCMSEntityTypes 里 9 条 dualCannonProjectile(...) 注册（按要求保留）
+    - 9 个 *Projectile 类自己的 getAllProperties()
+    - 9 个 *Block 的 getAssociatedEntityType()
+  ⚠ 一个**有意保留的例外**：9 个 *Block 的 isBaseFuze() 仍然查旧 handler。
+    它被 FuzedDualCannonProjectileBlock.useItemOn / useWithoutItem 使用，
+    决定引信插孔在哪个面，属于**仍在生效的方块交互逻辑**，
+    按 §6.3 的结论本来就该留在方块层。等阶段六删 handler 时，
+    这三行需要改成读 Entry.baseFuze()（Entry 里已经预留了该字段）。
+
+【尚未完成】阶段六的**删除**部分：
   旧的 9 个 *Projectile 类、CBCMSEntityTypes 的 9 条注册、
   DualCannonProjectileRenderer、config/DualCannonProperties* 六个类、
-  以及旧的 munition_properties/projectiles/*.json 仍然存在，
-  但**已经没有任何代码去生成或使用它们**。
+  CBCMSMunitionPropertiesHandlers 的两个 handler、
+  以及旧的 munition_properties/projectiles/*.json。
+  这些目前只被上面列出的旧子系统内部互相引用，删除时需要一并处理
+  isBaseFuze() 那三处。
 
 ================================================================================
 1. 现状盘点：cbcms 侧现有 Dual Cannon 弹药架构

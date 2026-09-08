@@ -2,7 +2,7 @@
 新旧 Dual Cannon 炮弹机制差异对照
   旧 = 继承 AbstractDualCannonProjectile 的实体炮弹（9 个 *Projectile 类）
   新 = munitions/dual_cannon/shaolib/ 下的 Shaolib 投射物实现
-  对照日期：2026-09-07     范围：阶段一～五已落地的代码
+  对照日期：2026-09-07     范围：阶段一～六（外围调用收尾）已落地的代码
 ================================================================================
 
 【阅读须知】
@@ -541,10 +541,20 @@
     - 近距离烟迹（shaolib effects.trail_smoke）与远距离曳光烟柱
       （cbcms 自己的网络包）两条并存，与旧系统一致
 
-  仍未完成（阶段六）：
+  阶段六的**外围调用收尾**也已完成（按要求只去调用、不删类）：
+    - DualCannonMountPoint 的装填读数改走 Registry，不再造临时实体
+    - CBCMSTooltip 与 9 个 BlockItem 改读新属性，
+      不再调用旧 handler、不再引用旧实体类型
+    - I18n 参数顺序与格式化未动，tooltip 显示结果应与旧的一致
+
+  仍未完成（阶段六的删除部分）：
     - 旧的 9 个实体炮弹类、CBCMSEntityTypes 的 9 条注册、
-      DualCannonProjectileRenderer、旧的 config/DualCannonProperties* 与
-      旧的 munition_properties JSON 仍然存在，但已无代码生成它们
+      DualCannonProjectileRenderer、旧的 config/DualCannonProperties*、
+      CBCMSMunitionPropertiesHandlers 的两个 handler、
+      旧的 munition_properties JSON —— 仍然存在，
+      但只被这个旧子系统内部互相引用，没有外围调用了
+    - 唯一仍在生效的旧调用：9 个 *Block 的 isBaseFuze() 还在查旧 handler，
+      它决定引信插孔在哪个面，删除 handler 时需改读 Entry.baseFuze()
 
   阶段四接线时同步修正/变更的几处（本文其余章节据此更新）：
     - §8 区块加载：已接 ProjectileChunkLoadPolicy，

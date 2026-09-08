@@ -6,8 +6,9 @@ import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.equipments.DualCannonCh
 import com.cainiao1053.cbcmoreshells.cannons.dual_cannon.material.DualCannonMaterialProperties;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.ReductiveTorpedoProperties;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.config.TorpedoProperties;
-import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.config.DualCannonIncendiaryProperties;
-import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.config.DualCannonProperties;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonIncendiaryProjectileProperties;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonMunitionProperties;
 import com.cainiao1053.cbcmoreshells.munitions.racked_projectile.config.RackedLoiteringRocketProjectileProperties;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import com.simibubi.create.foundation.utility.CreateLang;
@@ -445,19 +446,20 @@ public class CBCMSTooltip {
 	}
 
 	public static void appendInertDualCannonProjectileInfo(ItemStack stack, TooltipContext ctx, List<Component> tooltip,
-														   TooltipFlag flag, DualCannonProperties properties) {
-		if (!Screen.hasShiftDown()) {
+														   TooltipFlag flag, CBCMSDualCannonMunitionRegistry.Entry entry) {
+		if (entry == null || !Screen.hasShiftDown()) {
 			return;
 		}
-		float durabilityMass = properties.ballistics().durabilityMass();
-		float initVel = properties.dualCannonProperties().initialVel();
-		float projectileSpread = properties.dualCannonProperties().projectileSpread();
-		float minimumSpread = properties.dualCannonProperties().minimumSpread();
-		int lifetime = properties.dualCannonProperties().lifetime();
-		float deflection = properties.ballistics().deflection();
-		float smashToughness = properties.dualCannonProperties().smashToughness();
-		float maximumMomentum = properties.dualCannonProperties().maximumMomentum();
-		float reloadTimeCoef = properties.dualCannonProperties().reloadTimeCoef();
+		DualCannonMunitionProperties properties = CBCMSDualCannonMunitionRegistry.properties(entry);
+		float durabilityMass = (float) properties.ballistics().durabilityMass();
+		float initVel = (float) properties.dualCannon().initialVelocity();
+		float projectileSpread = (float) properties.dualCannon().projectileSpread();
+		float minimumSpread = (float) properties.dualCannon().minimumSpread();
+		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		float deflection = (float) properties.ballistics().deflection();
+		float smashToughness = (float) properties.dualImpact().smashToughness();
+		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();
+		float reloadTimeCoef = (float) properties.dualCannon().reloadTimeCoefficient();
 		FontHelper.Palette palette = getPalette();
 		String key1 = stack.getDescriptionId();
 		tooltip.add(Component.translatable(key1).withStyle(ChatFormatting.GRAY));
@@ -467,20 +469,21 @@ public class CBCMSTooltip {
 	}
 
 	public static void appendExplosiveDualCannonProjectileInfo(ItemStack stack, TooltipContext ctx, List<Component> tooltip,
-														   TooltipFlag flag, DualCannonProperties properties) {
-		if (!Screen.hasShiftDown()) {
+														   TooltipFlag flag, CBCMSDualCannonMunitionRegistry.Entry entry) {
+		if (entry == null || !Screen.hasShiftDown()) {
 			return;
 		}
-		float durabilityMass = properties.ballistics().durabilityMass();
-		float explosion = properties.explosion().blockDamagePower();
-		float initVel = properties.dualCannonProperties().initialVel();
-		float projectileSpread = properties.dualCannonProperties().projectileSpread();
-		float minimumSpread = properties.dualCannonProperties().minimumSpread();
-		int lifetime = properties.dualCannonProperties().lifetime();
-		float deflection = properties.ballistics().deflection();
-		float smashToughness = properties.dualCannonProperties().smashToughness();
-		float maximumMomentum = properties.dualCannonProperties().maximumMomentum();
-		float reloadTimeCoef = properties.dualCannonProperties().reloadTimeCoef();
+		DualCannonMunitionProperties properties = CBCMSDualCannonMunitionRegistry.properties(entry);
+		float durabilityMass = (float) properties.ballistics().durabilityMass();
+		float explosion = properties.effects().explosion().power();
+		float initVel = (float) properties.dualCannon().initialVelocity();
+		float projectileSpread = (float) properties.dualCannon().projectileSpread();
+		float minimumSpread = (float) properties.dualCannon().minimumSpread();
+		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		float deflection = (float) properties.ballistics().deflection();
+		float smashToughness = (float) properties.dualImpact().smashToughness();
+		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();
+		float reloadTimeCoef = (float) properties.dualCannon().reloadTimeCoefficient();
 		FontHelper.Palette palette = getPalette();
 		String key1 = stack.getDescriptionId();
 		tooltip.add(Component.translatable(key1).withStyle(ChatFormatting.GRAY));
@@ -490,22 +493,25 @@ public class CBCMSTooltip {
 	}
 
 	public static void appendIncendiaryDualCannonProjectileInfo(ItemStack stack, TooltipContext ctx, List<Component> tooltip,
-															   TooltipFlag flag, DualCannonIncendiaryProperties properties) {
-		if (!Screen.hasShiftDown()) {
+															   TooltipFlag flag, CBCMSDualCannonMunitionRegistry.Entry entry) {
+		if (entry == null || !Screen.hasShiftDown()) {
 			return;
 		}
-		float durabilityMass = properties.ballistics().durabilityMass();
-		float explosion = properties.explosion().blockDamagePower();
-		float initVel = properties.dualCannonProperties().initialVel();
-		float projectileSpread = properties.dualCannonProperties().projectileSpread();
-		float minimumSpread = properties.dualCannonProperties().minimumSpread();
-		int lifetime = properties.dualCannonProperties().lifetime();
-		float deflection = properties.ballistics().deflection();
-		float smashToughness = properties.dualCannonProperties().smashToughness();
-		float maximumMomentum = properties.dualCannonProperties().maximumMomentum();
+		if (!(CBCMSDualCannonMunitionRegistry.properties(entry) instanceof DualCannonIncendiaryProjectileProperties properties)) {
+			return;
+		}
+		float durabilityMass = (float) properties.ballistics().durabilityMass();
+		float explosion = properties.effects().explosion().power();
+		float initVel = (float) properties.dualCannon().initialVelocity();
+		float projectileSpread = (float) properties.dualCannon().projectileSpread();
+		float minimumSpread = (float) properties.dualCannon().minimumSpread();
+		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		float deflection = (float) properties.ballistics().deflection();
+		float smashToughness = (float) properties.dualImpact().smashToughness();
+		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();
 		float fireChance = properties.incendiary().fireChance();
 		int fireRange = properties.incendiary().fireRange();
-		float reloadTimeCoef = properties.dualCannonProperties().reloadTimeCoef();
+		float reloadTimeCoef = (float) properties.dualCannon().reloadTimeCoefficient();
 		FontHelper.Palette palette = getPalette();
 		String key1 = stack.getDescriptionId();
 		tooltip.add(Component.translatable(key1).withStyle(ChatFormatting.GRAY));
