@@ -291,10 +291,54 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
   3) **有线引信失去触发源**：WiredFuzeItem 靠发射点的红石信号触发，
      炮弹出膛后红石够不着，退化为触发引信。
 
-【尚未完成】阶段四～六：fireShot 改造、
-  客户端行为注册、旧实体类删除。
-  旧的 9 个实体炮弹与 CBCMSEntityTypes 注册**目前仍然存在且仍在使用**，
-  新旧两套并存，游戏行为暂时没有变化。
+【已完成】阶段四（第 7 节）。改动集中在 MountedDualCannonContraption：
+
+  - fireShot 里 AbstractDualCannonProjectile 局部变量 → 私有 record LoadedRound
+    （entry / cbcFuze / tracer / props 四元组，避免重复查表）
+  - 炮管扫描与兜底补块两处 projBlock.getProjectile(...) → LoadedRound.of(...)
+  - 新增 spawnRound(...)：坐标变换 → 散布 → 动态属性 → ShaolibProjectiles.spawn
+  - 新增 applySpread(...)：复刻 vanilla Projectile.shoot 的散布
+    （0.0172275 × inaccuracy 的三角分布扰动），因为没有实体可用了
+  - 新增 createHitCallback(...) / isShipHit(...)：替代 reduceCooldownOnHit
+  - FuzedDualCannonProjectileBlock.getFuzeFromBlocks 由 protected 改 public
+    （只改可见性，逻辑未动，因为 fireShot 现在要直接读引信）
+
+  **已按要求舍弃 projectile.addedChargePower()**：
+    两处 `propelCtx.chargesUsed += projectile.addedChargePower()` 已删除。
+    实际无数值影响 —— 9 个 JSON 的 added_charge_power 全是 0，
+    且双联装的 fireShot 从不调用 addPropellant，
+    所以 chargesUsed 迁移前后都恒为 0，fail(...) 的严重度参数不变。
+    ⚠ 遗留：DualCannonLaunchProperties 里的 addedChargePower /
+      minimumChargePower / canSquib 三个字段现在已无任何代码读取，
+      属于死数据。要不要连同 JSON 字段与网络编解码一起删掉，
+      需要你确认（本次没动，因为会改动网络协议与数据格式）。
+
+  **保留的原有逻辑与特性**：
+    - 战斗指令修正：commandSpreadModifier / commandLifetimeModifier /
+      commandDurabilityMassModifier 全部照原样参与计算
+    - 装备修正：equipmentSpreadModifier / equipmentLifetimeModifier /
+      equipmentDurabilityModifier 同上
+    - additionalSpreadCoef、barrelInverter（双管左右交替）、barrelGap 偏移
+    - 弹夹机制：hasMagazine / cachedMunition / DualCannonMountPoint 装填路径未动
+    - 两根炮管各自不同的散布公式（第一管取下限、第二管是相加）原样保留，
+      并在代码里注明这是刻意保留的差异
+    - 失败判定、炮口堵塞判定、后坐、烟羽、爆音、getSound 全部未动
+    - 曳光现在还额外接上了 allBigCannonProjectilesAreTracers 全局配置
+      （旧实体的 hasTracer() 有这条，阶段二时漏了，这里补上）
+
+  **删掉的死代码**：
+    - IntegratedPropellantProjectile 两个分支 —— 9 个双联装炮弹没有一个
+      实现该接口，分支永不进入
+    - recoilMagnitude 累加 —— 算完从不使用，onRecoil 只用 durabilityMassModifier
+    - fireShot 末尾两段 RitchiesProjectileLib.queueForceLoad —— 改由
+      ProjectileChunkLoadPolicy 承担（配置开启时 SYNC_LOAD，否则 IF_ALREADY_LOADED）
+
+  命中回调的船体判定做了**增强**：优先用 shaolib 的 hit.isBodyHit()，
+  判否时再回落到旧的 |坐标| > 1e7 hack，属于超集，不会比旧的更少触发。
+
+【尚未完成】阶段五～六：客户端行为注册、旧实体类删除。
+  ⚠ 现在 fireShot 已经切到新投射物，但**阶段五未做 = 炮弹在客户端是隐形的**。
+    旧的 9 个实体炮弹与 CBCMSEntityTypes 注册仍然存在，但已经没有代码去生成它们。
 
 ================================================================================
 1. 现状盘点：cbcms 侧现有 Dual Cannon 弹药架构

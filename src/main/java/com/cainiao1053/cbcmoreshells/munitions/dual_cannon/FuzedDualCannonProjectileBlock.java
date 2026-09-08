@@ -59,7 +59,7 @@ public abstract class FuzedDualCannonProjectileBlock<BLOCK_ENTITY extends FuzedB
 		return projectile;
 	}
 
-	protected static ItemStack getFuzeFromBlocks(List<StructureBlockInfo> blocks, HolderLookup.Provider registries) {
+	public static ItemStack getFuzeFromBlocks(List<StructureBlockInfo> blocks, HolderLookup.Provider registries) {
 		if (blocks.isEmpty()) return ItemStack.EMPTY;
 		StructureBlockInfo info = blocks.get(0);
 		if (info.nbt() == null) return ItemStack.EMPTY;

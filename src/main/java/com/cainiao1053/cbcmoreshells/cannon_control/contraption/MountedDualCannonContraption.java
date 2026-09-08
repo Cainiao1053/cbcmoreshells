@@ -13,9 +13,27 @@ import com.cainiao1053.cbcmoreshells.index.CBCMSContraptionTypes;
 import com.cainiao1053.cbcmoreshells.index.CBCMSDualCannonMaterials;
 import com.cainiao1053.cbcmoreshells.index.CBCMSSoundEvents;
 import com.cainiao1053.cbcmoreshells.index.CBCMSTags;
-import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.AbstractDualCannonProjectile;
+import com.cainiao1053.cbcmoreshells.CBCMSCompatTransformers;
+import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.config.CBCMSConfigs;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.DualCannonProjectileBlock;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.FuzedDualCannonProjectileBlock;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonData;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonFuzeMapper;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonShotOverrides;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonHitCallback;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonLaunchProperties;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonMunitionProperties;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonState;
 import com.cainiao1053.cbcmoreshells.network.CBCMSNetworkImpl;
+import com.verr1.shaolib.api.projectile.ProjectileHandle;
+import com.verr1.shaolib.api.projectile.ProjectileSpawnInitializer;
+import com.verr1.shaolib.api.projectile.ShaolibProjectiles;
+import com.verr1.shaolib.api.projectile.chunkload.ProjectileChunkLoadPolicy;
+import com.verr1.shaolib.api.raycast.ShaolibBlockHitResult;
+import com.verr1.shaolib.munitions.projectile.MunitionProjectileUtil;
+import com.verr1.shaolib.munitions.projectile.shell.FuzedShellData;
 import com.cainiao1053.cbcmoreshells.network.ClientboundCannonCmdSyncPacket;
 import com.google.common.collect.ImmutableList;
 import com.simibubi.create.api.contraption.ContraptionType;
@@ -34,12 +52,14 @@ import net.minecraft.sounds.SoundEvent;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.util.Mth;
 import net.minecraft.util.RandomSource;
+import net.minecraft.sounds.SoundEvents;
 import net.minecraft.world.entity.Entity;
+import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.ChunkPos;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.phys.AABB;
 import net.minecraft.world.level.LevelAccessor;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.entity.BlockEntity;
@@ -65,7 +85,6 @@ import rbasamoyai.createbigcannons.munitions.big_cannon.propellant.IntegratedPro
 import rbasamoyai.createbigcannons.munitions.config.BigCannonPropellantCompatibilities;
 import rbasamoyai.createbigcannons.munitions.config.BigCannonPropellantCompatibilityHandler;
 import rbasamoyai.createbigcannons.utils.CBCUtils;
-import rbasamoyai.ritchiesprojectilelib.RitchiesProjectileLib;
 
 import javax.annotation.Nullable;
 import java.util.*;
@@ -375,8 +394,8 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
         PropellantContext propelCtx = new PropellantContext();
 
         List<StructureBlockInfo> projectileBlocks = new ArrayList<>();
-        AbstractDualCannonProjectile projectile = null;
-        AbstractDualCannonProjectile secondary_projectile = null;
+        LoadedRound primary = null;
+        LoadedRound secondary = null;
         BlockPos assemblyPos = null;
 
         float minimumSpread = this.cannonMaterial.properties().minimumSpread();
@@ -394,7 +413,7 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
             if (containedBlockInfo.state().isAir()) {
                 if (count == 0)
                     return;
-                if (projectile == null && secondary_projectile == null) {
+                if (primary == null && secondary == null) {
                     if (projectileBlocks.isEmpty()) {
                         airGapPresent = true;
                         //propelCtx.chargesUsed = Math.max(propelCtx.chargesUsed - 1, 0);
@@ -409,7 +428,7 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                         subLength++;
                     }
                 }
-            } else if (block instanceof DualCannonProjectileBlock<?> projBlock && (projectile == null || secondary_projectile == null)) {
+            } else if (block instanceof DualCannonProjectileBlock<?> projBlock && (primary == null || secondary == null)) {
                 if (canFail && airGapPresent && rollFailToIgnite(rand)) {
                     Vec3 failIgnitePos = entity.toGlobalVector(Vec3.atCenterOf(currentPos.relative(this.initialOrientation)), 0);
                     level.playSound(null, failIgnitePos.x, failIgnitePos.y, failIgnitePos.z, cannonInfo.state().getSoundType().getBreakSound(), SoundSource.BLOCKS, 5.0f, 0.0f);
@@ -434,13 +453,17 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                     subLength++;
                 }
                 if (projBlock.isComplete(projectileBlocks, this.initialOrientation)) {
-                    if (projectile == null) {
-                        projectile = projBlock.getProjectile(level, projectileBlocks);
+                    LoadedRound round = LoadedRound.of(projBlock, projectileBlocks, registries);
+                    if (round == null) {
+                        if (canFail) this.fail(currentPos, level, entity, behavior.blockEntity, (int) propelCtx.chargesUsed);
+                        return;
+                    }
+                    if (primary == null) {
+                        primary = round;
                         projectileBlocks.clear();
                     } else {
-                        secondary_projectile = projBlock.getProjectile(level, projectileBlocks); //put munition in any of slot
+                        secondary = round; //put munition in any of slot
                     }
-                    propelCtx.chargesUsed += projectile.addedChargePower();
                 }
                 airGapPresent = false;
             } else {
@@ -457,7 +480,7 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                 ++count;
             }
         }
-        if ((projectile == null && secondary_projectile == null) && !projectileBlocks.isEmpty()) {
+        if ((primary == null && secondary == null) && !projectileBlocks.isEmpty()) {
             StructureBlockInfo info = projectileBlocks.get(0);
             if (!(info.state().getBlock() instanceof DualCannonProjectileBlock<?> projBlock)) {
                 if (canFail) this.fail(currentPos, level, entity, null, (int) 4);
@@ -489,8 +512,11 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
             }
             assemblyPos = currentPos.immutable().relative(this.initialOrientation.getOpposite());
             if (projBlock.isComplete(projectileBlocks, this.initialOrientation)) {
-                projectile = projBlock.getProjectile(level, projectileBlocks);
-                propelCtx.chargesUsed += projectile.addedChargePower();
+                primary = LoadedRound.of(projBlock, projectileBlocks, registries);
+                if (primary == null) {
+                    if (canFail) this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
+                    return;
+                }
             } else if (canFail) {
                 this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
                 return;
@@ -504,80 +530,37 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
         float horizontalOffset = this.cannonMaterial.properties().barrelGap() / 2 * this.barrelInverter;
         Vec3 horizontalOffsetVec = vec.yRot((float) Math.PI / 2).scale(horizontalOffset);
 
-        float recoilMagnitude = 0;
-
         int barrelLifetime = (this.cannonMaterial.properties().addedLifetime());
         float durabilityMassModifier = this.cannonMaterial.properties().durabilityMassModifier() * this.commandDurabilityMassModifier * this.equipmentDurabilityModifier;
-        if (projectile != null) {
-            if (projectile instanceof IntegratedPropellantProjectile integPropel && !projectileBlocks.isEmpty()) {
-                if (!propelCtx.addIntegratedPropellant(integPropel, projectileBlocks.get(0), this.initialOrientation) && canFail) {
-                    this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
-                    return;
-                }
-            }
+        if (primary != null) {
             StructureBlockInfo muzzleInfo = this.blocks.get(currentPos);
             if (canFail && muzzleInfo != null && !muzzleInfo.state().isAir()) {
                 this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
                 return;
             }
-            projectile.setPos(spawnPos.add(horizontalOffsetVec));
-            projectile.setChargePower(propelCtx.chargesUsed);
-            projectile.setLifetime((int) ((projectile.getLifetime() + barrelLifetime) * this.commandLifetimeModifier * this.equipmentLifetimeModifier));
-            projectile.setDurabilityModifier(durabilityMassModifier);
-            projectile.setProjectileMass(durabilityMassModifier * projectile.getMaximumMass());
-
-            projectile.shoot(vec.x, vec.y, vec.z,
-                    projectile.getInitVel(), //init vel
-                    (Math.max(projectile.getProjectileSpread() - spreadSub * subLength,
-                            projectile.getProjectileMinimumSpread() + minimumSpread)) * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef
-            ); //spread
-            projectile.onShoot(this, level);
-
-            projectile.xRotO = projectile.getXRot();
-            projectile.yRotO = projectile.getYRot();
-
-            projectile.addUntouchableEntity(entity, 1);
-
-            level.addFreshEntity(projectile);
-            recoilMagnitude += projectile.addedRecoil();
+            DualCannonLaunchProperties launch = primary.props().dualCannon();
+            float spread = (float) (Math.max(launch.projectileSpread() - spreadSub * subLength,
+                    launch.minimumSpread() + minimumSpread)
+                    * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef);
+            this.spawnRound(level, primary, spawnPos.add(horizontalOffsetVec), vec, spread, durabilityMassModifier, barrelLifetime);
         }
 
-        if (secondary_projectile != null && !cannonMaterial.properties().isSingleBarrel()) {
-            if (secondary_projectile instanceof IntegratedPropellantProjectile integPropel && !projectileBlocks.isEmpty()) {
-                if (!propelCtx.addIntegratedPropellant(integPropel, projectileBlocks.get(0), this.initialOrientation) && canFail) {
-                    this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
-                    return;
-                }
-            }
+        if (secondary != null && !cannonMaterial.properties().isSingleBarrel()) {
             StructureBlockInfo muzzleInfo = this.blocks.get(currentPos);
             if (canFail && muzzleInfo != null && !muzzleInfo.state().isAir()) {
                 this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
                 return;
             }
-            secondary_projectile.setPos(spawnPos.subtract(horizontalOffsetVec));
-            secondary_projectile.setChargePower(propelCtx.chargesUsed);
-            secondary_projectile.setLifetime((int) ((secondary_projectile.getLifetime() + barrelLifetime) * this.commandLifetimeModifier * this.equipmentLifetimeModifier));
-            secondary_projectile.setDurabilityModifier(durabilityMassModifier);
-            secondary_projectile.setProjectileMass(durabilityMassModifier * secondary_projectile.getMaximumMass());
-
-            secondary_projectile.shoot(vec.x, vec.y, vec.z,
-                    secondary_projectile.getInitVel(), //init vel
-                    (secondary_projectile.getProjectileMinimumSpread() + Math.max(secondary_projectile.getProjectileSpread()
-                            - spreadSub * subLength, minimumSpread)) * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef
-            ); //spread
-            secondary_projectile.onShoot(this, level);
-
-            secondary_projectile.xRotO = secondary_projectile.getXRot();
-            secondary_projectile.yRotO = secondary_projectile.getYRot();
-
-            secondary_projectile.addUntouchableEntity(entity, 1);
-
-            level.addFreshEntity(secondary_projectile);
-            //recoilMagnitude += secondary_projectile.addedRecoil();
+            // Second barrel keeps its own spread formula, which differs from the first barrel's:
+            // minimumSpread is added on top rather than acting as a floor. Preserved from the
+            // entity implementation so the two barrels group exactly as they used to.
+            DualCannonLaunchProperties launch = secondary.props().dualCannon();
+            float spread = (float) ((launch.minimumSpread()
+                    + Math.max(launch.projectileSpread() - spreadSub * subLength, minimumSpread))
+                    * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef);
+            this.spawnRound(level, secondary, spawnPos.subtract(horizontalOffsetVec), vec, spread, durabilityMassModifier, barrelLifetime);
         }
 
-        //recoilMagnitude += propelCtx.recoil;
-        //recoilMagnitude *= CBCConfigs.server().cannons.bigCannonRecoilScale.getF();
         if (controller != null) controller.onRecoil(vec.scale(-durabilityMassModifier * 2.25), centerPos, entity);
 
         this.hasFired = true;
@@ -609,15 +592,104 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                 player.connection.send(blastWavePacket);
         }
 
-        if (projectile != null && CBCConfigs.server().munitions.projectilesCanChunkload.get()) {
-            ChunkPos cpos1 = new ChunkPos(BlockPos.containing(projectile.position()));
-            RitchiesProjectileLib.queueForceLoad(level, cpos1.x, cpos1.z);
-        }
+    }
 
-        if (secondary_projectile != null && CBCConfigs.server().munitions.projectilesCanChunkload.get()) {
-            ChunkPos cpos2 = new ChunkPos(BlockPos.containing(secondary_projectile.position()));
-            RitchiesProjectileLib.queueForceLoad(level, cpos2.x, cpos2.z);
+    private record LoadedRound(CBCMSDualCannonMunitionRegistry.Entry entry, ItemStack cbcFuze, boolean tracer,
+                               DualCannonMunitionProperties props) {
+
+        @Nullable
+        static LoadedRound of(DualCannonProjectileBlock<?> block, List<StructureBlockInfo> blocks,
+                              HolderLookup.Provider registries) {
+            CBCMSDualCannonMunitionRegistry.Entry entry = CBCMSDualCannonMunitionRegistry.of(block);
+            if (entry == null) return null;
+            ItemStack fuze = entry.fuzed()
+                    ? FuzedDualCannonProjectileBlock.getFuzeFromBlocks(blocks, registries)
+                    : ItemStack.EMPTY;
+            boolean tracer = !DualCannonProjectileBlock.getTracerFromBlocks(blocks, registries).isEmpty()
+                    || CBCConfigs.server().munitions.allBigCannonProjectilesAreTracers.get();
+            return new LoadedRound(entry, fuze, tracer, CBCMSDualCannonMunitionRegistry.properties(entry));
         }
+    }
+
+    private void spawnRound(ServerLevel level, LoadedRound round, Vec3 localSpawnPos, Vec3 localDirection,
+                            float spread, float durabilityMassModifier, int barrelLifetime) {
+        // Shaolib projectiles live in world space; the contraption works in its own local space, so
+        // both position and direction have to be transformed out before spawning.
+        Vec3 worldPos = CBCCompatTransformers.transformVec3(level, localSpawnPos, this.entity.position());
+        Vec3 transformed = CBCCompatTransformers.transformLocationNormal(level, this.entity.blockPosition(), localDirection);
+        Vec3 worldDirection = (transformed.lengthSqr() < 1.0e-8 ? localDirection : transformed).normalize();
+
+        DualCannonMunitionProperties props = round.props();
+        Vec3 velocity = applySpread(worldDirection, props.dualCannon().initialVelocity(), spread, level.getRandom());
+
+        int lifetimeTicks = round.entry().launchProfile()
+                .resolveLifetimeTicks(barrelLifetime, this.commandLifetimeModifier, this.equipmentLifetimeModifier);
+        String overrides = CBCMSDualCannonShotOverrides.encode(durabilityMassModifier, props.ballistics().durabilityMass());
+        ProjectileChunkLoadPolicy loadPolicy = CBCConfigs.server().munitions.projectilesCanChunkload.get()
+                ? ProjectileChunkLoadPolicy.SYNC_LOAD
+                : ProjectileChunkLoadPolicy.IF_ALREADY_LOADED;
+        DualCannonHitCallback hitCallback = this.createHitCallback((float) props.dualCannon().cooldownReductionRate());
+
+        ProjectileHandle<DualCannonState> handle = ShaolibProjectiles.spawn(level, round.entry().projectileType(),
+                worldPos, velocity,
+                ProjectileSpawnInitializer.both(
+                        projectile -> {
+                            FuzedShellData.initialize(projectile, loadPolicy);
+                            projectile.setOrientation(MunitionProjectileUtil.orientationFromDirection(worldDirection));
+                            projectile.setAngularVelocity(Vec3.ZERO);
+                            if (round.tracer()) projectile.set(FuzedShellData.TRACER, true);
+                            if (!overrides.isEmpty()) projectile.set(CBCMSDualCannonData.DYNAMIC_PROPERTIES, overrides);
+                        },
+                        spawned -> {
+                            DualCannonState state = spawned.state();
+                            state.setDurabilityModifier(durabilityMassModifier);
+                            state.setLifetimeTicks(lifetimeTicks);
+                            state.setHitCallback(hitCallback);
+                            CBCMSDualCannonFuzeMapper.install(state, round.cbcFuze());
+                        }));
+
+        if (handle == null || !handle.alive()) {
+            Cbcmoreshells.LOGGER.warn("Failed to spawn dual cannon projectile {}", round.entry().projectileType().id());
+        }
+    }
+
+    /** Reproduces vanilla {@code Projectile.shoot} scatter, which is no longer reachable without an entity. */
+    private static Vec3 applySpread(Vec3 direction, double velocity, float spread, RandomSource random) {
+        double deviation = 0.0172275D * spread;
+        return direction.add(random.triangle(0.0D, deviation), random.triangle(0.0D, deviation),
+                random.triangle(0.0D, deviation)).scale(velocity);
+    }
+
+    /**
+     * Shortens the combat command cooldown the first time this shot lands on a ship, replacing
+     * {@code AbstractDualCannonProjectile.reduceCooldownOnHit}.
+     *
+     * <p>Held on the projectile state as a transient field, so it does not survive a save/load. That
+     * matches the entity implementation, which held a plain reference to the contraption.
+     */
+    private DualCannonHitCallback createHitCallback(float cooldownReductionRate) {
+        boolean[] alreadyCounted = {false};
+        return (context, outcome) -> {
+            if (alreadyCounted[0] || !isShipHit(outcome.hit())) return;
+            if (CBCMSConfigs.server().notifyOnHit.get()) {
+                Vec3 contraptionWorldPos = this.getContraptionWorldPos();
+                if (contraptionWorldPos != null) {
+                    AABB box = CBCMSCompatTransformers.getShipAABB(context.level(), contraptionWorldPos);
+                    context.level().getEntitiesOfClass(Player.class, box).forEach(
+                            player -> player.playNotifySound(SoundEvents.ANVIL_LAND, SoundSource.AMBIENT, 1, 2));
+                }
+            }
+            this.reduceCooldown(cooldownReductionRate);
+            alreadyCounted[0] = true;
+        };
+    }
+
+    private static boolean isShipHit(ShaolibBlockHitResult hit) {
+        if (hit.isBodyHit()) return true;
+        // Legacy fallback: sub-level block positions sit far outside normal world bounds. Kept so
+        // setups whose physics provider Shaolib cannot resolve behave as they did before.
+        BlockPos pos = hit.getBlockPos();
+        return Math.abs(pos.getX()) > 10000000 || Math.abs(pos.getZ()) > 10000000;
     }
 
     private SoundEvent getSound(float durabilityMultiplier) {

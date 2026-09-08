@@ -2,7 +2,7 @@
 新旧 Dual Cannon 炮弹机制差异对照
   旧 = 继承 AbstractDualCannonProjectile 的实体炮弹（9 个 *Projectile 类）
   新 = munitions/dual_cannon/shaolib/ 下的 Shaolib 投射物实现
-  对照日期：2026-09-07     范围：阶段一～三已落地的代码
+  对照日期：2026-09-07     范围：阶段一～四已落地的代码
 ================================================================================
 
 【阅读须知】
@@ -383,13 +383,15 @@
         if (config.projectilesCanChunkload) RitchiesProjectileLib.queueForceLoad(...)
       （落地时还会先 CBCCompatTransformers.transformBlockPos 转坐标）
       另外 fireShot 在发射瞬间也 queueForceLoad 一次。
-  新：改为 ProjectileChunkLoadPolicy（枚举，随投射物走），
+  新：改为 ProjectileChunkLoadPolicy（枚举，随投射物走），已于阶段四接线：
       由 shaolib 运行时处理。
 
-  → 机制完全不同。且**当前 policy 尚未设置**（阶段四才写），
-    默认走 FuzedShellData.LOAD_POLICY 的默认值 IF_ALREADY_LOADED，
-    即新炮弹目前不会强制加载区块。
-    旧系统在 config 打开时是会强加载的 → 打未加载区域的行为会不同。
+  → 机制完全不同，但**阶段四已接线**：
+      projectilesCanChunkload 打开 → SYNC_LOAD
+      关闭                         → IF_ALREADY_LOADED
+    语义上对齐了旧的「配置开启时保证区块可用」，
+    但旧的是每 tick 主动 queueForceLoad，新的是由 shaolib 在扫掠时按策略处理，
+    对未加载区域的实际表现仍可能有差别，需实测。
 
 ================================================================================
 9. 曳光 / 尾迹 / 音效 / 渲染
@@ -432,7 +434,10 @@
   旧：TRACER 是同步的 ItemStack（EntityDataAccessor），
       hasTracer() 还会看 CBCConfigs.server().munitions.allBigCannonProjectilesAreTracers。
   新：FuzedShellData.TRACER 是 boolean，SPAWN_ONLY 同步。
-      **全局曳光配置项目前没有接**（阶段四设置 TRACER 时需要补上）。
+      阶段四已接线，并且把 allBigCannonProjectilesAreTracers 一并接上了
+      （LoadedRound.of 里 `曳光物品非空 || 全局配置开启`）。
+      → 语义等价，只是从「同步一个 ItemStack」变成「同步一个 boolean」，
+        客户端拿不到曳光弹的具体物品（当前渲染也还没做，见 §9.4）。
 
 ================================================================================
 10. 新系统独有的能力（旧完全没有）                                      [已核对]
@@ -504,15 +509,30 @@
 13. 当前接线状态（很重要）                                              [已核对]
 ================================================================================
 
-  阶段一～三已完成，但 **阶段四（fireShot 改造）尚未做**，因此：
+  【2026-09-07 更新：阶段四已完成，本文的差异**现在全部生效了**】
 
-    - MountedDualCannonContraption.fireShot 仍然 `level.addFreshEntity(旧实体)`
-    - 新的 9 个 ProjectileType 已注册，但**没有任何代码去 spawn 它们**
-    - 新的 9 个 JSON 已加载进 MunitionConfigManager，但没有被消费
-    - 客户端行为未注册（阶段五）
+  阶段一～四已完成：
+    - MountedDualCannonContraption.fireShot 已改为 ShaolibProjectiles.spawn
+    - 9 个 ProjectileType / 9 个 JSON 均已接入并被消费
+    - 引信翻译、动态属性、命中回调、寿命、曳光均已接线
 
-  → **游戏内表现目前与迁移前完全相同**，本文列出的差异都是
-    「阶段四接线之后才会显现」的差异，不是当前已经生效的差异。
+  仍未完成（阶段五～六）：
+    - **客户端行为未注册 → 炮弹在客户端是隐形的**
+      （服务端弹道、命中、爆炸都正常，只是看不见弹体与飞行特效）
+    - 旧的 9 个实体炮弹类与 CBCMSEntityTypes 注册仍在，但已无代码生成它们
+
+  阶段四接线时同步修正/变更的几处（本文其余章节据此更新）：
+    - §8 区块加载：已接 ProjectileChunkLoadPolicy，
+      配置开启时用 SYNC_LOAD，否则 IF_ALREADY_LOADED
+    - §9.5 曳光：已接，且补上了旧实体 hasTracer() 里的
+      allBigCannonProjectilesAreTracers 全局配置
+    - §7 寿命：已接，公式与旧的一致（下限钳到 1 tick）
+    - §6.5 自伤：**仍未处理**，见下方风险清单第 1 条
+    - 命中回调的船体判定改为「hit.isBodyHit() 优先，旧坐标 hack 兜底」，
+      是旧判定的超集
+    - 舍弃了 projectile.addedChargePower()（用户要求，且数值恒为 0，无影响）
+    - 删除了三段死代码：IntegratedPropellantProjectile 分支、
+      未被使用的 recoilMagnitude 累加、fireShot 末尾的 queueForceLoad
 
 ================================================================================
 14. 建议实机验证清单（按风险排序）
