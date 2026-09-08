@@ -336,9 +336,51 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
   命中回调的船体判定做了**增强**：优先用 shaolib 的 hit.isBodyHit()，
   判否时再回落到旧的 |坐标| > 1e7 hack，属于超集，不会比旧的更少触发。
 
-【尚未完成】阶段五～六：客户端行为注册、旧实体类删除。
-  ⚠ 现在 fireShot 已经切到新投射物，但**阶段五未做 = 炮弹在客户端是隐形的**。
-    旧的 9 个实体炮弹与 CBCMSEntityTypes 注册仍然存在，但已经没有代码去生成它们。
+【已完成】阶段五（第 8 节）。新增 2 个文件 + 1 处接线：
+
+  munitions/dual_cannon/shaolib/client/
+    DualCannonProjectileClientBehavior.java  移植自 shaolib 的
+                                             DualCannonShellClientBehavior
+    CBCMSDualCannonProjectileClient.java     注册 9 条客户端行为
+
+  CbcmoreshellsClientCommon.onClientSetup() 里加一行 register()。
+  （入口链：CBCMSClientNeoForge.prepareClient → FMLClientSetupEvent
+    → CbcmoreshellsClientCommon.onClientSetup）
+
+  按「不依赖 shaolib 的 dual_cannon 包」的要求，客户端行为同样是**移植**而非直接用。
+  底下的 CbcShellBlockModelProjectileClientBehavior / CbcShellClientSpec /
+  MunitionClientState / ClientProjectileBehaviors 属于通用客户端框架，继续直接调用。
+
+  注册方式：**遍历 CBCMSDualCannonMunitionRegistry.all()**，
+  而不是再手写一份 9 条的列表 —— 避免出现「服务端注册了、客户端漏了 → 隐形弹」。
+  Entry 里的 renderedBlock 字段（阶段二就预留了）在这里被消费。
+
+  属性解析器与服务端一致，都用
+  MunitionPropertyResolver.encodedJson(propertyType, DYNAMIC_PROPERTIES)，
+  保证两端看到同一份每发属性。
+
+【8.2 / 8.3 的落实情况（核对后修正了原文的推测）】
+
+  烟迹：原文担心「shaolib 的 trail_smoke 与 cbcms 自己的尾迹包重复」。
+  实际逐行核对后：
+    - shaolib 的 CbcMunitionClientEffects.emitTrailSmoke
+      = TrailSmokeParticleData(100)、10 个插值点、0.004−0.002 随机速度、
+        addAlwaysVisibleParticle —— 与旧 AbstractDualCannonProjectile.tick()
+        里的客户端烟迹**逐行相同**
+    - cbcms 的 ClientboundCBCMSTrailPacket
+      = TrailSmokeParticleData(320)，每 5 tick 一段，远距离可见的曳光烟柱
+  → 这是**两个不同的东西**，旧系统本来就是两者并存。
+    所以采用 8.2 的方案 (a)+shaolib 原生，两条都保留，与旧系统对齐，不是重复。
+
+  飞行音效：effects.flyby_sound = true，由 CbcShellClientSpec.cbc(...) 自动接上
+  shaolib 的 MunitionFlyingSound。过滤半径与判定逻辑与旧的
+  playShellFlyingSoundOnClient 不同（见 difference.txt §9.3）。
+
+【尚未完成】阶段六：删除旧实体类与相关注册。
+  旧的 9 个 *Projectile 类、CBCMSEntityTypes 的 9 条注册、
+  DualCannonProjectileRenderer、config/DualCannonProperties* 六个类、
+  以及旧的 munition_properties/projectiles/*.json 仍然存在，
+  但**已经没有任何代码去生成或使用它们**。
 
 ================================================================================
 1. 现状盘点：cbcms 侧现有 Dual Cannon 弹药架构
@@ -1305,8 +1347,8 @@ NORMAL_* 只当作"参考实现 + fallback 数值来源"，不直接 spawn 它�
     CBCMSDualCannonMunitionRegistry.java         [阶段二 已建]
     CBCMSDualCannonShotOverrides.java            [阶段二 已建]
     CBCMSDualCannonFuzeMapper.java               [阶段三 已建]
-    client/CBCMSDualCannonProjectileClient.java  [阶段五 待建，
-       需自行移植 DualCannonShellClientBehavior，同样不能直接用 shaolib 的]
+    client/DualCannonProjectileClientBehavior.java   [阶段五 已建，移植]
+    client/CBCMSDualCannonProjectileClient.java      [阶段五 已建]
 
 【新建数据】
     data/cbcmoreshells/shaolib_munitions/munitions/normal_ap_shot.json

@@ -2,7 +2,7 @@
 新旧 Dual Cannon 炮弹机制差异对照
   旧 = 继承 AbstractDualCannonProjectile 的实体炮弹（9 个 *Projectile 类）
   新 = munitions/dual_cannon/shaolib/ 下的 Shaolib 投射物实现
-  对照日期：2026-09-07     范围：阶段一～四已落地的代码
+  对照日期：2026-09-07     范围：阶段一～五已落地的代码
 ================================================================================
 
 【阅读须知】
@@ -413,7 +413,15 @@
       每 tick 沿 oldPos→pos 插值撒 10 个 TrailSmokeParticleData，
       lifetime 固定 100（TrailType 硬编码为 SHORT，LONG 分支永不生效）。
   新：交给 shaolib 的 effects.trail_smoke（JSON 里为 true），
-      具体密度/寿命由 shaolib 决定，**与旧的视觉不会完全一致**。
+      实现是 CbcMunitionClientEffects.emitTrailSmoke。
+  → **逐行核对后：两者实现完全相同** —— 同样是 TrailSmokeParticleData(100)、
+    同样 10 个插值点、同样 0.004−0.002 的随机速度、同样 addAlwaysVisibleParticle。
+    （上一版本文档在此处推测「视觉不会完全一致」，是错的，现更正。）
+
+  ⚠ 注意这与 9.1 的尾迹网络包**不是同一个东西，也不重复**：
+    9.1 是服务端每 5 tick 发包、lifetime 320 的远距离曳光烟柱；
+    9.2 是客户端每 tick 撒、lifetime 100 的近距离烟迹。
+    旧系统两者并存，新系统同样两者并存，行为对齐。
 
 9.3 飞行音效                                                          [已核对]
 
@@ -423,11 +431,22 @@
   新：effects.flyby_sound = true，由 shaolib 的 MunitionFlyingSound 实现。
       **过滤逻辑与半径与旧的不同**。
 
-9.4 渲染：**当前完全没有**                                            [已核对]
+9.4 渲染：阶段五已完成                                                 [已核对]
 
   旧：DualCannonProjectileRenderer（EntityRenderer），渲染 getRenderedBlockState()。
-  新：需要 ClientProjectileBehaviors.register(...)，属于阶段五，**尚未做**。
-      → 现在即使把 fireShot 切过去，新炮弹也是**隐形的**。
+  新：DualCannonProjectileClientBehavior（移植自 shaolib 的
+      DualCannonShellClientBehavior），由 CBCMSDualCannonProjectileClient
+      在 FMLClientSetupEvent 里注册 9 条，用弹药方块的模型渲染。
+
+  差异：
+    - 渲染的方块来源相同：旧的 getRenderedBlockState() 与新的
+      Entry.renderedBlock 指向同一个方块（extended_* 两种同样借用
+      normal_* 的模型）。
+    - 新增「已引爆则不渲染弹体」：STATE == DETONATED 时跳过方块渲染，
+      旧系统靠实体 discard 达成同样效果。
+    - 新增嵌入渲染：钉进方块/船体后会跟随刚体运动，旧系统没有这个状态。
+    - 旧的 DualCannonProjectileRenderer 仍保留，因为旧的 9 个实体类型
+      还注册着（阶段六一并删除）。
 
 9.5 曳光弹                                                            [已核对]
 
@@ -516,10 +535,16 @@
     - 9 个 ProjectileType / 9 个 JSON 均已接入并被消费
     - 引信翻译、动态属性、命中回调、寿命、曳光均已接线
 
-  仍未完成（阶段五～六）：
-    - **客户端行为未注册 → 炮弹在客户端是隐形的**
-      （服务端弹道、命中、爆炸都正常，只是看不见弹体与飞行特效）
-    - 旧的 9 个实体炮弹类与 CBCMSEntityTypes 注册仍在，但已无代码生成它们
+  阶段五（客户端）也已完成：
+    - DualCannonProjectileClientBehavior 已移植，9 条客户端行为已在
+      FMLClientSetupEvent 注册，炮弹可见
+    - 近距离烟迹（shaolib effects.trail_smoke）与远距离曳光烟柱
+      （cbcms 自己的网络包）两条并存，与旧系统一致
+
+  仍未完成（阶段六）：
+    - 旧的 9 个实体炮弹类、CBCMSEntityTypes 的 9 条注册、
+      DualCannonProjectileRenderer、旧的 config/DualCannonProperties* 与
+      旧的 munition_properties JSON 仍然存在，但已无代码生成它们
 
   阶段四接线时同步修正/变更的几处（本文其余章节据此更新）：
     - §8 区块加载：已接 ProjectileChunkLoadPolicy，
