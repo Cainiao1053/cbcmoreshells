@@ -1,0 +1,325 @@
+================================================================================
+给 Dual Cannon 炮弹增加新 property 的方案
+  说明：只给方案，未改任何代码
+================================================================================
+
+先说结论：**gravity 这个例子已经有了**，不用加。
+  它在 shaolib 的 MunitionPropertyComponents.BallisticsProperties 里，
+  9 个 JSON 的 "ballistics" 段里也已经在用（normal_ap_shot 是 -0.04），
+  而且 MunitionMotionModels.acceleration 真的会读它，改了立刻生效。
+  同一组里现成可用的还有：drag、quadratic_drag、durability_mass、deflection。
+
+  所以真正的问题是：**你要加的这个 property 属于哪一类**。
+  不同类别的工作量差一个数量级，先对号入座再动手。
+
+================================================================================
+一、先分类（决策树）
+================================================================================
+
+  问题 1：shaolib 现成的组件里是不是已经有了？
+      ballistics : gravity / drag / quadratic_drag / durability_mass /
+                   penetration / toughness / deflection
+      runtime    : max_distance / terminal_ttl_ticks / detonation_ttl_ticks
+      impact     : stop_speed / max_penetrations / max_ricochets / can_bounce /
+                   break_blocks / base_bounce_chance /
+                   min_velocity_for_penetration_bonus / penetration_bonus_scale /
+                   bounce_velocity_retained / penetration_velocity_retained /
+                   minimum_velocity_retained / bounce_exit_distance /
+                   penetration_exit_distance
+      effects    : block_hit_effects / trail_smoke / flyby_sound /
+                   cbc_projectile_effect_entity / explosion{kind,power,fire,no_effects}
+      damage     : entity_damage / renders_invulnerable / ignores_invulnerability /
+                   ignores_entity_armor / knockback
+      incendiary : fire_chance / fire_range
+      → 有 → 直接在 JSON 里写就行，**零代码**。
+        但注意其中三个是**读了也没用**的（见第五节）。
+
+  问题 2：这个值对每种弹固定，还是每一发都可能不同？
+      每种弹固定（数据包配置）        → 走【方案一】加进属性 record
+      每发不同（受炮管/指令/装备影响）→ 走【方案二】每发动态覆盖
+      飞行过程中会变（运行时状态）    → 走【方案三】加进 DualCannonState
+      客户端也要知道（渲染/特效用）   → 走【方案四】加进 schema
+
+  问题 3（只对方案一）：它属于哪一组？
+      发射相关（初速/散布/装填/后坐）→ 加进 DualCannonLaunchProperties     ← 最省事
+      命中相关（穿深/跳弹/崩落）      → 加进 DualCannonImpactProperties     ← 最省事
+      其它（比如飞行、空气动力学）    → 新建一个组件 record                 ← 最费事
+
+  ⚠ 一个硬约束：**shaolib 的组件不能改**
+    BallisticsProperties / RuntimeProperties / ImpactProperties 这些是 shaolib 的
+    record，cbcms 加不了字段。所以「想要一个新的弹道类参数」时，
+    不能往 ballistics 里塞，只能新建 cbcms 自己的组件（问题 3 的第三种）。
+
+================================================================================
+二、方案一：加进已有的 cbcms 组件（最常见，推荐）
+================================================================================
+
+  适用：每种弹固定的数值，且能归到「发射」或「命中」两类。
+  文件：DualCannonLaunchProperties.java 或 DualCannonImpactProperties.java
+
+  以 DualCannonImpactProperties 加一个 `armorPiercingCap` 为例，改 5 处：
+
+    ① record 参数列表末尾加字段
+         public record DualCannonImpactProperties(
+             double smashToughness,
+             ...
+             double bounceMassPenaltyScale,
+             double armorPiercingCap          ← 新增
+         ) {
+
+    ② DEFAULT 补上默认值
+         public static final DualCannonImpactProperties DEFAULT =
+             new DualCannonImpactProperties(1.0, 128.0, 1.0, 1.3, 1.08, 1.0/3.0, 0.0);
+
+    ③ 紧凑构造器加校验（照抄现有几行）
+         armorPiercingCap = MunitionPropertyComponents.finiteNonNegative(
+                 "armorPiercingCap", armorPiercingCap);
+
+    ④ fromJson 加一行
+         GsonHelper.getAsDouble(json, "armor_piercing_cap", fallback.armorPiercingCap())
+
+    ⑤ write / read 各加一行，**必须加在末尾且位置对应**
+         write: buffer.writeDouble(impact.armorPiercingCap());
+         read : ... 最后一个 buffer.readDouble()
+
+  然后（可选）：
+    - 9 个 JSON 的 dual_impact 段里写上 "armor_piercing_cap": xxx，不写就走 DEFAULT
+    - 在 DualCannonPenetrationModel 或别处消费它
+
+  **不需要改**：DualCannonProjectileProperties、DualCannonIncendiaryProjectileProperties、
+  CBCMSDualCannonPropertyTypes、注册代码 —— 因为它们只是持有整个组件对象。
+  这就是为什么「能归到已有组件」比「新建组件」省事得多。
+
+  ⚠ write/read 是**按顺序的字节流，不按名字**。
+    加错位置的表现不是报错，而是「客户端所有数值集体错位」，非常难查。
+    改完务必开一个客户端看 tooltip 数值对不对。
+
+================================================================================
+三、方案一之变体：新建一个组件 record（新的一类参数）
+================================================================================
+
+  适用：新参数不属于「发射」也不属于「命中」，比如要加一整套空气动力学参数。
+  代价明显更高，因为**两个属性 record 都要改**。
+
+  假设新建 DualCannonFlightProperties（含 liftCoefficient、magnusFactor 等）：
+
+    1. 新建 DualCannonFlightProperties.java
+       照着 DualCannonImpactProperties 的样子写：
+       record 字段 + DEFAULT + 紧凑构造器校验 + fromJson + write + read
+
+    2. DualCannonMunitionProperties 接口加一个 getter
+         DualCannonFlightProperties flight();
+       （只有当击穿模型 / 运动模型要通过接口读它时才需要）
+
+    3. DualCannonProjectileProperties —— **7 处**
+         ① record 组件列表加 DualCannonFlightProperties flight
+         ② 紧凑构造器加 Objects.requireNonNull(flight, "flight")
+         ③ base(...) 里传 DualCannonFlightProperties.DEFAULT
+         ④ withReach(...) 里把 base.flight() 透传下去   ← 最容易漏
+         ⑤ fromJson 加 DualCannonFlightProperties.fromJson(optionalObject(json,"flight"), fallback.flight())
+         ⑥ write 加一行
+         ⑦ read 加一行
+
+    4. DualCannonIncendiaryProjectileProperties —— **6 处**
+         同上，只是没有 withReach，改成 normalIncendiaryHeShellFallback() 里补一个 DEFAULT
+
+    5. 9 个 JSON 里加 "flight": { ... }（可选）
+
+  ⚠ 最容易出的两个错：
+    - **只改了普通弹，忘了纵火弹**。两个 record 是并列的，都实现
+      DualCannonMunitionProperties，漏一个就编译不过（好在编译期能发现）。
+    - **忘了 withReach**。它会重新构造整个 record，漏传新组件就是编译错误
+      （同样编译期能发现），但如果你顺手写成 DEFAULT 而不是 base.flight()，
+      extended_ap_shot / extended_antiair_he_shell 两种弹的新参数就会被悄悄重置成默认值
+      —— 这个编译器抓不到。
+
+================================================================================
+四、如果这个新 property 要影响飞行（gravity 这一类）
+================================================================================
+
+  这是「像 gravity 一样」最需要注意的一点：
+  **光把字段加进属性 record 是不够的，运动模型根本不会去读它。**
+
+  现在的绑定在 CBCMSDualCannonProjectiles.register(...)：
+
+        .motionModel(MunitionMotionModels.configured(resolver))
+
+  而 MunitionMotionModels.configured 内部只读三个字段：
+
+        Vec3 acceleration = new Vec3(0, ballistics.gravity(), 0);
+        double drag = ballistics.drag();
+        dragAcceleration = ballistics.quadraticDrag()
+            ? velocity.normalize().scale(-drag * velocity.lengthSqr())
+            : velocity.scale(-drag);
+        return acceleration.add(dragAcceleration);
+
+  → gravity / drag / quadratic_drag 之外的任何东西，它都看不见。
+    想加升力、马格努斯效应、风、维度重力倍率、流体阻力……
+    都必须**换掉运动模型**。
+
+  好消息：ProjectileMotionModel 是个只有一个方法的函数式接口，自己写很短：
+
+        @FunctionalInterface
+        public interface ProjectileMotionModel {
+            void integrate(ProjectileInstance projectile, double scale);
+        }
+
+  自定义实现照抄 shaolib 的积分方式即可（保持弹道一致），大约 10 行：
+
+        public static ProjectileMotionModel configured(MunitionPropertyResolver<P> resolver) {
+            return (projectile, scale) -> {
+                P props = resolver.resolve(projectile);
+                Vec3 v = projectile.velocity();
+                Vec3 a = acceleration(v, props);          ← 你自己的公式，可以读任意字段
+                projectile.setPosition(projectile.position()
+                        .add(v.scale(scale))
+                        .add(a.scale(0.5 * scale * scale)));
+                projectile.setVelocity(v.add(a.scale(scale)));
+            };
+        }
+
+  然后在 CBCMSDualCannonProjectiles.register(...) 里把
+  MunitionMotionModels.configured(resolver) 换成你自己的。
+
+  ⚠ 位置/速度的更新公式（半隐式：pos += v·s + a·s²/2，v += a·s）**不要改**，
+    否则弹道会和现在对不上。只改 acceleration(...) 的内容。
+
+  顺带一提：difference.txt 里记的「维度阻力倍率丢失」「流体阻力丢失」两条，
+  修复方式正是这一节 —— 写一个自定义运动模型，把
+  DimensionMunitionPropertiesHandler 和 FluidDragHandler 的项加回去。
+
+================================================================================
+五、消费端：加完字段之后谁去读它
+================================================================================
+
+  按用途，读取点不同：
+
+    影响飞行            → 自定义 ProjectileMotionModel（见第四节）
+    影响击穿/跳弹        → DualCannonPenetrationModel.resolve（或按 report2.txt 拆分后的模型层）
+    影响引爆威力         → DualCannonBehavior.detonatePayload / explosionPowerMultiplier
+    影响实体伤害         → 目前走 shaolib 的 CbcLikeEntityImpact，
+                          要自定义得覆写 DualCannonBehavior.applyEntityImpact
+    影响发射（初速/散布）→ MountedDualCannonContraption.spawnRound
+    影响装填             → CBCMSDualCannonMunitionRegistry.reloadTimeCoefficient 一带
+    只是显示在 tooltip   → CBCMSTooltip 的三个 append*DualCannonProjectileInfo
+                          （记得同步改 lang 文件的占位符个数，见下）
+
+  ⚠ 三个「加了也白加」的既有字段，别往这些上面挂新逻辑：
+      ballistics.penetration           双联装击穿路径根本不读
+      ballistics.toughness             同上（CBC 遗留）
+      impact.penetration_exit_distance 被 MunitionImpactUtil.penetrationReclipPosition 忽略
+
+  ⚠ 如果要显示在 tooltip：
+    en_us.json 目前**占位符本来就少了一个**（normal_ap_shell / normal_apbc_shell 是
+    9 个 %s 对 10 个参数，normal_ap_shot 是 8 对 9，normal_incendiary_he_shell 干脆
+    一个 %s 都没有）。zh_cn 是全的。
+    这是迁移前就有的问题，但你加参数时会直接撞上 —— 加参数记得两个 lang 都补。
+
+================================================================================
+六、方案二：每发不同的值（受炮管/指令/装备影响）
+================================================================================
+
+  好消息：**这条链路已经通了，通常不需要加任何字段。**
+
+  每发炮弹可以携带一段 JSON 覆盖，叠加在数据包配置之上：
+
+    写入：CBCMSDualCannonShotOverrides.encode(...)
+          → MountedDualCannonContraption.spawnRound 里
+            set 进 CBCMSDualCannonData.DYNAMIC_PROPERTIES
+    读取：CBCMSDualCannonProjectiles 注册时用的
+          MunitionPropertyResolver.encodedJson(propertyType, DYNAMIC_PROPERTIES)
+
+  现在只覆盖了 ballistics.durability_mass。想让某个字段随炮管/指令变化，
+  在 encode() 里多加一段就行，**不用改 record、不用改网络编解码**：
+
+        JsonObject flight = new JsonObject();
+        flight.addProperty("lift_coefficient", base * 炮管系数);
+        overrides.add("flight", flight);
+
+  格式就是数据包 JSON 的同一套结构，逐字段覆盖，没写的沿用配置值。
+
+  ⚠ encode() 目前在「修正 ≈ 1」时返回空串来省一次解析。
+    如果你新加的覆盖项在修正为 1 时**也需要生效**，记得改这个短路条件，
+    否则会出现「基础炮管上新参数不生效，改装炮管上才生效」这种诡异现象。
+
+================================================================================
+七、方案三：运行时状态（飞行中会变的量）
+================================================================================
+
+  适用：不是配置，是这一发炮弹自己的状态，比如「已经穿了几层」「累计受热」。
+  注意区分：配置 → 属性 record；状态 → DualCannonState。
+
+  改 2 个文件：
+
+    1. DualCannonState.java
+         加私有字段 + getter/setter（照现有 lifetimeTicks / trailAnchor 的写法）
+         纯瞬时、不需要存档的可以标 transient（hitCallback 就是这么处理的）
+
+    2. DualCannonSerializer.java
+         saveAdditional / loadAdditional 各加一行
+         这里是按 key 存 NBT，**不像网络编解码那样怕顺序**，相对安全
+
+  不需要改属性 record，不需要改 JSON。
+
+================================================================================
+八、方案四：客户端也要知道的值
+================================================================================
+
+  先判断真的需要吗：
+    - **属性 record 里的东西客户端自动就有**，MunitionPropertiesSync 会整包同步，
+      客户端的 MunitionConfigManager 里查得到。所以配置类的值不用管。
+    - DualCannonState 是**纯服务端**的，客户端拿不到。
+
+  只有「每发不同、且客户端要用」的值才需要进 schema：
+
+    CBCMSDualCannonData.java 加一个 accessor：
+
+        public static final ProjectileDataAccessor<Float> HEAT =
+            BUILDER.define("cbcms_heat", ProjectileDataSerializers.FLOAT, 0.0F,
+                           ProjectileSyncPolicy.SPAWN_ONLY);
+
+    同步策略按需要选：
+        SPAWN_ONLY      只在生成时发一次（最省带宽，适合发射时定死的值）
+        RELIABLE_DELTA  变了就可靠地发（适合状态机、颜色）
+        MOVEMENT        跟着运动包发（适合尾迹速度这类）
+        LOCAL_ONLY      根本不发，纯服务端记账（但**仍然会存盘**）
+
+    可用的序列化器：BOOLEAN / BYTE / INT / LONG / FLOAT / DOUBLE / STRING / VEC3
+
+  写入：spawnRound 的 instance initializer 里 projectile.set(HEAT, x)
+  读取：客户端在 DualCannonProjectileClientBehavior 里 projectile.get(HEAT)
+
+  ⚠ schema 字段无论同步策略如何**都会写进存档**
+    （ProjectileInstance.save 里 tag.put("Data", data.saveNbt()) 对所有 accessor 一视同仁）。
+    所以 LOCAL_ONLY 也是持久的，可以当服务端状态用 —— 不过状态类的东西
+    还是放 DualCannonState 更清楚。
+
+================================================================================
+九、四个方案的工作量对照
+================================================================================
+
+  场景                                    改动点                      难度
+  ------------------------------------------------------------------------
+  shaolib 已有的字段（如 gravity）        只改 JSON                    ★
+  加进 LaunchProperties/ImpactProperties  1 个文件 5 处 + 消费端        ★★
+  每发动态覆盖                            CBCMSDualCannonShotOverrides ★★
+  运行时状态                              State + Serializer           ★★
+  客户端也要知道                          CBCMSDualCannonData          ★★
+  新建一个组件 record                     4 个文件 15+ 处 + 消费端      ★★★
+  影响飞行（要换运动模型）                自定义 MotionModel + 注册     ★★★
+
+================================================================================
+十、改完之后建议验证
+================================================================================
+
+  1. /reload 后进游戏看 tooltip 数值 —— 验 JSON 被读到、没走 fallback
+     （如果新字段是错的拼写，不会报错，只会静默用默认值）
+  2. 开一个客户端联多人 —— 验 write/read 顺序没错位
+     （错位的典型表现：tooltip 上多个数字集体变成别的字段的值）
+  3. extended_ap_shot / extended_antiair_he_shell 这两种弹单独看一眼 ——
+     它们走 withReach(...) 重新构造，是最容易被漏传的
+  4. 如果动了运动模型：找一门炮固定仰角打同一个目标，对比改动前后的落点，
+     确认只有你想改的那一项变了
+  5. 如果新字段进了 schema：存档退出重进，确认值还在
+
+================================================================================
