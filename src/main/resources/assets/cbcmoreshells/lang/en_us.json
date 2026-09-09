@@ -533,5 +533,20 @@
     "cbcmoreshells.firing_table.stat.effective_mass": "Effective Mass",
     "cbcmoreshells.firing_table.column.momentum": "Equivalent Momentum",
     "cbcmoreshells.firing_table.column.flight_time": "Flight Time",
-    "cbcmoreshells.firing_table.column.impact_speed": "Impact Speed"
+    "cbcmoreshells.firing_table.column.impact_speed": "Impact Speed",
+
+    "cbcmoreshells.firing_table.title": "Dual Cannon Firing Tables",
+    "cbcmoreshells.firing_table.material": "Material",
+    "cbcmoreshells.firing_table.distance": "Distance",
+    "cbcmoreshells.firing_table.showing": "Showing: %s",
+    "cbcmoreshells.firing_table.filter": "Barrels: %s",
+    "cbcmoreshells.firing_table.filter.single_only": "Single only",
+    "cbcmoreshells.firing_table.filter.single_plus_gaps": "Single + gaps",
+    "cbcmoreshells.firing_table.filter.all": "All",
+    "cbcmoreshells.firing_table.columns": "Columns: %s",
+    "cbcmoreshells.firing_table.unavailable": "No firing table for this round",
+    "cbcmoreshells.firing_table.no_ballistics": "This round's flight cannot be solved",
+    "cbcmoreshells.firing_table.no_shells": "No dual cannon rounds are registered",
+    "key.categories.cbcmoreshells": "CBC More Shells",
+    "key.cbcmoreshells.firing_tables": "Open Firing Tables"
 }
