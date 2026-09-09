@@ -14,11 +14,13 @@ public record DualCannonLaunchProperties(
 	double projectileSpread,
 	double minimumSpread,
 	double reloadTimeCoefficient,
-	double cooldownReductionRate
+	double cooldownReductionRate,
+	double baseRecoil,
+	int baseLifetime
 ) {
 
 	public static final DualCannonLaunchProperties DEFAULT =
-		new DualCannonLaunchProperties(0.0, 0.0, true, 0.0, 4.0, 0.0, 0.0, 1.0, 0.0);
+		new DualCannonLaunchProperties(0.0, 0.0, true, 0.0, 4.0, 0.0, 0.0, 1.0, 0.0, 1, 20);
 
 	public DualCannonLaunchProperties {
 		addedChargePower = MunitionPropertyComponents.finiteNonNegative("addedChargePower", addedChargePower);
@@ -29,6 +31,8 @@ public record DualCannonLaunchProperties(
 		minimumSpread = MunitionPropertyComponents.finiteNonNegative("minimumSpread", minimumSpread);
 		reloadTimeCoefficient = MunitionPropertyComponents.finiteNonNegative("reloadTimeCoefficient", reloadTimeCoefficient);
 		cooldownReductionRate = MunitionPropertyComponents.finiteNonNegative("cooldownReductionRate", cooldownReductionRate);
+		baseRecoil = MunitionPropertyComponents.finiteNonNegative("baseRecoil", baseRecoil);
+		baseLifetime = MunitionPropertyComponents.nonNegative("baseLifetime", baseLifetime);
 	}
 
 	public static DualCannonLaunchProperties fromJson(JsonObject json, DualCannonLaunchProperties fallback) {
@@ -43,7 +47,10 @@ public record DualCannonLaunchProperties(
 			GsonHelper.getAsDouble(json, "minimum_spread", fallback.minimumSpread()),
 			GsonHelper.getAsDouble(json, "reload_time_coefficient",
 				GsonHelper.getAsDouble(json, "reload_time_coef", fallback.reloadTimeCoefficient())),
-			GsonHelper.getAsDouble(json, "cooldown_reduction_rate", fallback.cooldownReductionRate()));
+			GsonHelper.getAsDouble(json, "cooldown_reduction_rate", fallback.cooldownReductionRate()),
+				GsonHelper.getAsDouble(json, "baseRecoil", fallback.baseRecoil()),
+				GsonHelper.getAsInt(json, "baseLifetime", fallback.baseLifetime())
+		);
 	}
 
 	public static void write(RegistryFriendlyByteBuf buffer, DualCannonLaunchProperties launch) {
@@ -56,12 +63,15 @@ public record DualCannonLaunchProperties(
 		buffer.writeDouble(launch.minimumSpread());
 		buffer.writeDouble(launch.reloadTimeCoefficient());
 		buffer.writeDouble(launch.cooldownReductionRate());
+		buffer.writeDouble(launch.baseRecoil());
+		buffer.writeInt(launch.baseLifetime());
 	}
 
 	public static DualCannonLaunchProperties read(RegistryFriendlyByteBuf buffer) {
 		return new DualCannonLaunchProperties(
 			buffer.readDouble(), buffer.readDouble(), buffer.readBoolean(), buffer.readDouble(), buffer.readDouble(),
-			buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+			buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readInt()
+		);
 	}
 
 }

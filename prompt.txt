@@ -1,2 +1,4 @@
-如果需要给dual cannon的炮弹本身增加新的property，比如gravity这样的，需要怎么加
-不改代码，只给方案，写进report3.txt
+我需要给Dual Cannon的炮弹做弹道计算，从DualCannonBehavior里面找炮弹的motion model，确认CBCMSBallisticUtils里面的cannon function是否可以直接用
+然后完成一个便捷计算，首先获取一个dual cannon炮弹的最大射程，然后根据给定的射程求飞行时间和炮弹剩余速度，这会在之后用于计算弹道和击穿能力
+需要根据炮弹和炮管搭配后已知的初速度，阻力，重力来计算弹道，高差为0
+这些方法之后会用于在游戏内显示炮弹弹道表格，完成这几个基础方法并写在CBCMSBallisticUtils里面

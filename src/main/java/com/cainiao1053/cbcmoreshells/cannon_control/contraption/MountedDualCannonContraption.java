@@ -525,6 +525,8 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
         float horizontalOffset = this.cannonMaterial.properties().barrelGap() / 2 * this.barrelInverter;
         Vec3 horizontalOffsetVec = vec.yRot((float) Math.PI / 2).scale(horizontalOffset);
 
+        double baseRecoil = 0;
+
         int barrelLifetime = (this.cannonMaterial.properties().addedLifetime());
         float durabilityMassModifier = this.cannonMaterial.properties().durabilityMassModifier() * this.commandDurabilityMassModifier * this.equipmentDurabilityModifier;
         if (primary != null) {
@@ -538,6 +540,7 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                     launch.minimumSpread() + minimumSpread)
                     * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef);
             this.spawnRound(level, primary, spawnPos.add(horizontalOffsetVec), vec, spread, durabilityMassModifier, barrelLifetime);
+            baseRecoil += primary.props().dualCannon().baseRecoil();
         }
 
         if (secondary != null && !cannonMaterial.properties().isSingleBarrel()) {
@@ -546,20 +549,18 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                 this.fail(currentPos, level, entity, null, (int) propelCtx.chargesUsed);
                 return;
             }
-            // Second barrel keeps its own spread formula, which differs from the first barrel's:
-            // minimumSpread is added on top rather than acting as a floor. Preserved from the
-            // entity implementation so the two barrels group exactly as they used to.
             DualCannonLaunchProperties launch = secondary.props().dualCannon();
             float spread = (float) ((launch.minimumSpread()
                     + Math.max(launch.projectileSpread() - spreadSub * subLength, minimumSpread))
                     * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef);
             this.spawnRound(level, secondary, spawnPos.subtract(horizontalOffsetVec), vec, spread, durabilityMassModifier, barrelLifetime);
+            baseRecoil += secondary.props().dualCannon().baseRecoil();
         }
-
-        if (controller != null) controller.onRecoil(vec.scale(-durabilityMassModifier * 2.25), centerPos, entity);
 
         this.hasFired = true;
         this.barrelInverter *= -1;
+
+        if (controller != null) controller.onRecoil(vec.scale(-baseRecoil * cannonMaterial.properties().recoilMultiplier() * CBCMSConfigs.server().recoilScale.getF()), centerPos, entity); //used to have coef as 2.25
 
         float soundPower = Mth.clamp(1 / 16f, 0, 1);
         float tone = 2 + soundPower * -8 + level.random.nextFloat() * 4f - 2f;
@@ -608,8 +609,6 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
 
     private void spawnRound(ServerLevel level, LoadedRound round, Vec3 localSpawnPos, Vec3 localDirection,
                             float spread, float durabilityMassModifier, int barrelLifetime) {
-        // Shaolib projectiles live in world space; the contraption works in its own local space, so
-        // both position and direction have to be transformed out before spawning.
         Vec3 worldPos = CBCCompatTransformers.transformVec3(level, localSpawnPos, this.entity.position());
         Vec3 transformed = CBCCompatTransformers.transformLocationNormal(level, this.entity.blockPosition(), localDirection);
         Vec3 worldDirection = (transformed.lengthSqr() < 1.0e-8 ? localDirection : transformed).normalize();
@@ -618,7 +617,7 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
         Vec3 velocity = applySpread(worldDirection, props.dualCannon().initialVelocity(), spread, level.getRandom());
 
         int lifetimeTicks = round.entry().launchProfile()
-                .resolveLifetimeTicks(barrelLifetime, this.commandLifetimeModifier, this.equipmentLifetimeModifier);
+                .resolveLifetimeTicks(props.dualCannon().baseLifetime(), barrelLifetime, this.commandLifetimeModifier, this.equipmentLifetimeModifier);
         String overrides = CBCMSDualCannonShotOverrides.encode(durabilityMassModifier, props.ballistics().durabilityMass());
         ProjectileChunkLoadPolicy loadPolicy = CBCConfigs.server().munitions.projectilesCanChunkload.get()
                 ? ProjectileChunkLoadPolicy.SYNC_LOAD

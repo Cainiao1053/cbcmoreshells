@@ -171,14 +171,11 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 			return this.applyApShotImpactOutcome(context, outcome);
 		}
 		if (this.kind == Kind.SAP && outcome.kinematics() == MunitionImpactKinematics.PENETRATE) {
-			// Semi-AP is designed to burst just inside the plate: spend the shell and detonate at the
-			// entry face rather than carrying on through.
 			context.state().setDurabilityMass(0.0);
 			this.detonate(context, this.blockImpactDetonationPosition(outcome.hit()));
 			return false;
 		}
 		if (this.kind.isApheLike() && outcome.kinematics() == MunitionImpactKinematics.PENETRATE) {
-			// Base-fuzed behaviour: the fuze only gets a say once the shell is through the armour.
 			FuzeResult fuzeResult = MunitionFuzes.onImpact(context, outcome.hit(), outcome);
 			if (this.applyFuzeResult(context, fuzeResult, this.blockImpactDetonationPosition(outcome.hit()))) {
 				return false;
@@ -251,13 +248,6 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 				explosion.noEffects()));
 	}
 
-	/**
-	 * How the barrel/command/equipment durability modifier translates into explosive yield.
-	 *
-	 * <p>The divisors differ per kind so that a heavier barrel rewards HE far more than it rewards an
-	 * armour-piercing shell, whose burst charge is small and largely fixed. APHE/APBC/SAP use an
-	 * affine form with a floor, so even an under-strength barrel still gets a usable burst.
-	 */
 	protected double explosionPowerMultiplier(ProjectileServerContext<DualCannonState> context) {
 		double modifier = context.state().durabilityModifier();
 		return switch (this.kind) {

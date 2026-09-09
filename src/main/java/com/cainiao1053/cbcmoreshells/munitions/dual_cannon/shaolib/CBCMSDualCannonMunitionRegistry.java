@@ -92,9 +92,6 @@ public final class CBCMSDualCannonMunitionRegistry {
 			CBCMSDualCannonPropertyTypes.EXTENDED_AP_SHOT, DualCannonBehavior.Kind.AP_SHOT, 20, false, false,
 			"normal_ap_shot");
 
-		// Fuzed shells. None of the dual cannon munitions are base-fuzed in the shipped data; APHE
-		// and APBC still wait for penetration before consulting their fuze, but that comes from
-		// Kind.isApheLike() rather than this flag.
 		put(entries, CBCMSBlocks.NORMAL_HE_SHELL.get(), CBCMSDualCannonProjectiles.NORMAL_HE_SHELL,
 			CBCMSDualCannonPropertyTypes.NORMAL_HE_SHELL, DualCannonBehavior.Kind.HE, 20, true, false,
 			"normal_he_shell");

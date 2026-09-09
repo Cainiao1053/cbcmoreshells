@@ -29,9 +29,7 @@ import rbasamoyai.createbigcannons.munitions.ImpactExplosion;
 
 public final class DualCannonPenetrationModel {
 
-	/** Reflection coefficient for ricochets; >1 kicks the shell away from the surface. */
 	private static final double ELASTICITY = 1.7;
-	/** Below this, masses and velocities are treated as zero to avoid divide-by-zero blowups. */
 	private static final double EPSILON = 1.0E-6;
 
 	private DualCannonPenetrationModel() {}
@@ -54,8 +52,6 @@ public final class DualCannonPenetrationModel {
 		}
 		Optional<BlockState> liveState = BlockImpactSupport.liveBlockState(context, hit);
 		if (liveState.isEmpty() || liveState.orElseThrow().isAir()) {
-			// The block went away between the raycast and now; let the sweep re-clip rather than
-			// resolving an impact against something that is no longer there.
 			return MunitionImpactOutcome.uncertain(hit, velocity, mass);
 		}
 
@@ -85,9 +81,9 @@ public final class DualCannonPenetrationModel {
 		double momentum = cappedMomentum * incidence;
 		double durabilityPenalty = incidentVelocity <= EPSILON ? mass : toughness / incidentVelocity;
 
-		boolean penetrate = momentum > toughness * 2.0;
+		boolean penetrate = momentum > toughness * 1.5;
 		if (!penetrate && momentum > toughness * 0.5 && toughness > EPSILON) {
-			double penetrationChance = Math.max(0.0, (momentum / toughness - 0.15) / 2.0);
+			double penetrationChance = Math.max(0.0, ((momentum / toughness) - 0.5));
 			penetrate = context.level().random.nextDouble() < penetrationChance;
 		}
 
@@ -120,9 +116,7 @@ public final class DualCannonPenetrationModel {
 
 		DualCannonState state = context.state();
 		double scale;
-		if (momentum > toughness * 3.0) {
-			scale = properties.dualImpact().highPenetrationMassPenaltyScale();
-		} else if (momentum > toughness * 2.0) {
+		if (momentum > toughness * 1.5) {
 			scale = properties.dualImpact().penetrationMassPenaltyScale();
 		} else {
 			// Barely got through: the shell is spent, leave only a token mass so it stops on the next
@@ -159,6 +153,9 @@ public final class DualCannonPenetrationModel {
 
 		// Shallower hits bounce more readily; at grazing incidence this approaches certainty.
 		double bounceChance = Math.max(impact.baseBounceChance(), 1.0 - incidence / ballistics.deflection());
+		if(incidence < properties.dualImpact().minDeflection()){
+			bounceChance = 1;
+		}
 		if (context.level().random.nextDouble() >= bounceChance) return Optional.empty();
 
 		Vec3 reflected = velocity.subtract(normal.scale(ELASTICITY * velocity.dot(normal)))
@@ -186,7 +183,6 @@ public final class DualCannonPenetrationModel {
 		return MunitionImpactOutcome.stop(hit, shatter, velocity, mass);
 	}
 
-	/** Small blast behind the impact face, standing in for armour spalling off the inner surface. */
 	private static void playSpallExplosion(ProjectileServerContext<?> context, Vec3 position,
 										   DualCannonMunitionProperties properties) {
 		double power = properties.dualImpact().spallExplosionPower();
@@ -199,10 +195,6 @@ public final class DualCannonPenetrationModel {
 		CreateBigCannons.handleCustomExplosion(context.level(), explosion);
 	}
 
-	/**
-	 * Lets whatever owns the struck block (a ship, a vehicle) scale its own armour resistance —
-	 * e.g. so a moving hull can be tuned separately from the same blocks sitting on the ground.
-	 */
 	private static double bodyResistanceMultiplier(ProjectileServerContext<?> context, ShaolibBlockHitResult hit,
 												   BlockPos blockPos, BlockState blockState, double toughness) {
 		Optional<UUID> bodyId = hit.bodyId().or(() -> BlockBodyResolverServices.bodyId(context.level(), blockPos));

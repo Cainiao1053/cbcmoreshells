@@ -19,7 +19,9 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 										  FailureMode failureMode, boolean connectsInSurvival, boolean isWeldable,
 										  int weldDamage, int weldStressPenalty, float minimumSpread,
 										  float spreadReductionPerBarrel, int addedLifetime, float reloadTimeModifier,
-										   float durabilityMassModifier, float barrelGap, int combatCommandCooldown, int combatCommandDuration, boolean isSingleBarrel) {
+										   float durabilityMassModifier, float barrelGap, int combatCommandCooldown, int combatCommandDuration, boolean isSingleBarrel,
+										   float recoilMultiplier
+) {
 
 	public DualCannonMaterialProperties {
 		Objects.requireNonNull(failureMode, "property :failureMode is required");
@@ -71,9 +73,10 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 		int combatCommandCooldown = Math.max(GsonHelper.getAsInt(obj, "combat_command_cooldown", 1800), 0);
 		int combatCommandDuration = Math.max(GsonHelper.getAsInt(obj, "combat_command_duration", 400), 0);
 		boolean isSingleBarrel = GsonHelper.getAsBoolean(obj, "is_single_barrel", false);
+		float recoilMultiplier = Math.max(GsonHelper.getAsFloat(obj, "recoil_multiplier", 1), 0);
 		return new DualCannonMaterialProperties(minimumVelocityPerBarrel, weight, maxSafeBaseCharges, failureMode,
 			connectsInSurvival, isWeldable, weldDamage, weldStressPenalty, minimumSpread, spreadReductionPerBarrel, addedLifetime, reloadTimeModifier, durabilityMassModifier, barrelGap,
-				combatCommandCooldown, combatCommandDuration, isSingleBarrel);
+				combatCommandCooldown, combatCommandDuration, isSingleBarrel, recoilMultiplier);
 	}
 
 	public JsonObject serialize() {
@@ -95,6 +98,7 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 		obj.addProperty("combat_command_cooldown", this.combatCommandCooldown);
 		obj.addProperty("combat_command_duration", this.combatCommandDuration);
 		obj.addProperty("is_single_barrel", this.isSingleBarrel);
+		obj.addProperty("recoil_multiplier", this.recoilMultiplier);
 		return obj;
 	}
 
@@ -115,7 +119,8 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 			.writeFloat(this.barrelGap);
 		buf.writeVarInt(this.combatCommandCooldown);
 		buf.writeVarInt(this.combatCommandDuration)
-				.writeBoolean(this.isSingleBarrel);
+				.writeBoolean(this.isSingleBarrel)
+				.writeFloat(recoilMultiplier);
 	}
 
 	public static DualCannonMaterialProperties fromBuf(FriendlyByteBuf buf) {
@@ -136,9 +141,10 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 		int combatCommandCooldown = buf.readVarInt();
 		int combatCommandDuration = buf.readVarInt();
 		boolean isSingleBarrel = buf.readBoolean();
+		float recoilMultiplier = buf.readFloat();
 		return new DualCannonMaterialProperties(minimumVelocityPerBarrel, weight, maxSafeBaseCharges, mode, connectsInSurvival,
 			isWeldable, weldDamage, weldStressPenalty, minimumSpread, spreadReductionPerBarrel, addedLifetime, reloadTimeModifier, durabilityMassModifier, barrelGap,
-				combatCommandCooldown, combatCommandDuration, isSingleBarrel);
+				combatCommandCooldown, combatCommandDuration, isSingleBarrel, recoilMultiplier);
 	}
 
 	public enum FailureMode implements StringRepresentable {
@@ -186,6 +192,7 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 		private int combatCommandCooldown;
 		private int combatCommandDuration;
 		private boolean isSingleBarrel;
+		private float recoilMultiplier;
 
 		private Builder() {
 		}
@@ -276,6 +283,11 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 			return this;
 		}
 
+		public Builder recoilMultiplier(float recoilMultiplier){
+			this.recoilMultiplier = recoilMultiplier;
+			return this;
+		}
+
 		public DualCannonMaterialProperties build() {
 			if (this.failureMode == null) {
 				throw new IllegalStateException("Missing required property: failureMode");
@@ -283,7 +295,7 @@ public record DualCannonMaterialProperties(double minimumVelocityPerBarrel, floa
 			return new DualCannonMaterialProperties(this.minimumVelocityPerBarrel, this.weight,
 				this.maxSafePropellantStress, this.failureMode, this.connectsInSurvival, this.isWeldable,
 				this.weldDamage, this.weldStressPenalty, this.minimumSpread, this.spreadReductionPerBarrel, this.addedLifetime, this.reloadTimeModifier,
-					this.durabilityMassModifier, this.barrelGap, this.combatCommandCooldown, this.combatCommandDuration, this.isSingleBarrel);
+					this.durabilityMassModifier, this.barrelGap, this.combatCommandCooldown, this.combatCommandDuration, this.isSingleBarrel, this.recoilMultiplier);
 		}
 	}
 }

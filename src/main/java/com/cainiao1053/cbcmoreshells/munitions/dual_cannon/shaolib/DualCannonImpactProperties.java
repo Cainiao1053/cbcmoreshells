@@ -11,11 +11,12 @@ public record DualCannonImpactProperties(
 	double spallExplosionPower,
 	double highPenetrationMassPenaltyScale,
 	double penetrationMassPenaltyScale,
-	double bounceMassPenaltyScale
+	double bounceMassPenaltyScale,
+	double minDeflection
 ) {
 
 	public static final DualCannonImpactProperties DEFAULT =
-		new DualCannonImpactProperties(1.0, 128.0, 1.0, 1.3, 1.08, 1.0 / 3.0);
+		new DualCannonImpactProperties(1.0, 128.0, 1.0, 1.3, 1.0, 1.0 / 3.0, 0.2);
 
 	public DualCannonImpactProperties {
 		smashToughness = MunitionPropertyComponents.finiteNonNegative("smashToughness", smashToughness);
@@ -27,6 +28,7 @@ public record DualCannonImpactProperties(
 			MunitionPropertyComponents.finiteNonNegative("penetrationMassPenaltyScale", penetrationMassPenaltyScale);
 		bounceMassPenaltyScale =
 			MunitionPropertyComponents.finiteNonNegative("bounceMassPenaltyScale", bounceMassPenaltyScale);
+		minDeflection = MunitionPropertyComponents.finiteNonNegative("minDeflection", minDeflection);
 	}
 
 	public static DualCannonImpactProperties fromJson(JsonObject json, DualCannonImpactProperties fallback) {
@@ -36,7 +38,9 @@ public record DualCannonImpactProperties(
 			GsonHelper.getAsDouble(json, "spall_explosion_power", fallback.spallExplosionPower()),
 			GsonHelper.getAsDouble(json, "high_penetration_mass_penalty_scale", fallback.highPenetrationMassPenaltyScale()),
 			GsonHelper.getAsDouble(json, "penetration_mass_penalty_scale", fallback.penetrationMassPenaltyScale()),
-			GsonHelper.getAsDouble(json, "bounce_mass_penalty_scale", fallback.bounceMassPenaltyScale()));
+			GsonHelper.getAsDouble(json, "bounce_mass_penalty_scale", fallback.bounceMassPenaltyScale()),
+				GsonHelper.getAsDouble(json, "minDeflection", fallback.minDeflection())
+		);
 	}
 
 	public static void write(RegistryFriendlyByteBuf buffer, DualCannonImpactProperties impact) {
@@ -46,11 +50,12 @@ public record DualCannonImpactProperties(
 		buffer.writeDouble(impact.highPenetrationMassPenaltyScale());
 		buffer.writeDouble(impact.penetrationMassPenaltyScale());
 		buffer.writeDouble(impact.bounceMassPenaltyScale());
+		buffer.writeDouble(impact.minDeflection());
 	}
 
 	public static DualCannonImpactProperties read(RegistryFriendlyByteBuf buffer) {
 		return new DualCannonImpactProperties(buffer.readDouble(), buffer.readDouble(), buffer.readDouble(),
-			buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
+			buffer.readDouble(), buffer.readDouble(), buffer.readDouble(), buffer.readDouble());
 	}
 
 }

@@ -37,10 +37,6 @@ public record DualCannonProjectileProperties(
 			DualCannonProjectileProperties::read));
 	}
 
-	// ---------------------------------------------------------------------------------------------
-	// Baked-in fallbacks. These are the balance baseline; datapack files override them field by field.
-	// ---------------------------------------------------------------------------------------------
-
 	public static DualCannonProjectileProperties normalApShotFallback() {
 		return base("normal_ap_shot", 6.0, 0.78, 0.0F, 52.0F);
 	}
@@ -65,15 +61,10 @@ public record DualCannonProjectileProperties(
 		return base("normal_sap_shell", 3.8, 0.75, 4.8F, 38.0F);
 	}
 
-	/**
-	 * Extended AP shot: the normal shot with half again the reach. It renders as the normal AP shot
-	 * block, matching what the old {@code ExtendedAPShotProjectile} drew.
-	 */
 	public static DualCannonProjectileProperties extendedApShotFallback() {
 		return withReach(normalApShotFallback(), 1.5);
 	}
 
-	/** Extended AA shell: the normal AA shell with half again the reach, same rendered block. */
 	public static DualCannonProjectileProperties extendedAntiairHeShellFallback() {
 		return withReach(normalAntiairHeShellFallback(), 1.5);
 	}
