@@ -98,6 +98,17 @@ public final class DualCannonPenetrationModel {
 			toughness, durabilityPenalty);
 	}
 
+	public static double getCappedMomentum(DualCannonMunitionProperties dualProperties, double speed, double mass){
+		DualCannonImpactProperties dualImpact = dualProperties.dualImpact();
+		MunitionPropertyComponents.ImpactProperties impact = dualProperties.impact();
+		double bonusMomentum =
+				1.0 + Math.max(0.0, (speed - impact.minVelocityForPenetrationBonus()) * impact.penetrationBonusScale());
+		double rawMomentum = mass * bonusMomentum * speed;
+		double cappedMomentum =
+				dualImpact.maximumMomentum() <= EPSILON ? rawMomentum : Math.min(rawMomentum, dualImpact.maximumMomentum());
+		return cappedMomentum;
+	}
+
 	private static <S extends DualCannonState> MunitionImpactOutcome penetrateBlock(ProjectileServerContext<S> context,
 																					DualCannonMunitionProperties properties,
 																					ShaolibBlockHitResult hit,

@@ -1,6 +1,8 @@
 package com.cainiao1053.cbcmoreshells.munitions.dual_cannon;
 
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonMunitionProperties;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.ChatFormatting;
@@ -13,6 +15,7 @@ import net.minecraft.world.level.block.Block;
 import rbasamoyai.createbigcannons.munitions.FuzedProjectileBlockItem;
 
 import java.util.List;
+import java.util.Objects;
 
 import static com.cainiao1053.cbcmoreshells.base.CBCMSTooltip.addHoldShift;
 import static rbasamoyai.createbigcannons.base.CBCTooltip.getPalette;
@@ -37,6 +40,10 @@ public class FuzedDualCannonProjectileBlockItem extends FuzedProjectileBlockItem
 		String key2 = "block."+Cbcmoreshells.MODID+".dual_cannon_projectile.tooltip.desc";
 		tooltip.addAll(TooltipHelper.cutStringTextComponent(I18n.get(key2), palette.primary(), palette.highlight(), 1));
 
+	}
+
+	public DualCannonMunitionProperties getProjectileProperties(){
+		return CBCMSDualCannonMunitionRegistry.properties(Objects.requireNonNull(CBCMSDualCannonMunitionRegistry.of(this.getBlock())));
 	}
 
 }
