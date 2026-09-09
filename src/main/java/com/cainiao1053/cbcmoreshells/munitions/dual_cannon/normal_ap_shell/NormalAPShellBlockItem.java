@@ -2,6 +2,9 @@ package com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_ap_shell;
 
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.FuzedDualCannonProjectileBlockItem;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonLoadout;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonStats;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.StatSink;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -24,6 +27,12 @@ public class NormalAPShellBlockItem extends FuzedDualCannonProjectileBlockItem {
 		super.appendHoverText(stack, context, tooltip, flag);
 		CBCMSTooltip.appendExplosiveDualCannonProjectileInfo(stack, context, tooltip, flag,
 				getMunitionEntry());
+	}
+
+	@Override
+	public void collectMaterialStats(StatSink<DualCannonLoadout> sink) {
+		super.collectMaterialStats(sink);
+		sink.add(DualCannonStats.EXPLOSION_POWER);
 	}
 
 }

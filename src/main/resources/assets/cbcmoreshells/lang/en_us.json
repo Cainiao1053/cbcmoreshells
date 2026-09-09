@@ -512,5 +512,26 @@
     "block.cbcmoreshells.material.large_steel": "Large Steel",
     "block.cbcmoreshells.material.large_single_brass": "Large Single Brass",
     "block.cbcmoreshells.material.large_single_steel": "Large Single Steel",
-    "block.cbcmoreshells.material.large_single_slate_alloy": "Large Single Slate Alloy"
+    "block.cbcmoreshells.material.large_single_slate_alloy": "Large Single Slate Alloy",
+
+    "cbcmoreshells.firing_table.stat.muzzle_velocity": "Muzzle Velocity",
+    "cbcmoreshells.firing_table.stat.drag": "Drag",
+    "cbcmoreshells.firing_table.stat.gravity": "Gravity",
+    "cbcmoreshells.firing_table.stat.base_mass": "Base Mass",
+    "cbcmoreshells.firing_table.stat.base_lifetime": "Base Lifetime",
+    "cbcmoreshells.firing_table.stat.deflection_angle": "Ricochet Angle",
+    "cbcmoreshells.firing_table.stat.max_momentum": "Momentum Cap",
+    "cbcmoreshells.firing_table.stat.smash_toughness": "Smash Toughness",
+    "cbcmoreshells.firing_table.stat.max_range": "Max Range",
+    "cbcmoreshells.firing_table.stat.optimal_elevation": "Optimal Elevation",
+    "cbcmoreshells.firing_table.stat.aa_altitude_bonus": "Altitude Bonus Cap",
+    "cbcmoreshells.firing_table.stat.lifetime": "Lifetime",
+    "cbcmoreshells.firing_table.stat.reload": "Reload",
+    "cbcmoreshells.firing_table.stat.explosion_power": "Explosion",
+    "cbcmoreshells.firing_table.stat.fire_chance": "Fire Chance",
+    "cbcmoreshells.firing_table.stat.fire_range": "Fire Range",
+    "cbcmoreshells.firing_table.stat.effective_mass": "Effective Mass",
+    "cbcmoreshells.firing_table.column.momentum": "Equivalent Momentum",
+    "cbcmoreshells.firing_table.column.flight_time": "Flight Time",
+    "cbcmoreshells.firing_table.column.impact_speed": "Impact Speed"
 }

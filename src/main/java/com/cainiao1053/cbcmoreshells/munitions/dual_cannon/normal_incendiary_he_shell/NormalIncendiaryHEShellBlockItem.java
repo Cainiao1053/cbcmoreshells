@@ -2,6 +2,11 @@ package com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_incendiary_he
 
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.FuzedDualCannonProjectileBlockItem;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.BallisticColumnMode;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonLoadout;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonShellContext;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonStats;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.StatSink;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.TooltipFlag;
@@ -24,6 +29,20 @@ public class NormalIncendiaryHEShellBlockItem extends FuzedDualCannonProjectileB
 		super.appendHoverText(stack, context, tooltip, flag);
 		CBCMSTooltip.appendIncendiaryDualCannonProjectileInfo(stack, context, tooltip, flag,
 				getMunitionEntry());
+	}
+
+	@Override
+	public void collectMaterialStats(StatSink<DualCannonLoadout> sink) {
+		super.collectMaterialStats(sink);
+		sink.add(DualCannonStats.EXPLOSION_POWER);
+		sink.add(DualCannonStats.FIRE_CHANCE);
+		sink.add(DualCannonStats.FIRE_RANGE);
+	}
+
+	/** Thin walled, so equivalent momentum says nothing. See {@code NormalHEShellBlockItem}. */
+	@Override
+	public List<BallisticColumnMode> ballisticModes() {
+		return List.of(BallisticColumnMode.FLIGHT_TIME, BallisticColumnMode.IMPACT_SPEED);
 	}
 
 }

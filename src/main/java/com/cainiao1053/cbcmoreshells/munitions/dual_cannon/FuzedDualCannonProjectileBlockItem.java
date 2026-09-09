@@ -3,6 +3,12 @@ package com.cainiao1053.cbcmoreshells.munitions.dual_cannon;
 import com.cainiao1053.cbcmoreshells.Cbcmoreshells;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.DualCannonMunitionProperties;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.BallisticColumnMode;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonLoadout;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonMomentumModel;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonShellContext;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.DualCannonStats;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.table.StatSink;
 import com.simibubi.create.foundation.item.TooltipHelper;
 import net.createmod.catnip.lang.FontHelper;
 import net.minecraft.ChatFormatting;
@@ -61,6 +67,53 @@ public class FuzedDualCannonProjectileBlockItem extends FuzedProjectileBlockItem
 	public DualCannonMunitionProperties getProjectileProperties() {
 		CBCMSDualCannonMunitionRegistry.Entry entry = this.getMunitionEntry();
 		return entry == null ? null : CBCMSDualCannonMunitionRegistry.properties(entry);
+	}
+
+	// -------------------------------------------------------------------------------------------
+	// Firing table hooks
+	//
+	// A shell class declares what its table shows by overriding these; the table itself knows
+	// nothing about shell kinds. Subclasses call super and add, so the shared rows stay in one
+	// place.
+	// -------------------------------------------------------------------------------------------
+
+	/**
+	 * Stats that do not change with the barrel material, shown once above the material rows. The
+	 * context cannot reach a barrel, so nothing declared here can accidentally vary per material.
+	 */
+	public void collectShellStats(StatSink<DualCannonShellContext> sink) {
+		sink.add(DualCannonStats.MUZZLE_VELOCITY);
+		sink.add(DualCannonStats.DRAG);
+		sink.add(DualCannonStats.GRAVITY);
+		sink.add(DualCannonStats.BASE_MASS);
+		sink.add(DualCannonStats.BASE_LIFETIME);
+		sink.add(DualCannonStats.DEFLECTION_ANGLE);
+		sink.add(DualCannonStats.MAX_MOMENTUM);
+		sink.add(DualCannonStats.SMASH_TOUGHNESS);
+		sink.add(DualCannonStats.MAX_RANGE);
+		sink.add(DualCannonStats.OPTIMAL_ELEVATION);
+	}
+
+	/**
+	 * Stats that change with the barrel material, one column each in the material rows. Kept short
+	 * on purpose — every column here costs a distance column in the ballistic block.
+	 */
+	public void collectMaterialStats(StatSink<DualCannonLoadout> sink) {
+		sink.add(DualCannonStats.LIFETIME);
+		sink.add(DualCannonStats.RELOAD);
+	}
+
+	/**
+	 * What the distance columns can show, in the order the toggle button cycles them. The first
+	 * entry is the default.
+	 */
+	public List<BallisticColumnMode> ballisticModes() {
+		return List.of(BallisticColumnMode.MOMENTUM, BallisticColumnMode.FLIGHT_TIME);
+	}
+
+	/** How this shell class converts impact speed into penetrating power. */
+	public DualCannonMomentumModel momentumModel() {
+		return DualCannonMomentumModel.CAPPED;
 	}
 
 }

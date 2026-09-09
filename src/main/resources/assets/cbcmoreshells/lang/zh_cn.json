@@ -513,5 +513,26 @@
     "block.cbcmoreshells.material.large_steel": "超宽钢",
     "block.cbcmoreshells.material.large_single_brass": "超宽单黄铜",
     "block.cbcmoreshells.material.large_single_steel": "超宽单钢",
-    "block.cbcmoreshells.material.large_single_slate_alloy": "超宽单板岩合金"
+    "block.cbcmoreshells.material.large_single_slate_alloy": "超宽单板岩合金",
+
+    "cbcmoreshells.firing_table.stat.muzzle_velocity": "初速",
+    "cbcmoreshells.firing_table.stat.drag": "阻力",
+    "cbcmoreshells.firing_table.stat.gravity": "重力",
+    "cbcmoreshells.firing_table.stat.base_mass": "基础质量",
+    "cbcmoreshells.firing_table.stat.base_lifetime": "基础寿命",
+    "cbcmoreshells.firing_table.stat.deflection_angle": "跳弹角",
+    "cbcmoreshells.firing_table.stat.max_momentum": "动量封顶",
+    "cbcmoreshells.firing_table.stat.smash_toughness": "碾压硬度",
+    "cbcmoreshells.firing_table.stat.max_range": "最大射程",
+    "cbcmoreshells.firing_table.stat.optimal_elevation": "最优仰角",
+    "cbcmoreshells.firing_table.stat.aa_altitude_bonus": "高度加成上限",
+    "cbcmoreshells.firing_table.stat.lifetime": "寿命",
+    "cbcmoreshells.firing_table.stat.reload": "装填",
+    "cbcmoreshells.firing_table.stat.explosion_power": "爆炸",
+    "cbcmoreshells.firing_table.stat.fire_chance": "点火率",
+    "cbcmoreshells.firing_table.stat.fire_range": "点火范围",
+    "cbcmoreshells.firing_table.stat.effective_mass": "实际质量",
+    "cbcmoreshells.firing_table.column.momentum": "等效动量",
+    "cbcmoreshells.firing_table.column.flight_time": "落弹时间",
+    "cbcmoreshells.firing_table.column.impact_speed": "存速"
 }

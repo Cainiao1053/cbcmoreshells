@@ -1,7 +1,8 @@
 ================================================================================
 方案 v3：双联装弹药「材料对比 + 弹道」表格 UI
   形态：先选一种炮弹 → 一张表，一行一种炮管材料，横向对比
-  状态：第 1 步（前置修复）和第 2 步（材料枚举 + 过滤器）已完成，见第九节
+  状态：第 1~4 步已完成（前置修复 / 材料枚举 / 属性体系 / 弹道与表格装配），见第九节
+        剩余：第 5 步 Paginator、第 6 步 界面
 ================================================================================
 
 
@@ -328,19 +329,120 @@
     · missingSingleVariants()：命名配对，返回还欠单管型号的双管材料
     · translationKey(material)：拼 block.<ns>.material.<path>
 
-9.3 验证方式
+9.3 第 3 步：属性体系与物品扩展点
 
-  沙盒里没有网络，gradle 解析不了 settings 插件，跑不了完整编译。所以用了两条替代：
+  munitions/dual_cannon/table/ 新增
+    StatFormat.java          INTEGER / PLAIN1 / PLAIN2 / PLAIN3 / M_PER_SEC / SECONDS /
+                             TICKS / PERCENT / DEGREES
+                             格式里带了单位换算，所以取值函数一律回传游戏原始单位，
+                             表格不用记「哪一列要乘 20」。非有限值印成 "-"。
+    StatSpec.java            record(key, ToDoubleFunction<C>, StatFormat, priority)
+                             取值函数吃整个上下文，以后要加入参只需给上下文加字段，
+                             所有 StatSpec 的签名一行都不用改。
+                             回传非有限值 = 本弹种不适用。
+                             PRIORITY_REQUIRED(100) / HIGH(90) / NORMAL(80) / LOW(60)
+    StatSink.java            收集器。limited(max) 先按 priority 砍最低的，
+                             但保留声明顺序，所以缩表时列不会左右乱跳。
+    DualCannonShellContext   (item, entry, shell)，只有炮弹没有炮管。
+                             of(Block) 工厂：不是双联装弹或 item 不带扩展点就回传 null。
+                             ballisticsSupported() 挡掉二次阻力 / 非负重力这类闭式解不覆盖的情况。
+    DualCannonLoadout        (shell, material, barrel, commandModifier, equipmentModifier)
+                             durabilityModifier / effectiveMass / lifetimeTicks /
+                             explosionPower / fireChance / fireRange / reloadCoefficient
+                             lifetimeTicks 走的是 launchProfile.resolveLifetimeTicks(
+                                 弹 baseLifetime, 炮管 addedLifetime, 指令, 装备)
+                             也就是【相加后】的最终值。
+    DualCannonMomentumModel  函数式接口 + CAPPED 常量，CAPPED 只经过
+                             DualCannonPenetrationModel.getCappedMomentum 这一条路。
+    BallisticColumnMode      MOMENTUM / FLIGHT_TIME / IMPACT_SPEED
+                             materialSensitive() 标出只有 MOMENTUM 随材料变。
+    DualCannonStats          全部 StatSpec 常量集中在这里，
+                             炮弹侧 10 个 + 材料侧 6 个。
 
-  a) 逐文件 javac 解析检查：所有改动过的文件只报「找不到符号 / 软件包不存在」这类
-     依赖缺失错误，没有任何语法或结构错误。CBCMSDualCannonLaunchProfile.java 无依赖，
-     完整编译通过（顺带确认 record 显式覆写访问器是合法的）。
+  FuzedDualCannonProjectileBlockItem 新增 4 个扩展点
+    collectShellStats(StatSink<DualCannonShellContext>)     默认 10 项
+    collectMaterialStats(StatSink<DualCannonLoadout>)       默认 寿命 + 装填
+    ballisticModes()                                        默认 (等效动量, 落弹时间)
+    momentumModel()                                         默认 CAPPED
 
-  b) 过滤器逻辑对着真实材料表跑了一遍独立复现：
-       14 单管 + 10 缺口 + 11 被合并 = 35 ✓
-       11 组被合并的双管，其 durabilityMassModifier 和 addedLifetime 与单管孪生体
-       完全一致 ✓（只差装填时间）
-     就是这一步抓出了数值签名的两处错配，才改成命名配对。
+  9 个子类的覆写
+    AP弹 / 延伸AP            不覆写（Kind.AP_SHOT 爆炸倍率恒为 0，动量列有意义）
+    APHE / APBC / SAP        + EXPLOSION_POWER
+    HE                       + EXPLOSION_POWER，弹道列换成 (落弹时间, 存速)
+    防空HE / 延伸防空HE       + EXPLOSION_POWER + 炮弹侧 AA_ALTITUDE_BONUS，
+                             弹道列换成 (落弹时间, 存速)
+    燃烧HE                   + EXPLOSION_POWER + FIRE_CHANCE + FIRE_RANGE，
+                             弹道列换成 (落弹时间, 存速)
+
+  CBCMSDualCannonMunitionRegistry 新增 blocks()
+    Entry 里没有指回方块的字段，而扩展点挂在物品上，所以需要一个从方块进来的入口。
+
+  lang（两个文件末尾各追加 20 条）
+    cbcmoreshells.firing_table.stat.*    17 条
+    cbcmoreshells.firing_table.column.*   3 条
+
+9.4 第 4 步：弹道骨架与表格装配
+
+  BallisticPoint          (range, elevation, flightTicks, impactSpeed)
+                          + flightSeconds() + reachableWithin(lifetimeTicks)
+  BallisticSkeleton       compute(shell, columns, highArc)，整张表只算一次。
+                          直接调 CBCMSBallisticUtils.dualCannonMaxRange /
+                          dualCannonRangeTable，没有新写任何数学。
+                          闭式解不覆盖时回传 null，界面退化成只显示属性。
+  MaterialRow             compute(loadout, skeleton, specs, missingSingleVariant)
+                          只算两样新东西：动量列 + 可达标记，其余都从骨架来。
+                          formatBallistic() 在打不到的格子上直接印 "-"。
+                          lastReachableColumn() 给界面画「该材料到此为止」。
+  DualCannonTable         炮弹属性 / 材料列 / 骨架 / 可选模式 / 材料列表，
+                          外加 nextMode() 给切换按钮轮换。
+  DualCannonTableSource   两级惰性 + 会话级缓存：
+                            shells()  只列方块，不解析任何属性
+                            table()   选中才算，一发弹一次
+                            row()     一行一算，页面要哪行算哪行
+                          列预算 = 总列数 - 1(材料名) - 材料列数，
+                          材料列先按 priority 砍到给弹道留够 MIN_BALLISTIC_COLUMNS(4)。
+                          invalidate() 供 /reload 后清空。
+
+9.5 验证方式
+
+  沙盒里没有网络（gradle 连 settings 插件都解析不了），跑不了完整编译。用了三条替代：
+
+  a) 逐文件 javac 解析检查
+     所有改动过的文件只剩「找不到符号 / 软件包不存在」这类依赖缺失错误，
+     没有语法或结构错误。
+
+  b) table 包的【真实类型检查】
+     给 Minecraft / shaolib / CBC 写了一组最小 stub，然后用真实的
+     DualCannonMaterial、CBCMSBallisticUtils、DualCannonModifiers、
+     CBCMSDualCannonLaunchProfile 一起编译整个 table 包 —— 干净通过。
+     物品 stub 的 4 个扩展点签名和真实文件逐字比对过，确保没有偏差。
+
+  c) 端到端跑数
+     用 normal_ap_shell.json 的真实数值（v0=8、drag=0.011、g=-0.04、质量 6.5、
+     封顶 400、爆炸 3.5、baseLifetime 走 fallback 20）驱动真实的
+     BallisticSkeleton / MaterialRow / StatSink，输出对得上：
+
+       最大射程 515.0 格 @ 29.42°
+       距离       57.2  114.4  171.7  228.9  286.1  343.3  400.6  457.8  515.0
+       落弹(s)    0.37   0.78   1.23   1.73   2.30   2.97   3.79   4.89   7.69
+       存速(m/s) 147.3  134.7  122.1  109.5   96.9   84.6   72.5   61.2   51.8
+       所需tick    7.5   15.6   24.6   34.6   46.0   59.4   75.7   97.9  153.8
+
+       材料                 寿命   装填  爆炸 │ 等效动量
+       单管钢              3.50s  0.85  2.88 │ 77.8 67.4 57.7 48.7 40.5 33.0  -   -   -
+       宽单管钢            5.25s  1.60  3.79 │125.3 108.5 92.9 78.5 65.2 53.2 42.5 33.4 -
+       宽单管坚固钢        4.50s  2.70  4.56 │166.0 143.7 123.0 103.9 86.3 70.4 56.3 -  -
+       ※下界钢             5.50s  1.25  3.05 │ 86.4 74.9 64.1 54.1 45.0 36.7 29.3 23.0 -
+
+     这几件事被这一跑证实了：
+       · 动量随材料的 durabilityMassModifier 缩放，和手算一致
+       · 可达性确实由寿命卡死：单管钢 70t 到第 6 列为止，宽单管钢 105t 能到第 8 列
+       · 切到「落弹时间」后四行数值完全相同（印证它与材料无关），
+         但「打不到」的横杠仍然逐材料不同 —— 可达性是随材料变的
+       · 爆炸威力 2.88 / 3.79 / 4.56 / 3.05 与 APHE 倍率公式 mod*0.47+0.4 逐个对上
+       · ※ 补漏标记正确落在 nether_steel 上
+       · 列预算：总列数 13 → 3 材料列 + 9 弹道列；
+         压到 6 时只保住 lifetime（PRIORITY_REQUIRED），弹道列守住 4 列
 
   下次能联网时请跑一次 ./gradlew compileJava 做最终确认。
 
@@ -349,16 +451,25 @@
 十、后续步骤
 ================================================================================
 
-  第 3 步  DualCannonShellContext / DualCannonLoadout / StatSpec / StatSink /
-           StatFormat / DualCannonStats + 9 个 Item 的两个收集口 + momentumModel
-  第 4 步  BallisticPoint / BallisticSkeleton / MaterialRow / DualCannonTableSource
-           直接复用 CBCMSBallisticUtils 的 dualCannon* 系列，不写新数学
   第 5 步  Paginator + 单测
+           setSource / setFilter / setComparator / setPageSize
+           page / pageIndex / pageCount / totalCount
+           next / prev / first / last / goTo / revealItem
+           单测覆盖：空表、单页、边界翻页、setPageSize 后保住首行、setFilter 后页码夹紧
+
   第 6 步  PageControls → 第 2 屏 → 第 1 屏 → 入口
            UI 基类 net.createmod.catnip.gui.NavigatableSimiScreen
            下拉 com.simibubi.create.foundation.gui.widget.SelectionScrollInput
            弹种格子 net.createmod.catnip.gui.element.GuiGameElement 直接画方块
            入口：手册物品 cbcmoreshells:dual_cannon_firing_tables
+
+           界面这一层要做的事已经不多了，数据全在 DualCannonTableSource 里：
+             区块 A  table.applicableShellStats() 逐条 formatted(table.shell())
+             区块 B  table.skeleton().points()，每点画 range / flightSeconds / impactSpeed
+             区块 C  source.rows(shell, 当前页材料) 逐行画
+                     材料名用 DualCannonMaterialFilter.translationKey(material)
+                     missingSingleVariant() 为真就打 ※
+                     切换按钮调 table.nextMode(current)
 
   留好口子但先不做：
     · 指令/装备加成：DualCannonLoadout 已有 commandModifier / equipmentModifier 字段
