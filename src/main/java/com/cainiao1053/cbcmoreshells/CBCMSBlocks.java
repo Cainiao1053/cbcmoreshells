@@ -86,6 +86,7 @@ import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shelless_sap_shell.She
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shellless_ap_shot.ShellessAPProjectileBlockItem;
 import com.cainiao1053.cbcmoreshells.munitions.big_cannon.shellless_ap_shot.ShellessAPShotBlock;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_antiair_he_shell.ExtendedAntiairHEShellBlock;
+import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_antiair_he_shell.ExtendedAntiairHEShellBlockItem;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_ap_shot.ExtendedAPShotBlock;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_ap_shot.ExtendedAPShotBlockItem;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.normal_antiair_he_shell.NormalAntiairHEShellBlock;
@@ -1114,10 +1115,9 @@ public class CBCMSBlocks {
 			.transform(shell(MapColor.COLOR_YELLOW))
 			.transform(axeOrPickaxe())
 			.transform(CBCBuilderTransformers.projectile("projectile/extended_antiair_he_shell"))
-			//.transform(CBCBuilderTransformers.safeNbt())
 			.loot(CBCBuilderTransformers.shellLoot())
 			.lang("Extended Antiair HE Shell")
-			.item(NormalAntiairHEShellBlockItem::new)
+			.item(ExtendedAntiairHEShellBlockItem::new)
 			.tag(CBCTags.CBCItemTags.BIG_CANNON_PROJECTILES)
 			.build()
 			.register();
