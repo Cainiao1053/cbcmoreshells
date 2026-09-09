@@ -2,7 +2,9 @@ package com.cainiao1053.cbcmoreshells.cannons.dual_cannon.material;
 
 import net.minecraft.resources.ResourceLocation;
 
-import java.util.HashMap;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.LinkedHashMap;
 import java.util.Map;
 
 public record DualCannonMaterial(ResourceLocation name, DualCannonMaterialProperties defaultProperties) {
@@ -12,7 +14,9 @@ public record DualCannonMaterial(ResourceLocation name, DualCannonMaterialProper
 		return custom == null ? this.defaultProperties : custom;
 	}
 
-	private static final Map<ResourceLocation, DualCannonMaterial> CANNON_MATERIALS = new HashMap<>();
+	// Linked so listings (firing tables, dropdowns) keep registration order instead of shuffling
+	// between launches.
+	private static final Map<ResourceLocation, DualCannonMaterial> CANNON_MATERIALS = new LinkedHashMap<>();
 
 	public static DualCannonMaterial register(ResourceLocation loc, DualCannonMaterialProperties defaultProperties) {
 		DualCannonMaterial material = new DualCannonMaterial(loc, defaultProperties);
@@ -26,5 +30,10 @@ public record DualCannonMaterial(ResourceLocation name, DualCannonMaterialProper
 	}
 
 	public static DualCannonMaterial fromNameOrNull(ResourceLocation loc) { return CANNON_MATERIALS.get(loc); }
+
+	/** Every registered material, in registration order. */
+	public static Collection<DualCannonMaterial> all() {
+		return Collections.unmodifiableCollection(CANNON_MATERIALS.values());
+	}
 
 }

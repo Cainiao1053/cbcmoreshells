@@ -1,30 +1,15 @@
 ================================================================================
-方案 v2：双联装弹药「材料对比 + 弹道」表格 UI
+方案 v3：双联装弹药「材料对比 + 弹道」表格 UI
   形态：先选一种炮弹 → 一张表，一行一种炮管材料，横向对比
-  本文只做设计，不改代码
+  状态：第 1 步（前置修复）和第 2 步（材料枚举 + 过滤器）已完成，见第九节
 ================================================================================
 
 
 ================================================================================
-零、先更正两条事实（v1 方案里我按 Java fallback 推的，实际数据包里不是这样）
+零、数据实况（读真实数据包得出，不是 Java fallback）
 ================================================================================
 
-我把 data/cbcmoreshells/shaolib_munitions/munitions/*.json 里的真实值全读了一遍，
-和 Java 里的 fallback 差得很远。表格必须读 MunitionConfigManager 的值（v1 已经是这么
-设计的），但 v1 里那两条基于 fallback 的结论要作废：
-
-  ✗ v1 说「maxDistance = 180 格是长射程的真正瓶颈」
-    → 错。9 种弹的 json 里 max_distance 全是 5000.0，飞行路程根本不构成约束。
-
-  ✓ 真正的瓶颈是【炮弹寿命】，而且卡得非常死，这恰好是这张对比表最大的价值：
-      baseLifetime 走 fallback = 20 tick（9 个 json 里都没写 baseLifetime 这个键）
-      总寿命 = (20 + 材料 addedLifetime) tick，材料 addedLifetime 跨度 5 ~ 140
-      → 实际寿命 25 ~ 160 tick
-      而 APHE 打到弹道最大射程 515 格需要 153.8 tick
-      → 单管钢(+50 → 70t) 只能打到 ~343 格；宽单管钢(+85 → 105t) 能到 ~457 格
-      → 不同材料的可达射程差一倍以上，且完全由寿命决定，不是弹道决定
-
-真实弹道参数（每种弹都不同，骨架必须按弹算，不能共用一份）：
+真实弹道参数（data/cbcmoreshells/shaolib_munitions/munitions/*.json）：
 
   弹种                v0(格/tick)  drag    gravity  基础质量  maxMom  爆炸  跳弹cos
   normal_ap_shot        12.0      0.011   -0.040    8.75     450     0    0.5
@@ -37,436 +22,345 @@
   normal_antiair_he      8.0      0.010   -0.030    0.10      10    4.0   0.01
   extended_antiair_he   12.0      0.010   -0.030    0.10      10    4.0   0.01
 
-  → 高爆/防空/燃烧这三类质量只有 0.1、动量封顶只有 10，等效动量算出来全是 0.2~2.6，
-    这一列对它们毫无意义。所以「弹道区显示什么」也必须按弹种可配，不能写死成动量。
-    这正好落进你说的「不同弹种属性列不同」。
+三条会影响设计的事实：
+
+  1) max_distance 全是 5000 → 飞行路程完全不构成约束，不用做这一列。
+
+  2) 【寿命是唯一的射程约束，而且卡得很死】
+     总寿命 = (弹 baseLifetime + 材料 addedLifetime) tick
+     9 个 json 都没写 baseLifetime → 全部走 fallback 20 tick
+     材料 addedLifetime 跨度 5 ~ 140 → 实际寿命 25 ~ 160 tick
+     而 APHE 打到弹道最大射程 515 格要 153.8 tick
+     → 单管钢(+50 → 70t) 只到 ~343 格；宽单管钢(+85 → 105t) 能到 ~457 格
+     不同材料的可达射程差一倍以上。这就是这张对比表最大的价值。
+
+  3) 高爆/防空/燃烧弹 质量 0.1、动量封顶 10 → 等效动量恒为 0.2~2.6，这一列对它们
+     没有意义。所以弹道列显示什么也要按弹种可配。
 
 
 ================================================================================
-一、界面形态（v2 的核心改动）
+一、界面形态
 ================================================================================
-
-v1 是「选弹 + 选材料 → 一张弹道表」，现在改成：
 
   第 1 屏  弹种选择（9 个）—— 只列种类，不解析属性
-  第 2 屏  对比表 —— 一行一种材料，横向翻页看更多材料
+  第 2 屏  对比表 —— 一行一种材料，翻页看更多材料
 
-第 2 屏的纵向结构（三块，自上而下）：
+  第 2 屏纵向三块：
+    A  不随材料变化的炮弹属性（只画一次）
+    B  弹道骨架：距离 / 落弹时间 / 存速（与材料无关，列与 C 的弹道列对齐）
+    C  材料对比表：材料名 + 随材料变的属性 + 弹道列
 
-  ┌ 区块 A：不随材料变化的炮弹属性（单独一块，只画一次）
-  ├ 区块 B：弹道骨架（与材料无关，列与下方弹道列一一对齐）
-  └ 区块 C：材料对比表（一行一材料，左侧材料名 + 随材料变的属性 + 弹道列）
-
-为什么要有区块 B：弹道骨架里的「仰角 / 落弹时间 / 存速」全都只由炮弹决定，
-与材料无关（初速、阻力、重力都没有炮管系数）。如果塞进每一行会重复 N 遍。
-区块 C 的弹道列里真正随材料变的只有【等效动量】和【能不能打到】两项。
+  区块 B 只留「距离对应的时间和存速」。仰角不展示（内部仍要算，用来求存速），
+  所需 tick 也不展示（内部用来判断该材料能不能打到）。
 
 
 ================================================================================
-二、材料集合：isSingleBarrel 过滤 + 补漏
+二、材料集合
 ================================================================================
 
-按你的要求默认只取 isSingleBarrel == true，实测 35 个材料里有 14 个：
+  默认只取 isSingleBarrel == true：35 个材料里有 14 个。
 
-  单管钢 SINGLE_STEEL              dmm 0.90  +50t   宽单管铸铁 WIDE_SINGLE_CAST_IRON   0.92  +15t
-  单管黄铜 SINGLE_BRASS            0.75  +30t      宽单管青铜 WIDE_SINGLE_BRONZE       1.15  +30t
-  单管板岩合金 SINGLE_SLATE_ALLOY   1.05  +60t      宽单管黄铜 WIDE_SINGLE_BRASS        1.30  +65t
-  单管军用板岩 SINGLE_MIL_SLATE     1.12  +55t      宽单管钢 WIDE_SINGLE_STEEL          1.45  +85t
-  宽单管板岩 WIDE_SINGLE_SLATE      1.58  +90t      宽单管军用板岩 WIDE_SINGLE_MIL      1.72 +110t
-  大单管黄铜 LARGE_SINGLE_BRASS     1.78  +75t      宽单管强化钢 WIDE_SINGLE_TOUGH      1.92  +70t
-  大单管钢 LARGE_SINGLE_STEEL       1.89  +90t      大单管板岩 LARGE_SINGLE_SLATE       2.00  +95t
+  但严格过滤会丢掉 10 个尚无单管型号的合金，其中 wide_nether_steel 是全表寿命最长
+  (+140t) 也是散布最小 (0.35) 的那个 —— 丢了它，表里就看不到射程上限最高的选项。
+  所以过滤器做成三档，默认可选：
 
-但这样会【静默丢掉 10 个没有单管孪生体的材料】，其中不乏关键项：
+    SINGLE_ONLY        严格单管，14 个
+    SINGLE_PLUS_GAPS   14 个单管 + 10 个「单管型号还没做」的双管（UI 打 ※ 标记），共 24
+    ALL                35 个，调试用
 
-  CAST_IRON(0.59/+5)  BRONZE(0.72/+20)  TOUGH_STEEL(1.20/+50)  ROSEQUARTZ_BRASS(0.84/+40)
-  WIDE_ROSEQUARTZ_BRASS(1.25/+70)  NETHER_STEEL(1.00/+90)  WIDE_NETHER_STEEL(1.52/+140)
-  PODIA_ZINC(0.75/+30)  STARLIGHT_INGOT(0.72/+20)  HAMLET_STEEL(0.93/+90)
+  配对靠【命名】而不是数值：steel↔single_steel，wide_steel↔wide_single_steel，
+  large_steel↔large_single_steel。
+  一开始我打算用 (durabilityMassModifier, addedLifetime) 做签名，写完对着真实数据跑了
+  一遍，发现两个错配：
+    · starlight_ingot 和 bronze 签名相同 (0.72/+20)，两个都没有单管，
+      却会被互相吞掉一个 —— starlight_ingot 直接从表里消失
+    · podia_zinc 和 brass 签名相同 (0.75/+30)，podia_zinc 会被并进 single_brass，
+      但两者装填是 0.80 对 0.62，是表格要显示的差异
+  改成命名配对后：14 单管 + 10 缺口 + 11 被合并 = 35，且 11 组被合并的双管与其单管
+  孪生体的 durabilityMassModifier / addedLifetime 完全一致，只差装填时间（单管略快）。
 
-  （WIDE_NETHER_STEEL 的 +140t 是全表最长寿命、0.35 是全表最小散布，
-    它被过滤掉的话，表里就看不到射程上限最高的那个选项了。）
-
-建议做法：过滤器做成两段式，默认开「补漏」
-
-  DualCannonMaterialFilter
-    SINGLE_ONLY        严格 isSingleBarrel，14 个
-    SINGLE_PLUS_GAPS   isSingleBarrel 的全要 + 那些「没有任何单管孪生体」的双管材料，
-                       后者在材料名旁打一个 ※ 标记（提示：暂无单管型号）
-    ALL                35 个都要，调试用
-
-  「孪生体」的判定签名 = (durabilityMassModifier, addedLifetime, minimumSpread)
-  这三项决定了弹道相关的一切；reloadTimeModifier 单/双管会差一点点，
-  按你的要求以单管的为准。
-  你以后把缺的单管补齐，SINGLE_PLUS_GAPS 的补漏名单会自动收缩到空，代码不用改。
+  当前 10 个缺口（即还欠的单管型号）：
+    cast_iron  bronze  starlight_ingot  podia_zinc  rosequartz_brass
+    hamlet_steel  nether_steel  tough_steel  wide_rosequartz_brass  wide_nether_steel
 
 
 ================================================================================
-三、属性分层：随材料变 vs 不随材料变
+三、属性分层
 ================================================================================
 
-这是你的需求 4，做成【类型级别】的区分，而不是一个布尔标记——
-这样「不随材料变的属性」在编译期就不可能误读到材料字段。
+做成【类型级别】区分，不用布尔标记 —— 不随材料变的属性在编译期就读不到材料字段。
 
 3.1 两个上下文
 
-  /** 只有炮弹，没有炮管。区块 A 和区块 B 用它。 */
-  public record DualCannonShellContext(
-      CBCMSDualCannonMunitionRegistry.Entry entry,
-      DualCannonMunitionProperties          shell
-  ) {
-      double muzzleVelocity(); double drag(); double gravity();
-      double baseMass(); double maxMomentum(); double deflectionAngleDeg();
-  }
+  /** 只有炮弹。区块 A、B 用它。 */
+  record DualCannonShellContext(Entry entry, DualCannonMunitionProperties shell)
 
-  /** 炮弹 + 一种炮管材料。区块 C 的每一行用它。 */
-  public record DualCannonLoadout(
+  /** 炮弹 + 一种炮管材料。区块 C 每一行用它。 */
+  record DualCannonLoadout(
       DualCannonShellContext shell,
-      DualCannonMaterial     material,
+      DualCannonMaterial material,
       DualCannonMaterialProperties barrel,
-      int    barrelBlocks,          // 身管格数，只影响散布，UI 上给个输入框
-      float  commandModifier,       // 预留，默认 1
-      float  equipmentModifier      // 预留，默认 1
+      float commandModifier,      // 预留，默认 1
+      float equipmentModifier     // 预留，默认 1
   ) {
       double durabilityModifier();  // barrel.durabilityMassModifier() * command * equipment
-      double effectiveMass();       // shell.baseMass() * durabilityModifier()
-      int    lifetimeTicks();       // (shell.baseLifetime + barrel.addedLifetime) * mods
+      double effectiveMass();       // 基础质量 * durabilityModifier()
+      int    lifetimeTicks();       // 弹 baseLifetime + 材料 addedLifetime，再乘修正
       double explosionPower();      // 基础爆炸 * DualCannonModifiers.explosionPower(kind, mod)
+      double fireChance();          // 燃烧弹：基础 * DualCannonModifiers.incendiaryFire(mod)
+      double fireRange();           // 燃烧弹：基础 * DualCannonModifiers.incendiaryRange(mod)
       double reloadCoefficient();   // 弹 reloadTimeCoefficient * barrel.reloadTimeModifier()
-      double spread();
   }
 
-3.2 两个 StatSpec 类型（泛型一套即可）
+  注意 lifetimeTicks 是【相加后】的最终值 —— baseLifetime 只是基础，
+  必须加上炮管的 addedLifetime，界面显示的就是这个和。
 
-  public record StatSpec<C>(
-      String key,                       // 翻译键，同时用作列头
-      ToDoubleFunction<C> value,        // 返回 NaN = 本弹种不适用，UI 跳过
-      StatFormat format,                // PLAIN2 / PERCENT / M_PER_SEC / SECONDS / DEGREES / TICKS
-      int priority                      // 列不够时按 priority 从低往高折进 tooltip
-  ) {}
+3.2 StatSpec（一套泛型两种用法）
 
-  public interface StatSink<C> {
-      void add(StatSpec<C> spec);
-      void addIf(boolean cond, StatSpec<C> spec);
-  }
+  record StatSpec<C>(String key, ToDoubleFunction<C> value, StatFormat format, int priority)
+  interface StatSink<C> { void add(StatSpec<C> spec); void addIf(boolean c, StatSpec<C> s); }
+  StatFormat: PLAIN2 / PERCENT / M_PER_SEC / SECONDS / DEGREES / TICKS
+  value 返回 NaN = 本弹种不适用，UI 跳过。
 
-3.3 物品上的两个收集口（需求 4 / 5 的落点）
+3.3 物品上的收集口
 
   在 FuzedDualCannonProjectileBlockItem 上：
 
-  /** 区块 A：不随材料变化的属性。 */
+  /** 区块 A：不随材料变化。 */
   public void collectShellStats(StatSink<DualCannonShellContext> sink) {
-      sink.add(DualCannonStats.MUZZLE_VELOCITY);   // 初速 m/s
+      sink.add(DualCannonStats.MUZZLE_VELOCITY);
       sink.add(DualCannonStats.DRAG);
       sink.add(DualCannonStats.GRAVITY);
-      sink.add(DualCannonStats.BASE_MASS);         // 基础弹头质量（未乘材料）
-      sink.add(DualCannonStats.DEFLECTION_ANGLE);  // 跳弹角，acos(deflection)
-      sink.add(DualCannonStats.MAX_MOMENTUM);      // 动量封顶
+      sink.add(DualCannonStats.BASE_MASS);
+      sink.add(DualCannonStats.DEFLECTION_ANGLE);
+      sink.add(DualCannonStats.MAX_MOMENTUM);
       sink.add(DualCannonStats.SMASH_TOUGHNESS);
-      sink.add(DualCannonStats.MAX_RANGE);         // 弹道最大射程 + 最优仰角
+      sink.add(DualCannonStats.MAX_RANGE);
   }
 
-  /** 区块 C 的前几列：随材料变化的属性。这里只声明列，值在渲染每一行时求。 */
+  /** 区块 C 的前几列：随材料变化。只留爆炸、寿命、装填、点火。 */
   public void collectMaterialStats(StatSink<DualCannonLoadout> sink) {
-      sink.add(DualCannonStats.MASS);        // priority 100
-      sink.add(DualCannonStats.LIFETIME);    // priority 100  ← 决定可达射程，必须留
-      sink.add(DualCannonStats.RELOAD);      // priority 80
-      sink.add(DualCannonStats.SPREAD);      // priority 60
+      sink.add(DualCannonStats.LIFETIME);   // priority 100，决定可达射程，永远不能砍
+      sink.add(DualCannonStats.RELOAD);     // priority 80
   }
 
-  子类按弹种加：
-    HE / APHE / APBC / SAP / 防空 / 燃烧
-        collectMaterialStats 里 super(...) 后 add(EXPLOSION_POWER)     priority 90
-    防空 HE
-        再 add(AA_ALTITUDE_BONUS)（每 80 格 +1，封顶 ×3）  —— 这个不随材料变，
-        所以其实该放 collectShellStats，注意别放错块
-    燃烧 HE
-        再 add(FIRE_CHANCE) / add(FIRE_RANGE)              priority 85
-    AP Shot（惰性）
-        不加爆炸列（Kind.AP_SHOT 的 explosionPowerMultiplier 恒为 0）
+  子类：
+    HE / APHE / APBC / SAP / 防空       super + add(EXPLOSION_POWER)   priority 90
+    燃烧 HE                             super + add(EXPLOSION_POWER)
+                                              + add(FIRE_CHANCE) + add(FIRE_RANGE)  priority 85
+    AP Shot / 延伸 AP（惰性）            只调 super（Kind.AP_SHOT 的爆炸倍率恒为 0）
 
-  所有 StatSpec 常量集中在 DualCannonStats 一个文件里。
-  加一个新属性 = 加一个常量 + 在某个 Item 里 add 一行，其他文件一律不动。
+  → M（材料列数）= 2（AP弹） / 3（大部分） / 5（燃烧弹）
 
-3.4 弹道区显示什么，也按弹种可配
+  防空弹的高度加成不随材料变，放 collectShellStats，别放错块。
 
-  因为高爆/防空/燃烧弹的等效动量恒等于 0.2~2.6（质量 0.1、封顶 10），显示它是浪费列。
-  所以再加一个口：
+3.4 弹道列显示什么，也按弹种可配
 
-  /** 弹道列显示的量。默认「等效动量」，切换按钮在这个列表里轮换。 */
   public List<BallisticColumnMode> ballisticModes() {
       return List.of(BallisticColumnMode.MOMENTUM, BallisticColumnMode.FLIGHT_TIME);
   }
-  高爆类覆写成 List.of(FLIGHT_TIME, IMPACT_SPEED)，把动量换掉。
+  高爆/防空/燃烧覆写成 List.of(FLIGHT_TIME, IMPACT_SPEED)，把没意义的动量换掉。
 
-  enum BallisticColumnMode { MOMENTUM, FLIGHT_TIME, IMPACT_SPEED, ELEVATION }
+  enum BallisticColumnMode { MOMENTUM, FLIGHT_TIME, IMPACT_SPEED }
 
-  注意：FLIGHT_TIME / IMPACT_SPEED / ELEVATION 都【与材料无关】，
-  切到这些模式时每一行的数值完全相同。此时建议 UI 把区块 C 的弹道列折叠掉，
-  只保留区块 B 里那一行——否则就是把同一行数字抄 14 遍。
-  （如果你更想要「按钮一按整块切换」的直观感，也可以照抄 14 遍，功能上没问题，
-    但我建议前者。这一条留给你定。）
+  切换按钮在这个列表里轮换。注意 FLIGHT_TIME / IMPACT_SPEED 与材料无关，
+  切过去后每行数值相同 —— 建议此时把区块 C 的弹道列折叠掉，只看区块 B 那两行。
 
-3.5 动量公式扩展点（需求 7，沿用 v1）
+3.5 动量公式扩展点
 
   public DualCannonMomentumModel momentumModel() { return DualCannonMomentumModel.CAPPED; }
+  CAPPED = (loadout, speed) ->
+      DualCannonPenetrationModel.getCappedMomentum(loadout.shell().shell(), speed, loadout.effectiveMass())
 
-  DualCannonMomentumModel.CAPPED = (l, v) ->
-      DualCannonPenetrationModel.getCappedMomentum(l.shell().shell(), v, l.effectiveMass());
+  你说 getCappedMomentum 还没做完、之后要让 resolve() 也调它来统一公式。
+  这里只经过物品这一层，等你把 resolve() 接过去之后，表格和实战自动就是同一个公式。
 
 
 ================================================================================
-四、列预算（需求 5）
+四、列预算
 ================================================================================
 
-  TOTAL_COLUMNS      可配，默认 15（UI 上给个 12/15/18 的下拉）
-  1                  材料名，固定占 1 列
-  M                  collectMaterialStats 声明的列数（按弹种不同，4 ~ 7）
+  TOTAL_COLUMNS      可配，默认 13（UI 给 11/13/15 的下拉）
+  1                  材料名
+  M                  collectMaterialStats 的列数（2 / 3 / 5）
   B = TOTAL - 1 - M  弹道列数
 
-  实例（APHE，M=5：质量/寿命/爆炸/装填/散布）：TOTAL=15 → B=9
+  APHE：M=3（寿命/装填/爆炸）→ B = 13-1-3 = 9
+  燃烧弹：M=5 → B = 7
+  AP 弹：M=2 → B = 10
 
-  保底规则
-    if (B < MIN_BALLISTIC_COLUMNS /* 建议 4 */) {
-        按 priority 从低到高，把材料属性列折进「悬停材料名显示全部属性」的 tooltip，
-        直到 B >= 4；仍然不够就强制把 TOTAL 抬到 1 + M + 4 并在界面上提示。
-    }
-  这就是 StatSpec.priority 存在的理由：列不够时机器知道先砍哪个。
+  保底：B < 4 时按 priority 从低到高把材料列折进「悬停材料名看全部」的 tooltip，
+  仍不够就把 TOTAL 抬到 1+M+4 并提示。
 
-  弹道列的距离取法
-    等分该弹的弹道最大射程：d_i = maxRange * i / B  (i = 1..B)
-    列头写实际距离（如 57.2 / 114.4 / …），全表共用一套距离，
-    所以区块 B 和区块 C 的列能严格对齐。
-    （备选：固定绝对距离 50/100/150…，好处是跨弹种可比，坏处是短射程弹会有空列。
-      建议做成一个开关，默认等分。）
+  弹道列距离取法：等分该弹的弹道最大射程，d_i = maxRange * i / B。
+  区块 B 和区块 C 共用同一套距离，所以列能严格对齐。
 
 
 ================================================================================
-五、惰性计算与缓存（需求 3）
+五、惰性计算
 ================================================================================
 
-  开界面
-    只读 CBCMSDualCannonMunitionRegistry.all() 拿 9 条 Entry（不解析属性），画 9 个格子。
-
+  开界面        只读 9 条 Entry 画格子，不解析属性
   选中某弹（一次）
-    1) properties = MunitionConfigManager 解析出来的该弹属性
-    2) shellCtx = new DualCannonShellContext(entry, properties)
-    3) 区块 A：item.collectShellStats(...) 求值
-    4) 算 M → 算 B
-    5) 区块 B 骨架：CBCMSBallisticUtils.dualCannonMaxRange + dualCannonRangeTable(..., B, lowArc)
-       只算 1 次，得到 B 个 BallisticPoint（距离/仰角/落弹时间/存速/所需tick）
-
+                解析 properties → 算 M → 算 B → 用 CBCMSBallisticUtils 求 B 个骨架点
   材料列表（一次）
-    DualCannonMaterial.all() → 按过滤器筛 → 按 durabilityMassModifier 升序 → 灌进 Paginator
+                DualCannonMaterialFilter.select() → 灌进 Paginator
+  渲染每一页    只算当前页那 ~10 行：材料属性列 + 每列的 momentum 和 reachable
 
-  渲染每一页（只算当前页那 ~10 行）
-    对页内每个 material：
-      loadout = new DualCannonLoadout(shellCtx, material, material.properties(), barrelBlocks, 1, 1)
-      材料属性列 = collectMaterialStats 的每个 StatSpec.value(loadout)
-      弹道列     = 对每个 BallisticPoint：
-                     momentum   = item.momentumModel().momentum(loadout, point.impactSpeed())
-                     reachable  = point.ticks() <= loadout.lifetimeTicks()
-    结果放进 Map<DualCannonMaterial, MaterialRow>，换弹/换过滤器/关界面时清空。
-
-  代价：每行只有几十次乘法 + 一次 momentum 调用，一页 10 行完全无感。
-  骨架那一步（B 次射程反解，每次 Lambert + Newton）也只有毫秒级，且每弹只做一次。
-
-  另外：不要在开界面时做全量预热。你已经明确要「选到谁算谁的」，
-  而且 /reload 改数据包后必须立刻反映出来，所以整个缓存的生命周期 = 一次界面会话。
+  缓存生命周期 = 一次界面会话，关掉就丢，保证 /reload 后立刻反映新数据。
 
 
 ================================================================================
-六、分页（需求：一页显示数量有限，翻页看多余材料）
+六、分页
 ================================================================================
 
-  utils/Paginator.java  —— 纯逻辑，不依赖任何 Minecraft 类型，可单测
+  utils/Paginator.java  纯逻辑，不依赖 Minecraft，可单测
+    setSource / setFilter / setComparator / setPageSize
+    page() / pageIndex() / pageCount() / totalCount()
+    next() / prev() / first() / last() / goTo() / revealItem()
+    pageCount 至少为 1；setPageSize 时按当前页首元素绝对下标重定位，翻页不跳内容。
 
-  public final class Paginator<T> {
-      Paginator(int pageSize);
-      void setSource(List<T> items);
-      void setFilter(Predicate<T>);          // 材料搜索框
-      void setComparator(Comparator<T>);     // 点列头按质量/寿命/装填排序
-      void setPageSize(int);                 // 窗口高度变化时重算，按当前页首元素绝对下标重定位
-      List<T> page();  int pageIndex();  int pageCount();  int totalCount();
-      boolean next(); boolean prev(); void first(); void last(); void goTo(int);
-      void revealItem(T);                    // 跳到包含某材料的那一页
-  }
-  pageCount 至少为 1，空表也有第 0 页，UI 不用特判。
-
-  client/gui/PageControls.java  —— [◀] 3 / 5 [▶]，页码可点输入跳页，
-  构造时传 Paginator + onPageChanged，任何列表界面都能复用。
-
-  行高固定，pageSize = 可用高度 / 行高，窗口 resize 时调 setPageSize。
+  client/gui/PageControls.java  [◀] 3 / 5 [▶]，页码可点输入跳页。
 
 
 ================================================================================
-七、布局草图（APHE 普通穿甲弹，全部为真实计算值）
+七、布局草图（APHE，TOTAL=13 → B=9，弹道数字为实算值）
 ================================================================================
 
-┌────────────────────────────────────────────────────────────────────────────────────────┐
-│ ◀ 普通穿甲弹 (APHE)          总列数[15▾]  弹道[低▾]  身管[8格]  材料[单管+补漏▾]        │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ A · 不随材料变化                                                                        │
-│   初速 160 m/s   阻力 0.011   重力 -0.040   基础质量 6.50   跳弹角 45.6°                │
-│   动量封顶 400   弹道最大射程 515.0 格 @ 29.4°                                          │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ B · 弹道骨架（与材料无关）                                                              │
-│   距离(格)      57.2  114.4  171.7  228.9  286.1  343.3  400.6  457.8  515.0           │
-│   仰角(°)       1.09   2.31   3.70   5.30   7.20   9.52  12.51  16.83  29.42           │
-│   落弹时间(s)   0.37   0.78   1.23   1.73   2.30   2.97   3.79   4.89   7.69           │
-│   存速(m/s)    147.3  134.7  122.1  109.5   96.9   84.6   72.5   61.2   51.8           │
-│   所需(tick)     7.5   15.6   24.6   34.6   46.0   59.4   75.7   97.9  153.8           │
-├────────────────────────────────────────────────────────────────────────────────────────┤
-│ C · 材料对比                                          [ 等效动量 ⇄ ]                    │
-│ 材料            质量  寿命   爆炸  装填  散布 │  57   114   172   229   286   343   401 …│
-│ 单管钢          5.85  3.5s   2.88  0.85  1.0 │ 77.8  67.4  57.7  48.7  40.5  33.0  ---- │
-│ 宽单管钢        9.43  5.25s  3.79  1.60  1.3 │125.3 108.5  92.9  78.5  65.2  53.2  42.5 │
-│ 宽单管强化钢   12.48  4.5s   4.56  2.70  1.55│166.0 143.7 123.0 103.9  86.3  70.4  56.3 │
-│ ※暗钢(双管)     6.50  5.5s   3.05  1.25  0.35│ 86.4  74.9  64.1  54.1  45.0  36.7  29.4 │
-│ …                                                                                       │
-│                                                              [◀] 1 / 2 [▶]              │
-└────────────────────────────────────────────────────────────────────────────────────────┘
-  ---- = 该材料寿命不够，打不到这个距离（单管钢 70t < 75.7t）
-  ※    = 该材料目前没有单管型号，由补漏规则带进来的双管材料
-
-  这张图就是这个功能的价值所在：同样一发 APHE，
-  单管钢最远只到 ~343 格，宽单管钢能到 ~457 格，
-  而动量差距是 1.6 倍——两个维度只有并排放才看得出来。
+┌──────────────────────────────────────────────────────────────────────────────────┐
+│ ◀ 普通穿甲弹 (APHE)        总列数[13▾]  弹道[低▾]  材料[单管+补漏▾]              │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ A · 不随材料变化                                                                  │
+│   初速 160 m/s  阻力 0.011  重力 -0.040  基础质量 6.50                            │
+│   跳弹角 45.6°  动量封顶 400  弹道最大射程 515.0 格 @ 29.4°                       │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ B · 弹道骨架（与材料无关）                                                        │
+│   距离(格)     57.2  114.4  171.7  228.9  286.1  343.3  400.6  457.8  515.0      │
+│   落弹时间(s)  0.37   0.78   1.23   1.73   2.30   2.97   3.79   4.89   7.69      │
+│   存速(m/s)   147.3  134.7  122.1  109.5   96.9   84.6   72.5   61.2   51.8      │
+├──────────────────────────────────────────────────────────────────────────────────┤
+│ C · 材料对比                                    [ 等效动量 ⇄ ]                    │
+│ 材料             寿命   装填  爆炸 │   57   114   172   229   286   343   401 …   │
+│ 单管钢           3.5s   0.85  2.88 │ 77.8  67.4  57.7  48.7  40.5  33.0   ----    │
+│ 宽单管钢        5.25s   1.60  3.79 │125.3 108.5  92.9  78.5  65.2  53.2   42.5    │
+│ 宽单管强化钢     4.5s   2.70  4.56 │166.0 143.7 123.0 103.9  86.3  70.4   56.3    │
+│ ※下界钢         5.5s   1.25  3.05 │ 86.4  74.9  64.1  54.1  45.0  36.7   29.4    │
+│ …                                                                                 │
+│                                                          [◀] 1 / 3 [▶]           │
+└──────────────────────────────────────────────────────────────────────────────────┘
+  ----  该材料寿命不够，打不到这个距离（单管钢 70t < 该列所需 75.7t）
+  ※     该合金目前还没有单管型号，由补漏规则带进来
 
 
 ================================================================================
-八、前置修复清单（做 UI 之前必须先处理）
+八、修复项处置（按你的批复）
 ================================================================================
 
-P1【必修】getProjectileProperties() 的 Objects.requireNonNull 去掉，改 @Nullable
-     UI 要遍历全部 9 种弹，任何一个漏注册都会整屏崩客户端。
-     （requireNonNull 本身是多余的，去掉它 properties(entry) 一样会 NPE，
-       它只是把报错位置提前了。）
-
-P2【必修】DualCannonMaterial 没法枚举
-     CANNON_MATERIALS 是 private static HashMap，没有任何公开访问器。
-     加 public static Collection<DualCannonMaterial> all()，
-     并把 HashMap 换成 LinkedHashMap —— 否则表格里材料顺序每次启动都不一样。
-
-P3【必修】倍率公式锁在 DualCannonBehavior 的实例方法里
-     explosionPowerMultiplier / incendiaryFireMultiplier / incendiaryRangeMultiplier /
-     antiairAltitudeMultiplier 都依赖 ProjectileServerContext，表格拿不到，只能抄。
-     抽成静态 munitions/dual_cannon/shaolib/DualCannonModifiers：
-        static double explosionPower(Kind kind, double durabilityModifier)
-        static double incendiaryFire(double durabilityModifier)
-        static double incendiaryRange(double durabilityModifier)
-        static double antiairAltitude(double climbBlocks)
-     DualCannonBehavior 改成调它。纯搬家，行为不变。
-
-P4【必修，直接影响本表】寿命有两个来源，而且现在的 tooltip 是错的
-     实际飞行用的是：
-        launchProfile.resolveLifetimeTicks(props.dualCannon().baseLifetime(), 材料addedLifetime, …)
-        而 9 个 json 里都没有 "baseLifetime" 键 → 全部走 fallback 20 tick
-     tooltip 显示的却是：
-        entry.launchProfile().baseLifetimeTicks()   （AP弹 40 / AP穿甲 30 / 防空 0 …）
-     两者完全对不上（例：单管钢 APHE 实际 70t=3.5s，tooltip 显示 30t=1.5s；
-     防空弹 profile 写 0，实际是 20+材料）。
-     必须先定哪个是权威：
-       方案甲  json 里补上 baseLifetime，profile 里那个字段删掉，tooltip 改读 properties
-       方案乙  resolveLifetimeTicks 改成用 profile 的值，properties 里那个删掉
-     没定之前，表格的「寿命」列和「打不到」判定都没法确定口径。
-
-P5【必修】json 键命名不一致，容易继续踩
-     DualCannonLaunchProperties.fromJson 里 9 个字段是 snake_case，
-     唯独 baseRecoil / baseLifetime 两个是 camelCase；
-     DualCannonImpactProperties.fromJson 里也唯独 minDeflection 是 camelCase。
-     数据包作者按 snake_case 写 base_lifetime / min_deflection 会静默失效。
-     建议两种都接受（先读 snake_case，回退 camelCase），像 initial_velocity/initial_vel 那样。
-
-P6【必修】主/副炮散布公式不等价
-     MountedDualCannonContraption:539-541  max(spread - sub*L, 弹minSpread + 材料minSpread)
-     MountedDualCannonContraption:553-555  材料minSpread + max(spread - sub*L, 材料minSpread)
-     看着是复制粘贴改漏。表格要显示散布，得先定用哪个。
-
-P7【必修，否则扩展点会踩空】ExtendedAntiairHEShellBlockItem 是死代码
-     CBCMSBlocks.java:1120 给 EXTENDED_ANTIAIR_HE_SHELL 传的是
-     .item(NormalAntiairHEShellBlockItem::new)，那个 Extended 类从来没被注册使用。
-     本方案要求把 collectShellStats / collectMaterialStats / ballisticModes /
-     momentumModel 写在物品里，写进 Extended 那个类会完全不生效且极难查。
-
-P8【必修】8 个材料缺 lang 键，材料名列会显示成翻译键原文
-     缺：hamlet_steel, podia_zinc, starlight_ingot, large_brass, large_steel,
-         large_single_brass, large_single_steel, large_single_slate_alloy
-     其中 large_single_* 三个属于 isSingleBarrel 集合，默认过滤器下就会露出来。
-     键格式沿用现有的 block.cbcmoreshells.material.<path>。
-
-P9【建议】DualCannonPenetrationModel.resolve() 内联了和 getCappedMomentum 一样的算式
-     resolve() 第 76-80 行 和 getCappedMomentum 第 104-108 行是同一段公式抄两遍。
-     让 resolve() 调 getCappedMomentum，否则以后改公式会出现
-     「表上写能穿、实战打不穿」。
-     进阶：把 momentumModel 也存一份到 Entry 上，让 resolve() 取到同一个实现，
-     这样需求 7 在实战侧也生效，而不只是表格好看。
+  P1  已修  getProjectileProperties 去掉 requireNonNull，改 @Nullable
+  P2  已修  DualCannonMaterial.all() + HashMap→LinkedHashMap
+  P3  已修  倍率抽成静态 DualCannonModifiers
+  P4  已修  tooltip 改读 properties.dualCannon().baseLifetime()
+  P5  不修  json 键 camelCase / snake_case 混用（baseRecoil / baseLifetime /
+            minDeflection 三个是 camelCase），保持现状。
+            ※ 这就是 9 个 json 都没设寿命的原因：写 base_lifetime 会静默失效。
+              以后写数据包记得用 camelCase。
+  P6  已修  副炮散布统一成主炮公式
+  P7  已修  （你已改回 ExtendedAntiairHEShellBlockItem::new）
+  P8  已修  8 个材料 lang 键追加到两个 lang json 末尾
+  P9  不修  DualCannonPenetrationModel.resolve() 与 getCappedMomentum 的重复算式
+            由你自己处理；本方案的 momentumModel() 已经只经过 getCappedMomentum 这一条路，
+            你把 resolve() 接过去之后两边自动一致。
 
 
 ================================================================================
-九、文件清单
+九、已完成的第 1 步和第 2 步
 ================================================================================
 
-  munitions/dual_cannon/
-    FuzedDualCannonProjectileBlockItem.java      + 4 个扩展点
-    shaolib/DualCannonModifiers.java             P3 抽出来的倍率
-    table/
-      DualCannonShellContext.java                只有炮弹
-      DualCannonLoadout.java                     炮弹 + 材料
-      StatSpec.java  StatSink.java  StatFormat.java
-      DualCannonStats.java                       所有 StatSpec 常量
-      DualCannonMomentumModel.java
-      BallisticColumnMode.java
-      BallisticPoint.java                        骨架一列
-      BallisticSkeleton.java                     一发弹的 B 列骨架
-      MaterialRow.java                           一行的全部数值
-      DualCannonMaterialFilter.java              SINGLE_ONLY / SINGLE_PLUS_GAPS / ALL
-      DualCannonTableSource.java                 惰性组装 + 会话级缓存
-  utils/
-    Paginator.java                               通用分页，无 MC 依赖
-  client/gui/
-    PageControls.java
-    DualCannonCodexScreen.java                   第 1 屏：9 个弹种
-    DualCannonCompareScreen.java                 第 2 屏：A/B/C 三块 + 分页
-  cannons/dual_cannon/material/
-    DualCannonMaterial.java                      + all()，HashMap→LinkedHashMap
+9.1 第 1 步：前置修复
 
-  UI 基类用 net.createmod.catnip.gui.NavigatableSimiScreen（自带返回栈）
-  材料/列数下拉用 com.simibubi.create.foundation.gui.widget.SelectionScrollInput
-  弹种格子用 net.createmod.catnip.gui.element.GuiGameElement 直接画方块，省贴图
-  入口：新增手册物品 cbcmoreshells:dual_cannon_firing_tables + 开发期 /cbcms tables 命令
+  munitions/dual_cannon/FuzedDualCannonProjectileBlockItem.java
+    · 新增 @Nullable getMunitionEntry()
+    · getProjectileProperties() 去掉 Objects.requireNonNull，改 @Nullable
+    · 两个方法都加了 javadoc（说明每发覆盖只动 durability_mass，
+      所以这里的 drag/gravity/initialVelocity 就是实际飞行值；只能在注册完成后调用）
+
+  munitions/dual_cannon/*/9 个 XxxBlockItem.java
+    · CBCMSDualCannonMunitionRegistry.of(this.getBlock()) → getMunitionEntry()
+    · 删掉随之不再需要的 import
+
+  cannons/dual_cannon/material/DualCannonMaterial.java
+    · CANNON_MATERIALS 改 LinkedHashMap（否则界面里材料顺序每次启动都不同）
+    · 新增 all()，返回不可变视图
+
+  munitions/dual_cannon/shaolib/DualCannonModifiers.java（新增）
+    · explosionPower(Kind, durabilityModifier)
+    · antiairAltitude(climbBlocks)
+    · incendiaryFire / incendiaryRange(durabilityModifier)
+    · ANTIAIR_ALTITUDE_SCALE / ANTIAIR_MAX_MULTIPLIER 从 DualCannonBehavior 搬过来
+
+  munitions/dual_cannon/shaolib/DualCannonBehavior.java
+    · 四个倍率方法改成调 DualCannonModifiers，数值行为完全不变
+      （防空弹仍然是 explosionPower(ANTIAIR_HE, mod) * antiairAltitude(climb)）
+
+  base/CBCMSTooltip.java
+    · 三处 entry.launchProfile().baseLifetimeTicks() → properties.dualCannon().baseLifetime()
+
+  munitions/dual_cannon/shaolib/CBCMSDualCannonLaunchProfile.java
+    · baseLifetimeTicks() 加显式 javadoc：它不是权威来源，实际发射走的是 properties
+    · resolveLifetimeTicks 加注释：最终寿命 = 弹的基础 + 炮管加成
+
+  cannon_control/contraption/MountedDualCannonContraption.java
+    · 副炮散布公式统一成主炮的
+        max(projectileSpread - spreadSub*subLength, 弹minimumSpread + 材料minimumSpread)
+
+  assets/cbcmoreshells/lang/{en_us,zh_cn}.json
+    · 追加 8 个材料键到文件末尾：hamlet_steel / podia_zinc / starlight_ingot /
+      large_brass / large_steel / large_single_brass / large_single_steel /
+      large_single_slate_alloy
+    ※ hamlet_steel、podia_zinc、starlight_ingot 这三个在本仓库里没有对应方块，
+      译名是我按字面取的（哈姆雷特钢 / 波迪亚锌 / 星光锭），你可以改。
+
+9.2 第 2 步：材料枚举与过滤
+
+  munitions/dual_cannon/table/DualCannonMaterialFilter.java（新增）
+    · SINGLE_ONLY / SINGLE_PLUS_GAPS / ALL 三档
+    · select()：按 durabilityMassModifier 升序返回
+    · missingSingleVariants()：命名配对，返回还欠单管型号的双管材料
+    · translationKey(material)：拼 block.<ns>.material.<path>
+
+9.3 验证方式
+
+  沙盒里没有网络，gradle 解析不了 settings 插件，跑不了完整编译。所以用了两条替代：
+
+  a) 逐文件 javac 解析检查：所有改动过的文件只报「找不到符号 / 软件包不存在」这类
+     依赖缺失错误，没有任何语法或结构错误。CBCMSDualCannonLaunchProfile.java 无依赖，
+     完整编译通过（顺带确认 record 显式覆写访问器是合法的）。
+
+  b) 过滤器逻辑对着真实材料表跑了一遍独立复现：
+       14 单管 + 10 缺口 + 11 被合并 = 35 ✓
+       11 组被合并的双管，其 durabilityMassModifier 和 addedLifetime 与单管孪生体
+       完全一致 ✓（只差装填时间）
+     就是这一步抓出了数值签名的两处错配，才改成命名配对。
+
+  下次能联网时请跑一次 ./gradlew compileJava 做最终确认。
 
 
 ================================================================================
-十、实施顺序（每步可独立编译验证）
+十、后续步骤
 ================================================================================
 
-  第 1 步  前置修复 P1~P8（P9 可选）
-           特别是 P4 的寿命口径必须先拍板，否则后面全是返工。
-           验证：开游戏、打炮行为不变、tooltip 数值和实际一致。
+  第 3 步  DualCannonShellContext / DualCannonLoadout / StatSpec / StatSink /
+           StatFormat / DualCannonStats + 9 个 Item 的两个收集口 + momentumModel
+  第 4 步  BallisticPoint / BallisticSkeleton / MaterialRow / DualCannonTableSource
+           直接复用 CBCMSBallisticUtils 的 dualCannon* 系列，不写新数学
+  第 5 步  Paginator + 单测
+  第 6 步  PageControls → 第 2 屏 → 第 1 屏 → 入口
+           UI 基类 net.createmod.catnip.gui.NavigatableSimiScreen
+           下拉 com.simibubi.create.foundation.gui.widget.SelectionScrollInput
+           弹种格子 net.createmod.catnip.gui.element.GuiGameElement 直接画方块
+           入口：手册物品 cbcmoreshells:dual_cannon_firing_tables
 
-  第 2 步  DualCannonMaterial.all() + DualCannonMaterialFilter
-           验证：临时命令 /cbcms materials 打印 14 个单管 + 10 个补漏，核对名单。
-
-  第 3 步  Context / StatSpec / StatSink / DualCannonStats + 9 个 Item 的两个收集口
-           验证：/cbcms dump <弹> 把区块 A 和区块 C 的属性打到日志，肉眼核对。
-
-  第 4 步  BallisticSkeleton / MaterialRow / DualCannonTableSource
-           直接复用 CBCMSBallisticUtils 的 dualCannon* 系列，不写新数学。
-           验证：dump 出来的骨架和本文第七节的数字对得上。
-
-  第 5 步  Paginator + 单测（空表 / 单页 / 边界翻页 / setPageSize 保首行 / setFilter 夹页码）
-
-  第 6 步  两个 Screen + PageControls + 入口
-           先做第 2 屏（数据都齐了），再做第 1 屏，最后接入口物品和命令。
-
-
-================================================================================
-十一、留好口子、但先不做
-================================================================================
-
-  · 指令 / 装备加成：DualCannonLoadout 已经把 commandModifier / equipmentModifier
-    作为字段暴露（默认 1.0），以后要做「带作战指令的射表」不用改任何调用点。
-  · 高差不为 0：CBCMSBallisticUtils 目前只解 dy=0。
-    要打高地/打船楼时，给 BallisticSkeleton 加一个 dy 参数、
-    CBCMSBallisticUtils 补一个带 dy 的求解即可，MaterialRow / UI / Paginator 都不用动。
-  · 跨弹种对比：区块 B 的距离取法如果切成「固定绝对距离」，
-    就能把两种弹的表并排放。数据结构已经支持，只是 UI 没做。
+  留好口子但先不做：
+    · 指令/装备加成：DualCannonLoadout 已有 commandModifier / equipmentModifier 字段
+    · 高差不为 0：CBCMSBallisticUtils 目前只解 dy=0，要打高地时补一个带 dy 的求解，
+      MaterialRow / UI / Paginator 都不用动

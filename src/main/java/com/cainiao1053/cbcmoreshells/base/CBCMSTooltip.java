@@ -455,7 +455,7 @@ public class CBCMSTooltip {
 		float initVel = (float) properties.dualCannon().initialVelocity();
 		float projectileSpread = (float) properties.dualCannon().projectileSpread();
 		float minimumSpread = (float) properties.dualCannon().minimumSpread();
-		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		int lifetime = properties.dualCannon().baseLifetime();
 		float deflection = (float) properties.ballistics().deflection();
 		float smashToughness = (float) properties.dualImpact().smashToughness();
 		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();
@@ -479,7 +479,7 @@ public class CBCMSTooltip {
 		float initVel = (float) properties.dualCannon().initialVelocity();
 		float projectileSpread = (float) properties.dualCannon().projectileSpread();
 		float minimumSpread = (float) properties.dualCannon().minimumSpread();
-		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		int lifetime = properties.dualCannon().baseLifetime();
 		float deflection = (float) properties.ballistics().deflection();
 		float smashToughness = (float) properties.dualImpact().smashToughness();
 		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();
@@ -505,7 +505,7 @@ public class CBCMSTooltip {
 		float initVel = (float) properties.dualCannon().initialVelocity();
 		float projectileSpread = (float) properties.dualCannon().projectileSpread();
 		float minimumSpread = (float) properties.dualCannon().minimumSpread();
-		int lifetime = entry.launchProfile().baseLifetimeTicks();
+		int lifetime = properties.dualCannon().baseLifetime();
 		float deflection = (float) properties.ballistics().deflection();
 		float smashToughness = (float) properties.dualImpact().smashToughness();
 		float maximumMomentum = (float) properties.dualImpact().maximumMomentum();

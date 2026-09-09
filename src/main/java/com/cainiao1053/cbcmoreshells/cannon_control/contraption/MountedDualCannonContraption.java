@@ -550,8 +550,8 @@ public class MountedDualCannonContraption extends AbstractMountedCannonContrapti
                 return;
             }
             DualCannonLaunchProperties launch = secondary.props().dualCannon();
-            float spread = (float) ((launch.minimumSpread()
-                    + Math.max(launch.projectileSpread() - spreadSub * subLength, minimumSpread))
+            float spread = (float) (Math.max(launch.projectileSpread() - spreadSub * subLength,
+                    launch.minimumSpread() + minimumSpread)
                     * this.commandSpreadModifier * this.equipmentSpreadModifier * this.additionalSpreadCoef);
             this.spawnRound(level, secondary, spawnPos.subtract(horizontalOffsetVec), vec, spread, durabilityMassModifier, barrelLifetime);
             baseRecoil += secondary.props().dualCannon().baseRecoil();

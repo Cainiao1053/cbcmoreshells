@@ -1,7 +1,6 @@
 package com.cainiao1053.cbcmoreshells.munitions.dual_cannon.extended_ap_shot;
 
 import com.cainiao1053.cbcmoreshells.base.CBCMSTooltip;
-import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.shaolib.CBCMSDualCannonMunitionRegistry;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.FuzedDualCannonProjectileBlockItem;
 import net.minecraft.network.chat.Component;
 import net.minecraft.world.item.ItemStack;
@@ -22,7 +21,7 @@ public class ExtendedAPShotBlockItem extends FuzedDualCannonProjectileBlockItem 
 		super.appendHoverText(stack, context, tooltip, flag);
 
 		CBCMSTooltip.appendInertDualCannonProjectileInfo(stack, context, tooltip, flag,
-				CBCMSDualCannonMunitionRegistry.of(this.getBlock()));
+				getMunitionEntry());
 	}
 
 }

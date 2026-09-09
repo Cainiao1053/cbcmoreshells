@@ -14,8 +14,8 @@ import net.minecraft.world.item.TooltipFlag;
 import net.minecraft.world.level.block.Block;
 import rbasamoyai.createbigcannons.munitions.FuzedProjectileBlockItem;
 
+import javax.annotation.Nullable;
 import java.util.List;
-import java.util.Objects;
 
 import static com.cainiao1053.cbcmoreshells.base.CBCMSTooltip.addHoldShift;
 import static rbasamoyai.createbigcannons.base.CBCTooltip.getPalette;
@@ -42,8 +42,25 @@ public class FuzedDualCannonProjectileBlockItem extends FuzedProjectileBlockItem
 
 	}
 
-	public DualCannonMunitionProperties getProjectileProperties(){
-		return CBCMSDualCannonMunitionRegistry.properties(Objects.requireNonNull(CBCMSDualCannonMunitionRegistry.of(this.getBlock())));
+	/**
+	 * This round's entry in the dual cannon registry, or null if the block was never registered
+	 * there. {@code getBlock()} is per-instance, so two rounds sharing an item class still resolve
+	 * to their own entry.
+	 */
+	@Nullable
+	public CBCMSDualCannonMunitionRegistry.Entry getMunitionEntry() {
+		return CBCMSDualCannonMunitionRegistry.of(this.getBlock());
+	}
+
+	/**
+	 * Datapack properties for this round. Carries no per-shot override, but overrides only touch
+	 * {@code durability_mass}, so drag, gravity and muzzle velocity here are what the shell really
+	 * flies with. Only call this after registration has finished.
+	 */
+	@Nullable
+	public DualCannonMunitionProperties getProjectileProperties() {
+		CBCMSDualCannonMunitionRegistry.Entry entry = this.getMunitionEntry();
+		return entry == null ? null : CBCMSDualCannonMunitionRegistry.properties(entry);
 	}
 
 }

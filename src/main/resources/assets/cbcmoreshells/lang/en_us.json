@@ -503,5 +503,14 @@
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_2": "Mechanical arms can take munition directly from ammo racks",
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_3": "Right-click an ammo rack slot while holding munition to insert it",
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_4": "Right-click a slot with an empty hand to take munition out",
-"cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_5": "Ammo racks can filter munition. Provide a redstone signal to switch the filtered ammo type"
+"cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_5": "Ammo racks can filter munition. Provide a redstone signal to switch the filtered ammo type",
+
+    "block.cbcmoreshells.material.hamlet_steel": "Hamlet Steel",
+    "block.cbcmoreshells.material.podia_zinc": "Podia Zinc",
+    "block.cbcmoreshells.material.starlight_ingot": "Starlight Ingot",
+    "block.cbcmoreshells.material.large_brass": "Large Brass",
+    "block.cbcmoreshells.material.large_steel": "Large Steel",
+    "block.cbcmoreshells.material.large_single_brass": "Large Single Brass",
+    "block.cbcmoreshells.material.large_single_steel": "Large Single Steel",
+    "block.cbcmoreshells.material.large_single_slate_alloy": "Large Single Slate Alloy"
 }

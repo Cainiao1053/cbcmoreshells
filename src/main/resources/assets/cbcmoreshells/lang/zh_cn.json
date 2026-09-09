@@ -504,5 +504,14 @@
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_3": "手持弹药右键弹药架的格子以放入",
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_4": "空手右键格子以取出",
 "cbcmoreshells.ponder.ammo_rack/ammo_rack_intro.text_5": "弹药架可以筛选弹药，通入红石信号以切换筛选弹种",
-"item.cbcmoreshells.fire_extinguisher": "灭火器"
+"item.cbcmoreshells.fire_extinguisher": "灭火器",
+
+    "block.cbcmoreshells.material.hamlet_steel": "哈姆雷特钢",
+    "block.cbcmoreshells.material.podia_zinc": "波迪亚锌",
+    "block.cbcmoreshells.material.starlight_ingot": "星光锭",
+    "block.cbcmoreshells.material.large_brass": "超宽黄铜",
+    "block.cbcmoreshells.material.large_steel": "超宽钢",
+    "block.cbcmoreshells.material.large_single_brass": "超宽单黄铜",
+    "block.cbcmoreshells.material.large_single_steel": "超宽单钢",
+    "block.cbcmoreshells.material.large_single_slate_alloy": "超宽单板岩合金"
 }

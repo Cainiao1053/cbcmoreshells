@@ -31,9 +31,6 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 	private static final int TRAIL_INITIAL_DELAY = 20;
 	private static final double TRAIL_ENDPOINT_PULLBACK = 0.75;
 
-	private static final double ANTIAIR_ALTITUDE_SCALE = 80.0;
-	private static final double ANTIAIR_MAX_MULTIPLIER = 3.0;
-
 	private final Kind kind;
 
 	public DualCannonBehavior(MunitionPropertyResolver<P> propertyResolver, Kind kind) {
@@ -250,31 +247,23 @@ public class DualCannonBehavior<P extends DualCannonMunitionProperties>
 
 	protected double explosionPowerMultiplier(ProjectileServerContext<DualCannonState> context) {
 		double modifier = context.state().durabilityModifier();
-		return switch (this.kind) {
-			case AP_SHOT -> 0.0;
-			case HE, INCENDIARY -> (modifier - 1.0) / 1.2 + 1.0;
-			case ANTIAIR_HE -> ((modifier - 1.0) / 1.5 + 1.0) * this.antiairAltitudeMultiplier(context);
-			case APHE -> modifier * 0.47 + 0.4;
-			case APBC -> modifier * 0.45 + 0.4;
-			case SAP -> modifier * 0.82 + 0.18;
-		};
+		double base = DualCannonModifiers.explosionPower(this.kind, modifier);
+		return this.kind == Kind.ANTIAIR_HE ? base * this.antiairAltitudeMultiplier(context) : base;
 	}
 
-	/** AA shells burst harder the higher they climb, up to {@link #ANTIAIR_MAX_MULTIPLIER}. */
 	private double antiairAltitudeMultiplier(ProjectileServerContext<DualCannonState> context) {
 		DualCannonState state = context.state();
 		double currentY = context.projectile().position().y;
 		double launchY = state.hasLaunchY() ? state.launchY() : currentY;
-		double climb = Math.max(0.0, currentY - launchY);
-		return Math.min(climb / ANTIAIR_ALTITUDE_SCALE + 1.0, ANTIAIR_MAX_MULTIPLIER);
+		return DualCannonModifiers.antiairAltitude(currentY - launchY);
 	}
 
 	private double incendiaryFireMultiplier(ProjectileServerContext<DualCannonState> context) {
-		return (context.state().durabilityModifier() - 1.0) / 0.9 + 1.0;
+		return DualCannonModifiers.incendiaryFire(context.state().durabilityModifier());
 	}
 
 	private double incendiaryRangeMultiplier(ProjectileServerContext<DualCannonState> context) {
-		return (context.state().durabilityModifier() - 1.0) / 1.3 + 1.0;
+		return DualCannonModifiers.incendiaryRange(context.state().durabilityModifier());
 	}
 
 	private static ProjectileChunkLoadPolicy loadPolicy(ProjectileInstance projectile) {
