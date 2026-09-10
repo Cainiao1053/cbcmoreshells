@@ -24,8 +24,10 @@ public record BallisticSkeleton(DualCannonShellContext shell, boolean highArc, d
 	}
 
 	/**
-	 * Samples {@code columns} distances up to the shell's maximum range.
+	 * Samples distances up to the shell's maximum range, preceded by a muzzle column.
 	 *
+	 * @param columns how many downrange samples to take; the returned skeleton has one more column
+	 *                than this, because distance zero is always prepended
 	 * @return null when the shell's ballistics fall outside what the closed form covers, e.g.
 	 *         quadratic drag or non-negative gravity
 	 */
@@ -45,7 +47,11 @@ public record BallisticSkeleton(DualCannonShellContext shell, boolean highArc, d
 			CBCMSBallisticUtils.dualCannonRangeTable(v0, drag, gravity, columns, highArc);
 		if (shots.isEmpty()) return null;
 
-		List<BallisticPoint> points = new ArrayList<>(shots.size());
+		List<BallisticPoint> points = new ArrayList<>(shots.size() + 1);
+		// Muzzle column. Needs no solving: at zero distance the shell has flown for no time and
+		// still carries its full muzzle velocity, whatever the elevation. It anchors the table's
+		// left edge so the fall-off across the row reads against a known starting point.
+		points.add(new BallisticPoint(0.0, 0.0, 0.0, v0));
 		for (CBCMSBallisticUtils.DualCannonShot shot : shots) {
 			points.add(new BallisticPoint(shot.range(), shot.angle(), shot.flightTicks(), shot.impactSpeed()));
 		}

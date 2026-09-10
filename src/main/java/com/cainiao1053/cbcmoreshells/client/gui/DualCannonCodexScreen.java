@@ -15,24 +15,31 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 
 /**
- * Shell picker. Lists the dual cannon rounds and opens a comparison table for whichever one is
- * chosen; the table's shape (material filter, column budget) is chosen here so it applies to every
- * shell.
+ * Shell picker. Shows the dual cannon rounds as a grid of icons and opens a comparison table for
+ * whichever one is chosen; the table's shape (material filter, column budget) is chosen here so it
+ * applies to every shell.
+ *
+ * <p>Names appear only on hover, so the grid stays compact no matter how long the shell names get.
  *
  * <p>Listing shells resolves no properties — that only happens once a shell is picked.
  */
 public class DualCannonCodexScreen extends AbstractSimiScreen {
 
 	private static final int PADDING = 8;
-	private static final int ROW_HEIGHT = 20;
-	private static final int WINDOW_WIDTH = 260;
 	private static final int ICON_SIZE = 16;
 
-	private static final int COLOUR_TITLE = 0xFFFFFFFF;
-	private static final int COLOUR_LABEL = 0xFFA0A0A0;
-	private static final int COLOUR_VALUE = 0xFFE0E0E0;
-	private static final int COLOUR_HOVER = 0x40FFFFFF;
-	private static final int COLOUR_BACKGROUND = 0xF0101018;
+	/** Icons per row. Change this to reshape the grid. */
+	private static final int GRID_COLUMNS = 5;
+	/** Space each icon gets, icon plus its share of the gutter. */
+	private static final int CELL_SIZE = 24;
+	/** Height of the title plus the settings buttons above the grid. */
+	private static final int HEADER_HEIGHT = 34;
+
+	// Ink on aged paper: the journal background is light (~#C0B7AA), so everything is dark.
+	private static final int COLOUR_TITLE = 0xFF2B2118;
+	private static final int COLOUR_LABEL = 0xFF6B5B4A;
+	private static final int COLOUR_HOVER = 0x30000000;
+	private static final int COLOUR_SELECTED = 0x60000000;
 
 	private static final int[] COLUMN_CHOICES = {11, 13, 15};
 
@@ -40,7 +47,8 @@ public class DualCannonCodexScreen extends AbstractSimiScreen {
 	private List<Block> shells = List.of();
 	private DualCannonMaterialFilter filter;
 	private int columnChoice;
-	private int listTop;
+	private int gridTop;
+	private int gridLeft;
 
 	@Nullable
 	private final Block lastSelection;
@@ -62,7 +70,11 @@ public class DualCannonCodexScreen extends AbstractSimiScreen {
 		if (this.source == null) this.source = this.buildSource();
 		this.shells = this.source.shells();
 
-		this.setWindowSize(WINDOW_WIDTH, PADDING * 2 + 20 + this.shells.size() * ROW_HEIGHT + 24);
+		int gridWidth = GRID_COLUMNS * CELL_SIZE;
+		int gridHeight = Math.max(1, this.rowCount()) * CELL_SIZE;
+		// Wide enough for the grid, but never narrower than the two settings buttons need.
+		int width = Math.max(gridWidth, 248) + PADDING * 2;
+		this.setWindowSize(width, PADDING * 2 + HEADER_HEIGHT + gridHeight);
 		super.init();
 
 		int left = this.guiLeft + PADDING;
@@ -73,7 +85,12 @@ public class DualCannonCodexScreen extends AbstractSimiScreen {
 		this.addRenderableWidget(Button.builder(this.columnLabel(), button -> this.cycleColumns())
 			.bounds(left + 154, top + 12, 90, 16).build());
 
-		this.listTop = top + 34;
+		this.gridTop = top + HEADER_HEIGHT;
+		this.gridLeft = this.guiLeft + (this.windowWidth - gridWidth) / 2;
+	}
+
+	private int rowCount() {
+		return (this.shells.size() + GRID_COLUMNS - 1) / GRID_COLUMNS;
 	}
 
 	private DualCannonTableSource buildSource() {
@@ -105,40 +122,64 @@ public class DualCannonCodexScreen extends AbstractSimiScreen {
 
 	@Override
 	protected void renderWindow(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		graphics.fill(this.guiLeft, this.guiTop, this.guiLeft + this.windowWidth,
-			this.guiTop + this.windowHeight, COLOUR_BACKGROUND);
+		JournalBackground.render(graphics, this.guiLeft, this.guiTop, this.windowWidth, this.windowHeight);
 
-		int left = this.guiLeft + PADDING;
-		graphics.drawString(this.font, I18n.get("cbcmoreshells.firing_table.title"), left,
-			this.guiTop + PADDING, COLOUR_TITLE, false);
+		graphics.drawString(this.font, I18n.get("cbcmoreshells.firing_table.title"),
+			this.guiLeft + PADDING, this.guiTop + PADDING, COLOUR_TITLE, false);
 
 		if (this.shells.isEmpty()) {
-			graphics.drawString(this.font, I18n.get("cbcmoreshells.firing_table.no_shells"), left, this.listTop,
-				COLOUR_LABEL, false);
+			graphics.drawString(this.font, I18n.get("cbcmoreshells.firing_table.no_shells"),
+				this.guiLeft + PADDING, this.gridTop, COLOUR_LABEL, false);
 			return;
 		}
 
-		int hovered = this.rowAt(mouseX, mouseY);
+		int hovered = this.cellAt(mouseX, mouseY);
 		for (int i = 0; i < this.shells.size(); i++) {
 			Block shell = this.shells.get(i);
-			int y = this.listTop + i * ROW_HEIGHT;
+			int x = this.cellX(i);
+			int y = this.cellY(i);
+
 			if (i == hovered) {
-				graphics.fill(left, y - 2, this.guiLeft + this.windowWidth - PADDING, y + ROW_HEIGHT - 4,
-					COLOUR_HOVER);
+				graphics.fill(x, y, x + CELL_SIZE, y + CELL_SIZE, COLOUR_HOVER);
+			} else if (shell == this.lastSelection) {
+				graphics.fill(x, y, x + CELL_SIZE, y + CELL_SIZE, COLOUR_SELECTED);
 			}
-			graphics.renderItem(new ItemStack(shell), left, y - 1);
-			graphics.drawString(this.font, shell.getName(), left + ICON_SIZE + 6,
-				y + (ICON_SIZE - this.font.lineHeight) / 2, COLOUR_VALUE, false);
+
+			int inset = (CELL_SIZE - ICON_SIZE) / 2;
+			graphics.renderItem(new ItemStack(shell), x + inset, y + inset);
 		}
 	}
 
-	/** Index of the shell row under the cursor, or -1. */
-	private int rowAt(double mouseX, double mouseY) {
-		int left = this.guiLeft + PADDING;
-		int right = this.guiLeft + this.windowWidth - PADDING;
-		if (mouseX < left || mouseX > right || mouseY < this.listTop) return -1;
-		int row = (int) ((mouseY - this.listTop + 2) / ROW_HEIGHT);
-		return row >= 0 && row < this.shells.size() ? row : -1;
+	/**
+	 * Names live here rather than in {@link #renderWindow} so the tooltip lands on top of the
+	 * buttons and icons instead of underneath them.
+	 */
+	@Override
+	protected void renderWindowForeground(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
+		super.renderWindowForeground(graphics, mouseX, mouseY, partialTicks);
+
+		int hovered = this.cellAt(mouseX, mouseY);
+		if (hovered < 0) return;
+		graphics.renderTooltip(this.font, this.shells.get(hovered).getName(), mouseX, mouseY);
+	}
+
+	private int cellX(int index) {
+		return this.gridLeft + (index % GRID_COLUMNS) * CELL_SIZE;
+	}
+
+	private int cellY(int index) {
+		return this.gridTop + (index / GRID_COLUMNS) * CELL_SIZE;
+	}
+
+	/** Index of the shell under the cursor, or -1. */
+	private int cellAt(double mouseX, double mouseY) {
+		int column = (int) Math.floor((mouseX - this.gridLeft) / CELL_SIZE);
+		int row = (int) Math.floor((mouseY - this.gridTop) / CELL_SIZE);
+		if (mouseX < this.gridLeft || column < 0 || column >= GRID_COLUMNS) return -1;
+		if (mouseY < this.gridTop || row < 0 || row >= this.rowCount()) return -1;
+
+		int index = row * GRID_COLUMNS + column;
+		return index < this.shells.size() ? index : -1;
 	}
 
 	@Override
@@ -146,9 +187,9 @@ public class DualCannonCodexScreen extends AbstractSimiScreen {
 		if (super.mouseClicked(mouseX, mouseY, button)) return true;
 		if (button != 0) return false;
 
-		int row = this.rowAt(mouseX, mouseY);
-		if (row < 0) return false;
-		ScreenOpener.open(new DualCannonCompareScreen(this.source, this.shells.get(row)));
+		int index = this.cellAt(mouseX, mouseY);
+		if (index < 0) return false;
+		ScreenOpener.open(new DualCannonCompareScreen(this.source, this.shells.get(index)));
 		return true;
 	}
 

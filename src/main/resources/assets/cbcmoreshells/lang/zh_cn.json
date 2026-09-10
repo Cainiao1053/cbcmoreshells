@@ -549,6 +549,5 @@
     "cbcmoreshells.firing_table.unavailable": "该弹种没有射表",
     "cbcmoreshells.firing_table.no_ballistics": "该弹种的弹道无法求解",
     "cbcmoreshells.firing_table.no_shells": "没有已注册的双联装炮弹",
-    "key.categories.cbcmoreshells": "CBC More Shells",
-    "key.cbcmoreshells.firing_tables": "打开射表"
+    "item.cbcmoreshells.ballistic_journal": "弹道手册"
 }

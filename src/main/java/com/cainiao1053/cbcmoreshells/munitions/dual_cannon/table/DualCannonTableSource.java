@@ -87,7 +87,10 @@ public final class DualCannonTableSource {
 		List<StatSpec<DualCannonLoadout>> materialStats = materialSink.limited(Math.max(0, materialBudget));
 		int ballisticColumns = this.totalColumns - 1 - materialStats.size();
 
-		BallisticSkeleton skeleton = BallisticSkeleton.compute(context, ballisticColumns, this.highArc);
+		// One of those columns is the muzzle, which compute() prepends for free, so ask for one
+		// fewer downrange sample and the finished table still fits the budget.
+		BallisticSkeleton skeleton =
+			BallisticSkeleton.compute(context, Math.max(1, ballisticColumns - 1), this.highArc);
 		DualCannonTable table = new DualCannonTable(context, shellSink.specs(), materialStats, skeleton,
 			context.item().ballisticModes(), this.filter.select());
 		this.tables.put(shell, table);

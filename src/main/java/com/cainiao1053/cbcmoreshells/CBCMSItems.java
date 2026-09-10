@@ -1,6 +1,7 @@
 package com.cainiao1053.cbcmoreshells;
 
 import com.cainiao1053.cbcmoreshells.datagen.assets.CBCMSBuilderTransformers;
+import com.cainiao1053.cbcmoreshells.items.ballistic_journal.BallisticJournalItem;
 import com.cainiao1053.cbcmoreshells.items.fire_extinguisher.FireExtinguisherItem;
 import com.cainiao1053.cbcmoreshells.munitions.autocannon.bullet.AntiairMachineGunRoundItem;
 import com.cainiao1053.cbcmoreshells.munitions.dual_cannon.combat_command.*;
@@ -122,6 +123,10 @@ public class CBCMSItems {
 
     public static final ItemEntry<FireExtinguisherItem> FIRE_EXTINGUISHER = REGISTRATE.item("fire_extinguisher", FireExtinguisherItem::new)
             .properties(properties -> properties.stacksTo(1).durability(152))
+            .register();
+
+    public static final ItemEntry<BallisticJournalItem> BALLISTIC_JOURNAL = REGISTRATE.item("ballistic_journal", BallisticJournalItem::new)
+            .properties(properties -> properties.stacksTo(1))
             .register();
 
 //    public static final ItemEntry<DualCannonComboItem> DUAL_CANNON_COMBO = REGISTRATE.item("dual_cannon_combo", DualCannonComboItem::new)

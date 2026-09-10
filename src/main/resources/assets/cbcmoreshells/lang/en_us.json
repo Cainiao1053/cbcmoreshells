@@ -547,6 +547,5 @@
     "cbcmoreshells.firing_table.unavailable": "No firing table for this round",
     "cbcmoreshells.firing_table.no_ballistics": "This round's flight cannot be solved",
     "cbcmoreshells.firing_table.no_shells": "No dual cannon rounds are registered",
-    "key.categories.cbcmoreshells": "CBC More Shells",
-    "key.cbcmoreshells.firing_tables": "Open Firing Tables"
+    "item.cbcmoreshells.ballistic_journal": "Ballistic Journal"
 }

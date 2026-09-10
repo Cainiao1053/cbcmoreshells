@@ -22,7 +22,6 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
 /**
@@ -43,14 +42,14 @@ public class DualCannonCompareScreen extends AbstractSimiScreen {
 	private static final int ROW_HEIGHT = 11;
 	private static final int MAX_ROWS_PER_PAGE = 12;
 
-	private static final int COLOUR_TITLE = 0xFFFFFFFF;
-	private static final int COLOUR_LABEL = 0xFFA0A0A0;
-	private static final int COLOUR_VALUE = 0xFFE0E0E0;
-	private static final int COLOUR_SKELETON = 0xFF9FD8FF;
-	private static final int COLOUR_GAP_MATERIAL = 0xFFFFD98F;
-	private static final int COLOUR_UNREACHABLE = 0xFF6A6A6A;
-	private static final int COLOUR_RULE = 0x40FFFFFF;
-	private static final int COLOUR_BACKGROUND = 0xF0101018;
+	// Ink on aged paper: the journal background is light (~#C0B7AA), so everything is dark.
+	private static final int COLOUR_TITLE = 0xFF2B2118;
+	private static final int COLOUR_LABEL = 0xFF6B5B4A;
+	private static final int COLOUR_VALUE = 0xFF33291E;
+	private static final int COLOUR_SKELETON = 0xFF1F4E6B;
+	private static final int COLOUR_GAP_MATERIAL = 0xFF8A5A12;
+	private static final int COLOUR_UNREACHABLE = 0xFF9A9086;
+	private static final int COLOUR_RULE = 0x40000000;
 
 	private final DualCannonTableSource source;
 	private final Block shell;
@@ -157,8 +156,7 @@ public class DualCannonCompareScreen extends AbstractSimiScreen {
 
 	@Override
 	protected void renderWindow(GuiGraphics graphics, int mouseX, int mouseY, float partialTicks) {
-		graphics.fill(this.guiLeft, this.guiTop, this.guiLeft + this.windowWidth,
-			this.guiTop + this.windowHeight, COLOUR_BACKGROUND);
+		JournalBackground.render(graphics, this.guiLeft, this.guiTop, this.windowWidth, this.windowHeight);
 
 		if (this.table == null) {
 			graphics.drawString(this.font, I18n.get("cbcmoreshells.firing_table.unavailable"),
