@@ -42,6 +42,12 @@ public final class DualCannonStats {
 			return cosine <= 0.0 || cosine > 1.0 ? Double.NaN : Math.acos(cosine);
 		}, StatFormat.DEGREES);
 
+	public static final StatSpec<DualCannonShellContext> BOUNCE_ANGLE =
+			shellStat("bounce_angle", shell -> {
+				double cosine = shell.minDeflection();
+				return cosine <= 0.0 || cosine > 1.0 ? Double.NaN : Math.acos(cosine);
+			}, StatFormat.DEGREES);
+
 	public static final StatSpec<DualCannonShellContext> MAX_MOMENTUM =
 		shellStat("max_momentum", DualCannonShellContext::maxMomentum, StatFormat.INTEGER);
 
@@ -79,6 +85,10 @@ public final class DualCannonStats {
 	public static final StatSpec<DualCannonLoadout> RELOAD =
 		materialStat("reload", DualCannonLoadout::reloadCoefficient, StatFormat.PLAIN2,
 			StatSpec.PRIORITY_NORMAL);
+
+	public static final StatSpec<DualCannonLoadout> RECOIL =
+			materialStat("recoil", DualCannonLoadout::recoil, StatFormat.PLAIN2,
+					StatSpec.PRIORITY_NORMAL);
 
 	public static final StatSpec<DualCannonLoadout> EXPLOSION_POWER =
 		materialStat("explosion_power", DualCannonLoadout::explosionPower, StatFormat.PLAIN2,

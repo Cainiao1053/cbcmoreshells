@@ -16,7 +16,7 @@ public record DualCannonImpactProperties(
 ) {
 
 	public static final DualCannonImpactProperties DEFAULT =
-		new DualCannonImpactProperties(1.0, 128.0, 1.0, 1.3, 1.0, 1.0 / 3.0, 0.2);
+		new DualCannonImpactProperties(1.0, 128.0, 1.0, 1.3, 1.0, 1.0 / 3.0, 0.005);
 
 	public DualCannonImpactProperties {
 		smashToughness = MunitionPropertyComponents.finiteNonNegative("smashToughness", smashToughness);

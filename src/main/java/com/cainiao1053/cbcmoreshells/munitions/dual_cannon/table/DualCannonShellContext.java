@@ -70,6 +70,10 @@ public record DualCannonShellContext(FuzedDualCannonProjectileBlockItem item,
 		return this.shell.ballistics().deflection();
 	}
 
+	public double minDeflection(){
+		return this.shell.dualImpact().minDeflection();
+	}
+
 	public double maxMomentum() {
 		return this.shell.dualImpact().maximumMomentum();
 	}

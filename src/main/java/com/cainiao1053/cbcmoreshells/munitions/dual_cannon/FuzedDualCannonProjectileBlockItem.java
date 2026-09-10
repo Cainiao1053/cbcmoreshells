@@ -83,15 +83,8 @@ public class FuzedDualCannonProjectileBlockItem extends FuzedProjectileBlockItem
 	 */
 	public void collectShellStats(StatSink<DualCannonShellContext> sink) {
 		sink.add(DualCannonStats.MUZZLE_VELOCITY);
-		sink.add(DualCannonStats.DRAG);
-		sink.add(DualCannonStats.GRAVITY);
-		sink.add(DualCannonStats.BASE_MASS);
-		sink.add(DualCannonStats.BASE_LIFETIME);
 		sink.add(DualCannonStats.DEFLECTION_ANGLE);
-		sink.add(DualCannonStats.MAX_MOMENTUM);
-		sink.add(DualCannonStats.SMASH_TOUGHNESS);
-		sink.add(DualCannonStats.MAX_RANGE);
-		sink.add(DualCannonStats.OPTIMAL_ELEVATION);
+		sink.add(DualCannonStats.BOUNCE_ANGLE);
 	}
 
 	/**
@@ -99,8 +92,8 @@ public class FuzedDualCannonProjectileBlockItem extends FuzedProjectileBlockItem
 	 * on purpose — every column here costs a distance column in the ballistic block.
 	 */
 	public void collectMaterialStats(StatSink<DualCannonLoadout> sink) {
-		sink.add(DualCannonStats.LIFETIME);
 		sink.add(DualCannonStats.RELOAD);
+		sink.add(DualCannonStats.RECOIL);
 	}
 
 	/**

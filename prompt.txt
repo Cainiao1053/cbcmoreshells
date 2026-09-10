@@ -1,2 +1,4 @@
-完成步骤5和步骤6
-然后更新answer3.txt
+移除打开Table的Keybind，以及整个Keybind实现，然后制作一个物品，BallisticJournalItem，用这个物品右键使用时打开弹道显示的屏幕，然后注册物品
+同时，弹道界面中显示出膛属性，添加距离为0的就行，不用改太复杂
+并且把DualCannonCodexScreen和DualCannonCompareScreen的背景改为用一张图片，位于cbcmoreshells:textures/gui/journal_background
+同时，DualCannonCodexScreen中的图标只有鼠标放上去的时候显示名称，且使用格子排列，列数可调并放在类里用变量硬编码完成

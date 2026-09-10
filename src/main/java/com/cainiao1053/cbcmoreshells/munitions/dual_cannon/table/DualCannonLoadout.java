@@ -74,7 +74,11 @@ public record DualCannonLoadout(DualCannonShellContext shell, DualCannonMaterial
 
 	/** Reload time multiplier for this pairing; lower is faster. */
 	public double reloadCoefficient() {
-		return this.shell.shell().dualCannon().reloadTimeCoefficient() * this.barrel.reloadTimeModifier();
+		return this.shell.shell().dualCannon().reloadTimeCoefficient() * this.barrel.reloadTimeModifier() * 2.5;
+	}
+
+	public double recoil(){
+		return this.shell.shell().dualCannon().baseRecoil() * this.barrel.recoilMultiplier();
 	}
 
 }

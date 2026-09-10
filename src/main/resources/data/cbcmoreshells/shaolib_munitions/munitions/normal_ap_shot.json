@@ -52,7 +52,7 @@
     "minimum_charge_power": 1.0,
     "can_squib": true,
     "added_recoil": 1.0,
-    "initial_velocity": 12.0,
+    "initial_velocity": 10.0,
     "projectile_spread": 8.0,
     "minimum_spread": 0.1,
     "reload_time_coefficient": 0.9,

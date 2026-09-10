@@ -22,6 +22,7 @@ import net.minecraft.client.gui.GuiGraphics;
 import net.minecraft.client.gui.components.Button;
 import net.minecraft.client.resources.language.I18n;
 import net.minecraft.network.chat.Component;
+import net.minecraft.resources.ResourceLocation;
 import net.minecraft.world.level.block.Block;
 
 /**
@@ -187,11 +188,11 @@ public class DualCannonCompareScreen extends AbstractSimiScreen {
 		int halfWidth = (this.windowWidth - PADDING * 2) / 2;
 		int y = top;
 
-		for (int i = 0; i < specs.size(); i += 2) {
+		for (int i = 0; i < specs.size(); i += 1) {
 			this.renderStatPair(graphics, left, y, specs.get(i), context);
-			if (i + 1 < specs.size()) {
-				this.renderStatPair(graphics, left + halfWidth, y, specs.get(i + 1), context);
-			}
+//			if (i + 1 < specs.size()) {
+//				this.renderStatPair(graphics, left + halfWidth, y, specs.get(i + 1), context);
+//			}
 			y += ROW_HEIGHT;
 		}
 		return y;
